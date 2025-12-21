@@ -1,3 +1,3 @@
-idf_component_register(SRCS "adc.c" "hello_world_main.c" "ds18b20.c" "adc.c"
-                       PRIV_REQUIRES spi_flash esp_adc
+idf_component_register(SRCS "ficus_sensor_main.cpp" "ds18b20.c"
+                       PRIV_REQUIRES spi_flash adc
                        INCLUDE_DIRS ".")

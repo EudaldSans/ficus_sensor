@@ -11,18 +11,17 @@
 #include "onewire_bus.h"
 #include "ds18b20.h"
 
-#include "adc.h"
+#include "adc.hh"
 
 #define EXAMPLE_ONEWIRE_BUS_GPIO    18
 #define EXAMPLE_ONEWIRE_MAX_DS18B20 1
 
 static const char *TAG = "example";
 
-void app_main(void)
+extern "C" void app_main(void)
 {
-    adc_init();
-    adc_config();
-    adc_calibration_init();
+    ADC adc = ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
+    adc.init();
 
     // install 1-wire bus
     onewire_bus_handle_t bus = NULL;
@@ -69,10 +68,16 @@ void app_main(void)
     ESP_ERROR_CHECK(onewire_del_device_iter(iter));
     ESP_LOGI(TAG, "Searching done, %d DS18B20 device(s) found", ds18b20_device_num);
 
-    float temperature;
+    float temperature, humidity;
+    int voltage;
     while (1) {
-        adc_read();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        adc.measure(voltage);
+        humidity = 100 - 100*voltage/3300;
+        if (humidity < 0) {
+            humidity = 0;
+        }
+
+        ESP_LOGI(TAG, "Humidity: %f%%", humidity);
 
         // trigger temperature conversion for all sensors on the bus
         ESP_ERROR_CHECK(ds18b20_trigger_temperature_conversion_for_all(bus));
@@ -80,5 +85,7 @@ void app_main(void)
             ESP_ERROR_CHECK(ds18b20_get_temperature(ds18b20s[i], &temperature));
             ESP_LOGI(TAG, "temperature read from DS18B20[%d]: %.2fC", i, temperature);
         }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
