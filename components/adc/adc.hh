@@ -2,6 +2,9 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+#ifndef ADC_H
+#define ADC_H
+
 class ADC {
     public:
         ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bitwidth_t bitwidth);        
@@ -22,3 +25,5 @@ class ADC {
 
         constexpr static char const *TAG = "ADC";
 };
+
+#endif
