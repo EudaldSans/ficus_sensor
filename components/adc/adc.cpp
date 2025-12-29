@@ -52,7 +52,7 @@ esp_err_t ADC::measure(int &voltage_out) {
     ESP_RETURN_ON_ERROR(adc_oneshot_read(adc_handle, channel, &adc_raw[0][0]), TAG, "Failed to read raw voltage");
     ESP_RETURN_ON_ERROR(adc_cali_raw_to_voltage(adc_cali_handle, adc_raw[0][0], &voltage[0][0]), TAG, "Failed to calibrate raw voltage");
 
-    ESP_LOGI(TAG, "ADC channel %d measurement: %dmV", channel, voltage[0][0]);
+    ESP_LOGD(TAG, "ADC channel %d measurement: %dmV", channel, voltage[0][0]);
     voltage_out = voltage[0][0];
 
     return ESP_OK;

@@ -15,7 +15,7 @@ OnewireBus::OnewireBus(int bus_gpio_num, uint32_t max_rx_bytes) {
 }
 
 OnewireBus::~OnewireBus() {
-
+    if (bus != nullptr) onewire_bus_del(bus);
 }
 
 esp_err_t OnewireBus::init() {
@@ -45,6 +45,7 @@ esp_err_t OnewireBus::find_device(onewire_device_address_t address, onewire_devi
 
             if ((next_onewire_device.address & address_mask) == address) {
                 ESP_LOGI(TAG, "Found a Onewire device[%d], address: %016llX", device_num, address);
+                device_list.push_back(next_onewire_device.address);
                 device_num++;
 
             } else {
@@ -59,9 +60,36 @@ esp_err_t OnewireBus::find_device(onewire_device_address_t address, onewire_devi
     return ESP_OK;
 }
 
-esp_err_t OnewireBus::write_command(uint8_t cmd) {
-    return ESP_OK;
+esp_err_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
+    std::vector<uint8_t> tx_buffer;
+    
+    tx_buffer.push_back(ONEWIRE_CMD_SKIP_ROM);
+    tx_buffer.insert(tx_buffer.end(), tx_data.begin(), tx_data.end());
+    return write_bytes(tx_buffer);
 }
-esp_err_t OnewireBus::read_command(uint8_t cmd, uint8_t *read_buffer, size_t read_buffer_size, size_t &read_bytes) {
-    return ESP_OK;
+
+esp_err_t OnewireBus::write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data) {
+    std::vector<uint8_t> tx_buffer;
+    
+    tx_buffer.push_back(ONEWIRE_CMD_MATCH_ROM);
+
+    for (int i = 7; i >= 0; --i) {
+        tx_buffer.push_back(static_cast<uint8_t>((address >> (i * 8)) & 0xFF));
+    }
+
+    tx_buffer.insert(tx_buffer.end(), tx_data.begin(), tx_data.end());
+    return write_bytes(tx_buffer);
 }
+
+esp_err_t OnewireBus::reset() {
+    return onewire_bus_reset(bus);
+}
+
+esp_err_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
+    return onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size());
+}
+
+esp_err_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
+    return onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size());
+}
+

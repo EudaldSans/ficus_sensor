@@ -17,20 +17,21 @@ class OnewireBus {
 
         esp_err_t find_device(onewire_device_address_t address, uint64_t address_mask);
 
-        esp_err_t write_command(uint8_t cmd);
-        esp_err_t read_command(uint8_t cmd, uint8_t *read_buffer, size_t read_buffer_size, size_t &read_bytes);
+        esp_err_t reset();
+        esp_err_t read_bytes(std::vector<uint8_t> &rx_buf);
+        esp_err_t write_bytes(std::vector<uint8_t> tx_data);
+
+        esp_err_t write_to_all(std::vector<uint8_t> tx_data);
+        esp_err_t write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data);
         
     protected:
     private:
-        struct bus_device {
-            onewire_device_address_t address;
-        } bus_device_t;
 
         onewire_bus_handle_t bus = nullptr; 
         int bus_gpio_num;
         uint32_t max_rx_bytes;
 
-        std::vector<bus_device> device_list;
+        std::vector<onewire_device_address_t> device_list;
 
         constexpr static char const *TAG = "ONE WIRE";
 };
