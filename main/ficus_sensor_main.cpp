@@ -9,31 +9,27 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "adc.hh"
 #include "ds18b20.hh"
+#include "analog_humidity_sensor.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 
 static const char *TAG = "example";
 
 extern "C" void app_main(void) {
-    ADC adc = ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
-    adc.init();
+    const uint32_t humidity_sensor_max_voltage_mv = 3300;
 
     DS18B20 temp_sensor = DS18B20(ONEWIRE_BUS_GPIO);
     temp_sensor.init();
     temp_sensor.set_resolution(DS18B20::resolution_12B);
 
+    AnalogHumiditySensor humidity_sensor = AnalogHumiditySensor(humidity_sensor_max_voltage_mv, ADC_CHANNEL_2, ADC_UNIT_1);
+    humidity_sensor.init();
+
     uint16_t measurement_delay_ms = 0;
     float temperature, humidity;
-    int voltage;
     while (1) {
-        adc.measure(voltage);
-        humidity = 100 - 100*voltage/3300;
-        if (humidity < 0) {
-            humidity = 0;
-        }
-
+        humidity = humidity_sensor.get_last_measurement();
         ESP_LOGI(TAG, "Humidity: %f%%", humidity);
 
         temp_sensor.trigger_measurement(measurement_delay_ms);
