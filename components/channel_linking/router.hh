@@ -1,24 +1,34 @@
-#include "endpoints.hh"
+#include <functional>
+
+#include "esp_log.h"
+
+#include "endpoint.hh"
 #include "channels.hh"
+#include "conversions.hh"
 
 #ifndef CHANNEL_LINKING_ROUTER_HH
 #define CHANNEL_LINKING_ROUTER_HH
 
 class Router {
     public: 
-    template <typename T>
-    static void link(TransportInterface& producer, const std::string& outName,
-                     TransportInterface& consumer, const std::string& inName) {
+    template <typename producerType, typename consumerType>
+    static void link(ChannelEndpoint& producer, const std::string& outName,
+                     ChannelEndpoint& consumer, const std::string& inName,
+                     std::vector<std::shared_ptr<IConversion<producerType>>> conversions) {
         
-        // 1. Get Typed Pointers
-        auto* outCh = producer.getOutput<T>(outName);
-        auto* inCh = consumer.getInput<T>(inName);
+        auto* outCh = producer.get_output<producerType>(outName);
+        auto* inCh = consumer.get_input<consumerType>(inName);
+        
+        // Type conversion
+        std::function<void(const producerType&)> adapter = [inCh](const producerType& data) {
+            consumerType converted_data = static_cast<consumerType>(data); 
+            
+            inCh->receive(converted_data);
+        };
 
-        // 2. Connect
-        // This creates a closure. The type T is baked into the std::function.
-        outCh->connect(inCh);
+        outCh->connect(adapter, conversions);
         
-        std::cout << "Linked " << outName << " -> " << inName << std::endl;
+        ESP_LOGI(TAG, "Linked %s -> %s", outName.data(), inName.data());
     }
 
     private: 

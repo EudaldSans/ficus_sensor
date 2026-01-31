@@ -1,3 +1,6 @@
+#include <functional>
+#include <memory>
+
 #include "channels.hh"
 
 #ifndef CHANNEL_LINKING_ENDPOINT_HH
@@ -10,18 +13,30 @@ class ChannelEndpoint {
         ~ChannelEndpoint() = default;
 
         template <typename T>
-        void add_input_channel(int id, std::function<void(const T&)> cb) {
-            input_channels_[id] = std::make_shared<InputChannel<T>>(cb);
+        void add_input_channel(std::string id, std::function<void(const T&)> cb) {
+            _input_channels[id] = std::make_shared<InputChannel<T>>(cb);
         }
 
         template <typename T>
-        void add_output_channel(int id) {
-            output_channels_[id] = std::make_shared<OutputChannel<T>>();
+        void add_output_channel(std::string id) {
+            _output_channels[id] = std::make_shared<OutputChannel<T>>();
+        }
+
+        template <typename T>
+        OutputChannel<T>* get_output(const std::string& name) {
+            if (_output_channels.find(name) == _output_channels.end()) return nullptr;
+            return static_cast<OutputChannel<T>*>(_output_channels[name].get());
+        }
+
+        template <typename T>
+        InputChannel<T>* get_input(const std::string& name) {
+            if (_input_channels.find(name) == _input_channels.end()) return nullptr;
+            return static_cast<InputChannel<T>*>(_input_channels[name].get());
         }
 
     private:
-        std::unordered_map<int, std::shared_ptr<ChannelBase>> input_channels_;
-        std::unordered_map<int, std::shared_ptr<ChannelBase>> output_channels_;
+        std::unordered_map<std::string, std::shared_ptr<ChannelBase>> _input_channels;
+        std::unordered_map<std::string, std::shared_ptr<ChannelBase>> _output_channels;
 
         constexpr static char const *TAG = "CHANNEL ENDPOINT";
 };

@@ -3,30 +3,29 @@
 
 #include <vector>
 
+#include "conversions.hh"
+
 #ifndef CHANNEL_LINKING_CHANNELS_H
 #define CHANNEL_LINKING_CHANNELS_H
 
 struct ChannelBase {
-    size_t type_hash; // Store a hash of the type
-    ChannelBase(size_t t) : type_hash(t) {}
+    ChannelBase() = default;
     virtual ~ChannelBase() = default;        
 };
 
 template <typename T>
 class InputChannel : public ChannelBase {
+    using Callback = std::function<void(const T&)>;
+
     public:
-        InputChannel(Callback cb) : ChannelBase(typeid(T).hash_code()), callback(nullptr) {}
+        InputChannel(Callback cb) : ChannelBase(), callback(cb) {}
         ~InputChannel() override = default;
 
-        void set_value(const T& value) {
+        void receive(const T& value) {
             value_ = value;
             if (callback) {
                 callback(value_);
             }
-        }
-
-        void set_callback(Callback cb) {
-            callback = cb;
         }
 
         T get_value() const {
@@ -35,8 +34,7 @@ class InputChannel : public ChannelBase {
 
     private:
         T value_;
-
-        using Callback = std::function<void(const T&)>;
+        
         Callback callback;
 
         constexpr static char const *TAG = "INPUT CHANNEL";
@@ -46,23 +44,30 @@ class InputChannel : public ChannelBase {
 template <typename T>
 class OutputChannel : public ChannelBase {
     public:
-        OutputChannel() : ChannelBase(typeid(T).hash_code()) {}
+        OutputChannel() : ChannelBase() {}
         ~OutputChannel() override = default;
 
-        void connect(InputChannel<T>* listener) {
-            listeners_.push_back(listener);
+        void connect(std::function<void(const T&)> listener, std::vector<std::shared_ptr<IConversion<T>>> conversions) {
+            _listeners.push_back(listener);
+            _conversions = conversions;
         }
 
         void emit(const T& value) {
-            value_ = value;
-            for (const auto& listener : listeners_) {
-                listener->set_value(value_);
+            _value = value;
+
+            for (auto& conversion: _conversions) {
+                _value = conversion->convert(_value);
+            }
+
+            for (const auto& listener : _listeners) {
+                listener(_value);
             }
         }
 
     private:
-        T value_;
-        std::vector<InputChannel<T>*> listeners_;
+        T _value;
+        std::vector<std::function<void(const T&)>> _listeners;
+        std::vector<std::shared_ptr<IConversion<T>>> _conversions;
 
         constexpr static char const *TAG = "OUTPUT CHANNEL";
 };

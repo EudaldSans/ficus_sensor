@@ -9,10 +9,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "esp_log.h"
+
 #include "ds18b20.hh"
 #include "analog_humidity_sensor.hh"
 
 #include "led_strip.h"
+
+#include "router.hh"
+#include "endpoint.hh"
+#include "conversions.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
@@ -108,44 +114,50 @@ extern "C" void app_main(void) {
     configure_led();
     led_strip_refresh(led_strip);
 
+    ChannelEndpoint producer;
+    ChannelEndpoint consumer; 
+
+    std::vector<std::shared_ptr<IConversion<float>>> conversions;
+    conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
+
+    ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
+
+    const std::string temp_producer = "temp_producer";
+    const std::string humidity_producer = "humidity_producer";
+
+    const std::string temp_consumer = "temp_consumer";
+    const std::string humidity_consumer = "humidity_consumer";
+
+    producer.add_output_channel<float>(temp_producer);
+    producer.add_output_channel<float>(humidity_producer);
+
+    consumer.add_input_channel<int>(temp_consumer, 
+        [](const int& value) {ESP_LOGI(TAG, "temp_consumer got %d", value);}
+    );
+    consumer.add_input_channel<int>(humidity_consumer, 
+        [](const int& value) {ESP_LOGI(TAG, "humidity_consumer got %d", value);}
+    );
+
+    Router::link<float, int>(producer, temp_producer, consumer, temp_consumer, conversions);
+    Router::link<float, int>(producer, humidity_producer, consumer, humidity_consumer, conversions);
+
+    auto* temp_out = producer.get_output<float>(temp_producer);
+    auto* humidity_out = producer.get_output<float>(humidity_producer);
+
     uint16_t measurement_delay_ms = 0;
     float temperature, humidity;
     while (1) {
         humidity = humidity_sensor.get_last_measurement();
-        ESP_LOGI(TAG, "Humidity: %f%%", humidity);
+        humidity_out->emit(humidity);
 
         temp_sensor.trigger_measurement(measurement_delay_ms);
         vTaskDelay(measurement_delay_ms / portTICK_PERIOD_MS);
         temperature = temp_sensor.get_last_measurement();
 
-        ESP_LOGI(TAG, "Temperature: %fºC", temperature);
         set_heat_led(temperature);
+        ESP_LOGI(TAG, "Got temperature: %f", temperature);
+        temp_out->emit(temperature);
 
         vTaskDelay(pdMS_TO_TICKS(25));
-
-        if (temperature >= 30) break;
-    }
-
-    uint32_t blink_time_ms = 300;
-
-    blink(blink_time_ms / 2, 120, 120, 120);
-    blink(blink_time_ms / 2, 120, 120, 120);
-    blink(blink_time_ms / 2, 120, 120, 120);
-
-    while (1) {
-        blink(blink_time_ms, 120, 0, 0);
-        blink(blink_time_ms, 120, 0, 0);
-        blink(blink_time_ms, 120, 0, 0);
-        blink(blink_time_ms, 120, 0, 0);
-        blink(blink_time_ms, 120, 0, 0);
-
-        blink(blink_time_ms, 0, 120, 0);
-        blink(blink_time_ms, 0, 120, 0);
-
-        blink(blink_time_ms, 0, 0, 120);
-        blink(blink_time_ms, 0, 0, 120);
-        blink(blink_time_ms, 0, 0, 120);
-
-        blink(blink_time_ms * 2, 0, 0, 0);
     }
 }
