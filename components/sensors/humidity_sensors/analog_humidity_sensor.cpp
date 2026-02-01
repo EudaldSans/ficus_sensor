@@ -3,7 +3,9 @@
 #include "esp_check.h"
 
 
-AnalogHumiditySensor::AnalogHumiditySensor(uint32_t max_voltage_mv, adc_channel_t channel, adc_unit_t unit) : adc(channel, unit, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT) {
+AnalogHumiditySensor::AnalogHumiditySensor(uint32_t max_voltage_mv, adc_channel_t channel, adc_unit_t unit) : 
+        Sensor(humidity_output_name), 
+        adc(channel, unit, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT) {
     this->max_voltage_mv = max_voltage_mv;
 }
 

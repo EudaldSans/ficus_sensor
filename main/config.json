@@ -1,0 +1,11 @@
+{
+  "interfaces": {
+    "humidity_sensor": { "outputs": { "humidity": "float" } },
+    "temperature_sensor": { "outputs": { "temperature": "float" } },
+    "console": { "inputs": { "humidity": "int", "temperature": "int"} }
+  },
+  "links": [
+    { "from": "humidity_sensor.humidity", "to": "console.humidity" },
+    { "from": "temperature_sensor.temperature", "to": "console.temperature" }
+  ]
+}
