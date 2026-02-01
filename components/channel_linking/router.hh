@@ -14,19 +14,25 @@ class Router {
     template <typename producerType, typename consumerType>
     static void link(ChannelEndpoint& producer, const std::string& outName,
                      ChannelEndpoint& consumer, const std::string& inName,
-                     std::vector<std::shared_ptr<IConversion<producerType>>> conversions) {
+                     std::vector<std::shared_ptr<IConversion<producerType>>> conversion_pipeline) {
         
         auto* outCh = producer.get_output<producerType>(outName);
         auto* inCh = consumer.get_input<consumerType>(inName);
         
-        // Type conversion
-        std::function<void(const producerType&)> adapter = [inCh](const producerType& data) {
-            consumerType converted_data = static_cast<consumerType>(data); 
+        // Signal conversions and type conversion
+        std::function<void(const producerType&)> adapter = [inCh, conversion_pipeline](const producerType& data) {
+            producerType processed_value = data;
+
+            for (const auto& stage : conversion_pipeline) {
+                processed_value = stage->convert(processed_value);
+            }
+
+            consumerType final_data = static_cast<consumerType>(processed_value);
             
-            inCh->receive(converted_data);
+            inCh->receive(final_data);
         };
 
-        outCh->connect(adapter, conversions);
+        outCh->connect(adapter);
         
         ESP_LOGI(TAG, "Linked %s -> %s", outName.data(), inName.data());
     }

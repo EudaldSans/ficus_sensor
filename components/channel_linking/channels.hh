@@ -36,8 +36,6 @@ class InputChannel : public ChannelBase {
         T value_;
         
         Callback callback;
-
-        constexpr static char const *TAG = "INPUT CHANNEL";
 };
 
 
@@ -47,17 +45,12 @@ class OutputChannel : public ChannelBase {
         OutputChannel() : ChannelBase() {}
         ~OutputChannel() override = default;
 
-        void connect(std::function<void(const T&)> listener, std::vector<std::shared_ptr<IConversion<T>>> conversions) {
+        void connect(std::function<void(const T&)> listener) {
             _listeners.push_back(listener);
-            _conversions = conversions;
         }
 
         void emit(const T& value) {
             _value = value;
-
-            for (auto& conversion: _conversions) {
-                _value = conversion->convert(_value);
-            }
 
             for (const auto& listener : _listeners) {
                 listener(_value);
@@ -67,9 +60,6 @@ class OutputChannel : public ChannelBase {
     private:
         T _value;
         std::vector<std::function<void(const T&)>> _listeners;
-        std::vector<std::shared_ptr<IConversion<T>>> _conversions;
-
-        constexpr static char const *TAG = "OUTPUT CHANNEL";
 };
 
 
