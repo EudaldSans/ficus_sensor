@@ -9,7 +9,7 @@
 
 class SensorEndpoint : public ChannelEndpoint {
     public:
-        SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor> sensor);
+        SensorEndpoint(std::shared_ptr<ISensor> sensor, uint16_t measurement_period);
         virtual ~SensorEndpoint() = default; 
 
         void sensor_tic();
@@ -17,6 +17,8 @@ class SensorEndpoint : public ChannelEndpoint {
     private:
         OutputChannel<float>* _measurement_output;
         std::shared_ptr<ISensor> _sensor;
+
+        uint16_t _measurement_period_ms;
 };
 
 #endif

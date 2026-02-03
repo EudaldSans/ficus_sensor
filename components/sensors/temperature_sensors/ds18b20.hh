@@ -24,6 +24,8 @@ class DS18B20 : public ISensor {
         void sensor_tic();
 
         esp_err_t set_resolution(ds18b20_resolution_t resolution);
+
+        const std::string sensor_name = "DS18B20";
     
     private: 
         static constexpr  uint8_t max_rx_bytes = 10;
@@ -34,8 +36,6 @@ class DS18B20 : public ISensor {
 
         OnewireBus bus;
         ds18b20_resolution_t resolution;
-
-        const std::string sensor_name = "DS18B20";
 
         constexpr static char const *TAG = "DS18B20";
 };

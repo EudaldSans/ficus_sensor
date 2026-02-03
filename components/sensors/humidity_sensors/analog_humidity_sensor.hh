@@ -14,12 +14,11 @@ class AnalogHumiditySensor : public ISensor {
         esp_err_t trigger_measurement(uint16_t &measurement_delay_ms) override;
         float get_last_measurement() override;
         const char* get_name() override;
-    
+
+        const std::string sensor_name = "analog_humidity_sensor";
     private: 
         ADC adc;
         uint32_t max_voltage_mv;
-
-        const std::string sensor_name = "analog_humidity_sensor";
 
         constexpr static char const *TAG = "ANALOG NUMIDITY";
 };

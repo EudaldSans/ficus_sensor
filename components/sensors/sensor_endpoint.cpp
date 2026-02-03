@@ -3,8 +3,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-SensorEndpoint::SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor> sensor) : _sensor(sensor) {
-    _measurement_output = add_output_channel<float>(output_name);
+SensorEndpoint::SensorEndpoint(std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) {
+    _measurement_period_ms = measurement_period_ms;
+    _sensor = sensor;
+    _measurement_output = add_output_channel<float>(_sensor->sensor_name);
 }
 
 void SensorEndpoint::sensor_tic() {
@@ -16,4 +18,9 @@ void SensorEndpoint::sensor_tic() {
     temperature = _sensor->get_last_measurement();
 
     _measurement_output->emit(temperature);
+
+    measurement_delay_ms = _measurement_period_ms - measurement_delay_ms;
+    if (measurement_delay_ms > 0) {
+        vTaskDelay(measurement_delay_ms / portTICK_PERIOD_MS);
+    }
 }
