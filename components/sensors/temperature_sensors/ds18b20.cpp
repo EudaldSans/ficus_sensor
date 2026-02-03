@@ -14,7 +14,7 @@ typedef struct {
     uint8_t crc_value;     /*!< crc value of scratchpad data */
 } __attribute__((packed)) ds18b20_scratchpad_t;
 
-DS18B20::DS18B20(int bus_gpio_num) : Sensor(temp_output_name), bus(bus_gpio_num, max_rx_bytes) {
+DS18B20::DS18B20(int bus_gpio_num) : ISensor(), bus(bus_gpio_num, max_rx_bytes) {
     this->resolution = resolution_12B;
 }
 

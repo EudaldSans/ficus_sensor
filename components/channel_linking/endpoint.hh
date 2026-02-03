@@ -13,13 +13,13 @@ class ChannelEndpoint {
         ~ChannelEndpoint() = default;
 
         template <typename T>
-        InputChannel<T>* add_input_channel(std::string id, std::function<void(const T&)> cb) {
+        InputChannel<T>* add_input_channel(const std::string& id, std::function<void(const T&)> cb) {
             _input_channels[id] = std::make_shared<InputChannel<T>>(cb);
             return get_input<T>(id);
         }
 
         template <typename T>
-        OutputChannel<T>* add_output_channel(std::string id) {
+        OutputChannel<T>* add_output_channel(const std::string& id) {
             _output_channels[id] = std::make_shared<OutputChannel<T>>();
             return get_output<T>(id);
         }

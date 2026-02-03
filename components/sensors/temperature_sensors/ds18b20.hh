@@ -4,7 +4,7 @@
 #ifndef DS18B20_H
 #define DS18B20_H
 
-class DS18B20 : public Sensor {
+class DS18B20 : public ISensor {
     public: 
         typedef enum {
             resolution_9B, 
@@ -35,7 +35,7 @@ class DS18B20 : public Sensor {
         OnewireBus bus;
         ds18b20_resolution_t resolution;
 
-        const std::string temp_output_name = "DS18B20_temperature_output";
+        const std::string sensor_name = "DS18B20";
 
         constexpr static char const *TAG = "DS18B20";
 };

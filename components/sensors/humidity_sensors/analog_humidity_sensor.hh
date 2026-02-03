@@ -4,7 +4,7 @@
 #ifndef ANALOG_HUMIDITY_SENSOR_H
 #define ANALOG_HUMIDITY_SENSOR_H
 
-class AnalogHumiditySensor : public Sensor {
+class AnalogHumiditySensor : public ISensor {
     public: 
       
         AnalogHumiditySensor(uint32_t max_voltage_mv, adc_channel_t chanel, adc_unit_t unit);
@@ -19,7 +19,7 @@ class AnalogHumiditySensor : public Sensor {
         ADC adc;
         uint32_t max_voltage_mv;
 
-        const std::string humidity_output_name = "analog_humidity_output";
+        const std::string sensor_name = "analog_humidity_sensor";
 
         constexpr static char const *TAG = "ANALOG NUMIDITY";
 };
