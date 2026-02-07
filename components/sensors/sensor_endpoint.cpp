@@ -3,9 +3,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-SensorEndpoint::SensorEndpoint(std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) {
+SensorEndpoint::SensorEndpoint(std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) : _sensor(sensor) {
     _measurement_period_ms = measurement_period_ms;
-    _sensor = sensor;
     _measurement_output = add_output_channel<float>(_sensor->sensor_name);
 }
 
