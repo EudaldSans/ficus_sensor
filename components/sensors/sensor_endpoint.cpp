@@ -1,14 +1,14 @@
-#include "sensor_endpoint.hh"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-SensorEndpoint::SensorEndpoint(std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) : _sensor(sensor) {
+#include "sensor_endpoint.hh"
+
+SensorEndpoint::SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) : _output_name(output_name), _sensor(sensor) {
     _measurement_period_ms = measurement_period_ms;
-    _measurement_output = add_output_channel<float>(_sensor->sensor_name);
+    _measurement_output = add_output_channel<float>(_output_name);
 }
 
-void SensorEndpoint::trigger_measurement() {
+void SensorEndpoint::_trigger_measurement() {
     uint16_t measurement_delay_ms = 0;
     uint32_t now = pdTICKS_TO_MS(xTaskGetTickCount());
     
@@ -27,13 +27,13 @@ void SensorEndpoint::sensor_tic() {
 
     _measurement_output->emit(value);
 
-    trigger_measurement();
+    _trigger_measurement();
 }
 
 void SensorEndpoint::setup() {
     _sensor->init();
 
-    trigger_measurement();
+    _trigger_measurement();
 }
 
 void SensorEndpoint::update() {

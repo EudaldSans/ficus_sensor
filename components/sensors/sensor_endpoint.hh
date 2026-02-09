@@ -11,7 +11,7 @@
 
 class SensorEndpoint : public ChannelEndpoint, public ITask {
     public:
-        SensorEndpoint(std::shared_ptr<ISensor> sensor, uint16_t measurement_period);
+        SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor> sensor, uint16_t measurement_period);
         ~SensorEndpoint() = default; 
 
         void sensor_tic();
@@ -28,7 +28,9 @@ class SensorEndpoint : public ChannelEndpoint, public ITask {
         uint16_t _measurement_period_ms;
         uint32_t _next_measurement_time_ms;
 
-        void trigger_measurement();
+        const std::string _output_name;
+
+        void _trigger_measurement();
 };
 
 #endif

@@ -104,6 +104,12 @@ void blink(uint32_t time_ms, uint32_t red, uint32_t green, uint32_t blue) {
 extern "C" void app_main(void) {
     const uint32_t humidity_sensor_max_voltage_mv = 3300;
 
+    const std::string temp_producer = "temp_producer";
+    const std::string humidity_producer = "humidity_producer";
+
+    const std::string temp_consumer = "temp_consumer";
+    const std::string humidity_consumer = "humidity_consumer";
+
     DS18B20 temp_sensor = DS18B20(ONEWIRE_BUS_GPIO);
     temp_sensor.init();
     temp_sensor.set_resolution(DS18B20::resolution_12B);
@@ -111,53 +117,35 @@ extern "C" void app_main(void) {
     AnalogHumiditySensor humidity_sensor = AnalogHumiditySensor(humidity_sensor_max_voltage_mv, ADC_CHANNEL_2, ADC_UNIT_1);
     humidity_sensor.init();
 
+    temp_endpoint = SensorEndpoint(temp_producer, std::make_shared<DS18B20>(temp_sensor), 30000);
+    humidity_endpoint = SensorEndpoint(humidity_producer, std::make_shared<AnalogHumiditySensor>(humidity_sensor), 30000);
+
+    task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
+    task_manager.add_task(std::make_shared<SensorEndpoint>(temp_endpoint));
+    task_manager.add_task(std::make_shared<SensorEndpoint>(humidity_endpoint));
+
     configure_led();
     led_strip_refresh(led_strip);
-
-    ChannelEndpoint producer;
-    ChannelEndpoint consumer; 
 
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
 
     ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
-    const std::string temp_producer = "temp_producer";
-    const std::string humidity_producer = "humidity_producer";
-
-    const std::string temp_consumer = "temp_consumer";
-    const std::string humidity_consumer = "humidity_consumer";
-
-    producer.add_output_channel<float>(temp_producer);
-    producer.add_output_channel<float>(humidity_producer);
-
     consumer.add_input_channel<int>(temp_consumer, 
-        [](const int& value) {ESP_LOGI(TAG, "temp_consumer got %d", value);}
+        [](const int& temperature) {
+            ESP_LOGI(TAG, "temp_consumer got %d", temperature);
+            set_heat_led(temperature);
+        }
     );
     consumer.add_input_channel<int>(humidity_consumer, 
-        [](const int& value) {ESP_LOGI(TAG, "humidity_consumer got %d", value);}
+        [](const int& humidity) {ESP_LOGI(TAG, "humidity_consumer got %d", humidity);}
+            ESP_LOGI(TAG, "humidity_consumer got %d", humidity);
+        }
     );
 
-    Router::link<float, int>(producer, temp_producer, consumer, temp_consumer, conversions);
-    Router::link<float, int>(producer, humidity_producer, consumer, humidity_consumer, conversions);
+    Router::link<float, int>(temp_endpoint, temp_producer, consumer, temp_consumer, conversions);
+    Router::link<float, int>(humidity_endpoint, humidity_producer, consumer, humidity_consumer, conversions);
 
-    auto* temp_out = producer.get_output<float>(temp_producer);
-    auto* humidity_out = producer.get_output<float>(humidity_producer);
-
-    uint16_t measurement_delay_ms = 0;
-    float temperature, humidity;
-    while (1) {
-        humidity = humidity_sensor.get_last_measurement();
-        humidity_out->emit(humidity);
-
-        temp_sensor.trigger_measurement(measurement_delay_ms);
-        vTaskDelay(measurement_delay_ms / portTICK_PERIOD_MS);
-        temperature = temp_sensor.get_last_measurement();
-
-        set_heat_led(temperature);
-        ESP_LOGI(TAG, "Got temperature: %f", temperature);
-        temp_out->emit(temperature);
-
-        vTaskDelay(pdMS_TO_TICKS(25));
-    }
+    task_manager.start();
 }
