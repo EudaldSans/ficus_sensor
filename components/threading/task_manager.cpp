@@ -1,6 +1,6 @@
 #include "task_manager.hh"
 
-TaskManager::TaskManager(std::string name, uint32_t stack_size): _name(name), _stack_size(stack_size) {
+TaskManager::TaskManager(std::string name, uint32_t stack_size, BaseType_t core_id): _name(name), _stack_size(stack_size), _core_id(core_id) {
 
 }
 
@@ -28,7 +28,7 @@ void TaskManager::start() {
     if (_running) return;
     _running = true;
 
-    xTaskCreate(run, _name.c_str(), _stack_size, this, 10, &_handle);
+    xTaskCreatePinnedToCore(run, _name.c_str(), _stack_size, this, 10, &_handle, _core_id);
 }
 
 void TaskManager::add_task(std::shared_ptr<ITask> task) {
