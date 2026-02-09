@@ -2,6 +2,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <atomic>
 
 #include <inttypes.h>
 
@@ -27,7 +28,7 @@ class TaskManager {
         static void run(void* pvParameters);
         std::vector<std::shared_ptr<ITask>> _tasks;
 
-        bool _running = false;
+        std::atomic_bool _running = false;
 
         const std::string _name;
         const uint32_t _stack_size;
