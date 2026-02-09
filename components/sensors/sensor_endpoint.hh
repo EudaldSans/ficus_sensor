@@ -19,18 +19,19 @@ class SensorEndpoint : public ChannelEndpoint, public ITask {
         void setup() override;
         void update() override;
 
-        uint32_t get_run_period_ms() override {return _next_measurement_time_ms;}
+        uint32_t get_run_period_ms() override {return _measurement_period_ms;}
 
     private:
         OutputChannel<float>* _measurement_output;
+        uint64_t _next_measurement_time_ms;
+
         std::shared_ptr<ISensor> _sensor;
-
-        uint16_t _measurement_period_ms;
-        uint32_t _next_measurement_time_ms;
-
         const std::string _output_name;
+        const uint16_t _measurement_period_ms;
 
         void _trigger_measurement();
+
+        constexpr static char const *TAG = "SensorEndpoint";
 };
 
 #endif

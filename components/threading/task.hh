@@ -10,7 +10,7 @@ class ITask {
         virtual void update() = 0;
         virtual uint32_t get_run_period_ms() = 0; // Return interval in milliseconds
         
-        uint32_t last_run_time_ms = 0;
+        uint64_t last_run_time_ms = 0;
 };
 
 #endif

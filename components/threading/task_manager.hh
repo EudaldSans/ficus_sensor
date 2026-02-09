@@ -35,6 +35,8 @@ class TaskManager {
         const BaseType_t _core_id;
 
         TaskHandle_t _handle = nullptr;
+
+        constexpr static char const *TAG = "TaskManager";
 };
 
 #endif

@@ -113,15 +113,11 @@ extern "C" void app_main(void) {
     const std::string temp_consumer = "temp_consumer";
     const std::string humidity_consumer = "humidity_consumer";
 
-    DS18B20 temp_sensor = DS18B20(ONEWIRE_BUS_GPIO);
-    temp_sensor.init();
-    temp_sensor.set_resolution(DS18B20::resolution_12B);
-
+    DS18B20 temp_sensor = DS18B20(ONEWIRE_BUS_GPIO, DS18B20::resolution_12B);
     AnalogHumiditySensor humidity_sensor = AnalogHumiditySensor(humidity_sensor_max_voltage_mv, ADC_CHANNEL_2, ADC_UNIT_1);
-    humidity_sensor.init();
 
     SensorEndpoint temp_endpoint = SensorEndpoint(temp_producer, std::make_shared<DS18B20>(temp_sensor), 30000);
-    SensorEndpoint humidity_endpoint = SensorEndpoint(humidity_producer, std::make_shared<AnalogHumiditySensor>(humidity_sensor), 30000);
+    SensorEndpoint humidity_endpoint = SensorEndpoint(humidity_producer, std::make_shared<AnalogHumiditySensor>(humidity_sensor), 20000);
 
     TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
     task_manager.add_task(std::make_shared<SensorEndpoint>(temp_endpoint));
@@ -131,7 +127,7 @@ extern "C" void app_main(void) {
     led_strip_refresh(led_strip);
 
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
-    conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
+    // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
 
     ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
@@ -144,7 +140,7 @@ extern "C" void app_main(void) {
         }
     );
     consumer.add_input_channel<int>(humidity_consumer, 
-        [](const int& humidity) {ESP_LOGI(TAG, "humidity_consumer got %d", humidity);
+        [](const int& humidity) {
             ESP_LOGI(TAG, "humidity_consumer got %d", humidity);
         }
     );
