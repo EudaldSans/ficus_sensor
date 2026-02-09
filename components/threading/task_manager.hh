@@ -16,7 +16,7 @@
 
 class TaskManager {
     public: 
-        TaskManager(std::string name, uint32_t stack_size);
+        TaskManager(std::string name, uint32_t stack_size, BaseType_t _core_id = tskNO_AFFINITY);
         ~TaskManager();
 
         void start();
@@ -31,6 +31,7 @@ class TaskManager {
 
         const std::string _name;
         const uint32_t _stack_size;
+        const BaseType_t _core_id;
 
         TaskHandle_t _handle = nullptr;
 };
