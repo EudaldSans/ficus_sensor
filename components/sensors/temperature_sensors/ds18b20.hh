@@ -13,7 +13,7 @@ class DS18B20 : public ISensor {
             resolution_12B, 
         } ds18b20_resolution_t;
         
-        DS18B20(int bus_gpio_num);
+        DS18B20(int bus_gpio_num, ds18b20_resolution_t resolution);
         ~DS18B20();
 
         esp_err_t init() override;

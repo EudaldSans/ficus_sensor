@@ -14,8 +14,8 @@ typedef struct {
     uint8_t crc_value;     /*!< crc value of scratchpad data */
 } __attribute__((packed)) ds18b20_scratchpad_t;
 
-DS18B20::DS18B20(int bus_gpio_num) : ISensor(), bus(bus_gpio_num, max_rx_bytes) {
-    this->resolution = resolution_12B;
+DS18B20::DS18B20(int bus_gpio_num, ds18b20_resolution_t resolution) : ISensor(), bus(bus_gpio_num, max_rx_bytes) {
+    this->resolution = resolution;
 }
 
 DS18B20::~DS18B20() {}
@@ -26,6 +26,8 @@ esp_err_t DS18B20::init() {
 
     ESP_RETURN_ON_ERROR(bus.init(), TAG, "Failed to initialize bus");
     ESP_RETURN_ON_ERROR(bus.find_device(ds18b20_address, ds18b20_mask), TAG, "Failed to find device");
+
+    set_resolution(DS18B20::resolution_12B);
 
     return ESP_OK;
 }
