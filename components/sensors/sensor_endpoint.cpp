@@ -3,7 +3,7 @@
 
 #include "sensor_endpoint.hh"
 
-SensorEndpoint::SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) : _output_name(output_name), _sensor(sensor) {
+SensorEndpoint::SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor> sensor, uint16_t measurement_period_ms) : _sensor(sensor), _output_name(output_name) {
     _measurement_period_ms = measurement_period_ms;
     _measurement_output = add_output_channel<float>(_output_name);
 }

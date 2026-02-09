@@ -13,6 +13,9 @@
 
 #include "ds18b20.hh"
 #include "analog_humidity_sensor.hh"
+#include "sensor_endpoint.hh"
+
+#include "task_manager.hh"
 
 #include "led_strip.h"
 
@@ -117,10 +120,10 @@ extern "C" void app_main(void) {
     AnalogHumiditySensor humidity_sensor = AnalogHumiditySensor(humidity_sensor_max_voltage_mv, ADC_CHANNEL_2, ADC_UNIT_1);
     humidity_sensor.init();
 
-    temp_endpoint = SensorEndpoint(temp_producer, std::make_shared<DS18B20>(temp_sensor), 30000);
-    humidity_endpoint = SensorEndpoint(humidity_producer, std::make_shared<AnalogHumiditySensor>(humidity_sensor), 30000);
+    SensorEndpoint temp_endpoint = SensorEndpoint(temp_producer, std::make_shared<DS18B20>(temp_sensor), 30000);
+    SensorEndpoint humidity_endpoint = SensorEndpoint(humidity_producer, std::make_shared<AnalogHumiditySensor>(humidity_sensor), 30000);
 
-    task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
+    TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
     task_manager.add_task(std::make_shared<SensorEndpoint>(temp_endpoint));
     task_manager.add_task(std::make_shared<SensorEndpoint>(humidity_endpoint));
 
@@ -132,6 +135,8 @@ extern "C" void app_main(void) {
 
     ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
+    ChannelEndpoint consumer = ChannelEndpoint();
+
     consumer.add_input_channel<int>(temp_consumer, 
         [](const int& temperature) {
             ESP_LOGI(TAG, "temp_consumer got %d", temperature);
@@ -139,7 +144,7 @@ extern "C" void app_main(void) {
         }
     );
     consumer.add_input_channel<int>(humidity_consumer, 
-        [](const int& humidity) {ESP_LOGI(TAG, "humidity_consumer got %d", humidity);}
+        [](const int& humidity) {ESP_LOGI(TAG, "humidity_consumer got %d", humidity);
             ESP_LOGI(TAG, "humidity_consumer got %d", humidity);
         }
     );
@@ -148,4 +153,8 @@ extern "C" void app_main(void) {
     Router::link<float, int>(humidity_endpoint, humidity_producer, consumer, humidity_consumer, conversions);
 
     task_manager.start();
+
+    while (1) {
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+    }
 }
