@@ -18,7 +18,7 @@ OnewireBus::~OnewireBus() {
     if (bus != nullptr) onewire_bus_del(bus);
 }
 
-esp_err_t OnewireBus::init() {
+IN_error_t OnewireBus::init() {
     onewire_bus_config_t bus_config = {};
     bus_config.bus_gpio_num = bus_gpio_num;
     bus_config.flags.en_pull_up = true;
@@ -30,7 +30,7 @@ esp_err_t OnewireBus::init() {
     return ESP_OK;
 }
 
-esp_err_t OnewireBus::find_device(onewire_device_address_t address, onewire_device_address_t address_mask) {
+IN_error_t OnewireBus::find_device(onewire_device_address_t address, onewire_device_address_t address_mask) {
     int device_num = 0;
     onewire_device_iter_handle_t iter = NULL;
     onewire_device_t next_onewire_device;
@@ -57,10 +57,10 @@ esp_err_t OnewireBus::find_device(onewire_device_address_t address, onewire_devi
     ESP_RETURN_ON_ERROR(onewire_del_device_iter(iter), TAG, "Unable to delete device iterator");
     ESP_LOGI(TAG, "Searching done, %d Onewire device(s) found with address 0x%x", device_num, address);
 
-    return ESP_OK;
+    return IN_OK;
 }
 
-esp_err_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
+IN_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
     std::vector<uint8_t> tx_buffer;
     
     tx_buffer.push_back(ONEWIRE_CMD_SKIP_ROM);
@@ -68,7 +68,7 @@ esp_err_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
     return write_bytes(tx_buffer);
 }
 
-esp_err_t OnewireBus::write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data) {
+IN_error_t OnewireBus::write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data) {
     std::vector<uint8_t> tx_buffer;
     
     tx_buffer.push_back(ONEWIRE_CMD_MATCH_ROM);
@@ -81,15 +81,15 @@ esp_err_t OnewireBus::write_to(onewire_device_address_t address, std::vector<uin
     return write_bytes(tx_buffer);
 }
 
-esp_err_t OnewireBus::reset() {
+IN_error_t OnewireBus::reset() {
     return onewire_bus_reset(bus);
 }
 
-esp_err_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
+IN_error_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
     return onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size());
 }
 
-esp_err_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
+IN_error_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
     return onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size());
 }
 

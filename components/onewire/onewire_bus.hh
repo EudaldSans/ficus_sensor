@@ -5,24 +5,26 @@
 
 #include <vector>
 
+#include "hal/onewire_hal.hh"
+
 #ifndef ONEWIRE_BUS_H
 #define ONEWIRE_BUS_H
 
-class OnewireBus {
+class OnewireBus : public IOnewireBus {
     public:
         OnewireBus(int bus_gpio_num, uint32_t max_rx_bytes);
         ~OnewireBus();
 
-        esp_err_t init();
+        IN_error_t init() override;
 
-        esp_err_t find_device(onewire_device_address_t address, uint64_t address_mask);
+        IN_error_t find_device(onewire_device_address_t address, uint64_t address_mask) override;
 
-        esp_err_t reset();
-        esp_err_t read_bytes(std::vector<uint8_t> &rx_buf);
-        esp_err_t write_bytes(std::vector<uint8_t> tx_data);
+        IN_error_t reset() override;
+        IN_error_t read_bytes(std::vector<uint8_t> &rx_buf) override;
+        IN_error_t write_bytes(std::vector<uint8_t> tx_data) override;
 
-        esp_err_t write_to_all(std::vector<uint8_t> tx_data);
-        esp_err_t write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data);
+        IN_error_t write_to_all(std::vector<uint8_t> tx_data) override;
+        IN_error_t write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data) override;
         
     protected:
     private:

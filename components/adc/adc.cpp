@@ -16,7 +16,7 @@ ADC::ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bi
     this->bitwidth = bitwidth;
 }
 
-esp_err_t ADC::init() {
+IN_error_t ADC::init() {
     ESP_LOGI(TAG, "Setting up ADC channel %d", channel);
 
     adc_oneshot_unit_init_cfg_t init_config = {};
@@ -37,7 +37,7 @@ esp_err_t ADC::init() {
     
     ESP_RETURN_ON_ERROR(adc_cali_create_scheme_curve_fitting(&cali_config, &adc_cali_handle), TAG, "Unable to Create calibration scheme", channel); 
 
-    return ESP_OK;
+    return IN_OK;
 }
 
 ADC::~ADC() {
@@ -45,7 +45,7 @@ ADC::~ADC() {
     adc_cali_delete_scheme_curve_fitting(adc_cali_handle);
 }
 
-esp_err_t ADC::measure(int &voltage_out) {
+IN_error_t ADC::measure(int &voltage_out) {
     int adc_raw[2][10];
     int voltage[2][10];
 
@@ -55,6 +55,6 @@ esp_err_t ADC::measure(int &voltage_out) {
     ESP_LOGD(TAG, "ADC channel %d measurement: %dmV", channel, voltage[0][0]);
     voltage_out = voltage[0][0];
 
-    return ESP_OK;
+    return IN_OK;
 }
 
