@@ -2,7 +2,7 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 
-#include "hal/adc_hal.hh"
+#include "adc_hal.hh"
 
 #ifndef ADC_H
 #define ADC_H
@@ -12,8 +12,8 @@ class ADC : IADC {
         ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bitwidth_t bitwidth);        
         ~ADC();
         
-        ADC_error_t measure(int &voltage) override;
-        ADC_error_t init() override;
+        in_error_t measure(int &voltage) override;
+        in_error_t init() override;
 
     protected: 
     private: 

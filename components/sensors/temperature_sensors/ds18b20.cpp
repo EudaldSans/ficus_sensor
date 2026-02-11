@@ -21,8 +21,8 @@ DS18B20::DS18B20(int bus_gpio_num, ds18b20_resolution_t resolution) : ISensor(),
 DS18B20::~DS18B20() {}
 
 esp_err_t DS18B20::init() {
-    const onewire_device_address_t ds18b20_address = 0x28;
-    const onewire_device_address_t ds18b20_mask = 0xFF;
+    const uint64_t ds18b20_address = 0x28;
+    const uint64_t ds18b20_mask = 0xFF;
 
     ESP_RETURN_ON_ERROR(bus.init(), TAG, "Failed to initialize bus");
     ESP_RETURN_ON_ERROR(bus.find_device(ds18b20_address, ds18b20_mask), TAG, "Failed to find device");

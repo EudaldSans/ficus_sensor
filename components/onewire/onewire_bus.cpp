@@ -18,7 +18,7 @@ OnewireBus::~OnewireBus() {
     if (bus != nullptr) onewire_bus_del(bus);
 }
 
-IN_error_t OnewireBus::init() {
+in_error_t OnewireBus::init() {
     onewire_bus_config_t bus_config = {};
     bus_config.bus_gpio_num = bus_gpio_num;
     bus_config.flags.en_pull_up = true;
@@ -26,17 +26,25 @@ IN_error_t OnewireBus::init() {
     onewire_bus_rmt_config_t rmt_config = {};
     rmt_config.max_rx_bytes = max_rx_bytes;
 
-    ESP_RETURN_ON_ERROR(onewire_new_bus_rmt(&bus_config, &rmt_config, &bus), TAG, "Unable to create new onewire unit");
-    return ESP_OK;
+    if (onewire_new_bus_rmt(&bus_config, &rmt_config, &bus) != ESP_OK) {
+        ESP_LOGE(TAG, "Unable to create new onewire unit"); 
+        return IN_ERR_SDK_FAIL;
+    }
+
+    return IN_OK;
 }
 
-IN_error_t OnewireBus::find_device(onewire_device_address_t address, onewire_device_address_t address_mask) {
+in_error_t OnewireBus::find_device(uint64_t address, uint64_t address_mask) {
     int device_num = 0;
     onewire_device_iter_handle_t iter = NULL;
     onewire_device_t next_onewire_device;
     esp_err_t search_result = ESP_OK;
 
-    ESP_RETURN_ON_ERROR(onewire_new_device_iter(bus, &iter), TAG, "Unable to create device iterator");
+    if (onewire_new_device_iter(bus, &iter) != ESP_OK) {
+        ESP_LOGE(TAG, "Unable to create device iterator"); 
+        return IN_ERR_SDK_FAIL;
+    }
+
     ESP_LOGI(TAG, "Device iterator created, start searching...");
 
     do {
@@ -54,13 +62,17 @@ IN_error_t OnewireBus::find_device(onewire_device_address_t address, onewire_dev
         }
     } while (search_result != ESP_ERR_NOT_FOUND);
 
-    ESP_RETURN_ON_ERROR(onewire_del_device_iter(iter), TAG, "Unable to delete device iterator");
+    if (onewire_del_device_iter(iter) != ESP_OK) {
+        ESP_LOGE(TAG, "Unable to delete device iterator"); 
+        return IN_ERR_SDK_FAIL;
+    }
+
     ESP_LOGI(TAG, "Searching done, %d Onewire device(s) found with address 0x%x", device_num, address);
 
     return IN_OK;
 }
 
-IN_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
+in_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
     std::vector<uint8_t> tx_buffer;
     
     tx_buffer.push_back(ONEWIRE_CMD_SKIP_ROM);
@@ -68,7 +80,7 @@ IN_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
     return write_bytes(tx_buffer);
 }
 
-IN_error_t OnewireBus::write_to(onewire_device_address_t address, std::vector<uint8_t> tx_data) {
+in_error_t OnewireBus::write_to(uint64_t address, std::vector<uint8_t> tx_data) {
     std::vector<uint8_t> tx_buffer;
     
     tx_buffer.push_back(ONEWIRE_CMD_MATCH_ROM);
@@ -81,15 +93,15 @@ IN_error_t OnewireBus::write_to(onewire_device_address_t address, std::vector<ui
     return write_bytes(tx_buffer);
 }
 
-IN_error_t OnewireBus::reset() {
-    return onewire_bus_reset(bus);
+in_error_t OnewireBus::reset() {
+    return (onewire_bus_reset(bus) == ESP_OK) ? IN_OK : IN_ERR_SDK_FAIL;
 }
 
-IN_error_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
-    return onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size());
+in_error_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
+    return (onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size()) == ESP_OK) ? IN_OK : IN_ERR_SDK_FAIL;
 }
 
-IN_error_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
-    return onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size());
+in_error_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
+    return (onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size()) == ESP_OK) ? IN_OK : IN_ERR_SDK_FAIL;
 }
 

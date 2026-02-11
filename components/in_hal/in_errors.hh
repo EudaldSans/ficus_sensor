@@ -1,7 +1,13 @@
 
-enum IN_error_t {
+
+#ifndef IN_ERRORS_H
+#define IN_ERRORS_H
+
+enum in_error_t {
     IN_OK = 0,
     IN_ERR_FAIL = -1,
+
+    IN_ERR_SDK_FAIL = 0x99,
 
     IN_ERR_NO_MEM = 0x100,
     IN_ERR_INVALID_ARG = 0x101,
@@ -24,3 +30,5 @@ enum IN_error_t {
 
     IN_ERR_WIFI_BASE = 0x3000
 };
+
+#endif
