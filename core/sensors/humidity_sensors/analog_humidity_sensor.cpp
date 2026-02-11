@@ -1,7 +1,5 @@
 #include "analog_humidity_sensor.hh"
 #include "esp_log.h"
-#include "esp_check.h"
-
 
 AnalogHumiditySensor::AnalogHumiditySensor(std::shared_ptr<IADC> adc, uint32_t _max_voltage_mv) : 
         ISensor(), _adc(adc) {
@@ -11,14 +9,14 @@ AnalogHumiditySensor::AnalogHumiditySensor(std::shared_ptr<IADC> adc, uint32_t _
 
 AnalogHumiditySensor::~AnalogHumiditySensor() {}
 
-esp_err_t AnalogHumiditySensor::init() {
+in_error_t AnalogHumiditySensor::init() {
     return _adc->init();
 }
 
-esp_err_t AnalogHumiditySensor::trigger_measurement(uint16_t &measurement_delay_ms) {
+in_error_t AnalogHumiditySensor::trigger_measurement(uint16_t &measurement_delay_ms) {
     measurement_delay_ms = 0;
 
-    return ESP_OK;
+    return IN_OK;
 }
 
 float AnalogHumiditySensor::get_last_measurement() {

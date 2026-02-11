@@ -18,14 +18,14 @@ class DS18B20 : public ISensor {
         DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution);
         ~DS18B20();
 
-        esp_err_t init() override;
-        esp_err_t trigger_measurement(uint16_t &measurement_delay_ms) override;
+        in_error_t init() override;
+        in_error_t trigger_measurement(uint16_t &measurement_delay_ms) override;
         float get_last_measurement() override;
         const char* get_name() override;
 
         void sensor_tic();
 
-        esp_err_t set_resolution(ds18b20_resolution_t resolution);
+        in_error_t set_resolution(ds18b20_resolution_t resolution);
 
         const std::string sensor_name = "DS18B20";
     

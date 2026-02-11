@@ -31,4 +31,34 @@ enum in_error_t {
     IN_ERR_WIFI_BASE = 0x3000
 };
 
+#define IN_ERR_RETURN_ON_TRUE(a, err_code, log_action) do {     \
+        if (unlikely(a)) {                                  \
+            log_action;                                     \
+            return err_code;                                \
+        }                                                   \
+    } while(0)
+
+#define IN_ERR_RETURN_ON_FALSE(a, err_code, log_action) do {    \
+        if (unlikely(!(a))) {                                   \
+            log_action;                                         \
+            return err_code;                                    \
+        }                                                       \
+    } while(0)
+
+#define IN_RETURN_VALUE_ON_ERROR(x, value, log_action) do { \
+        in_error_t err_rc_ = (x);                           \
+        if (unlikely(err_rc_ != ESP_OK)) {                  \
+            log_action;                                     \
+            return value;                                   \
+        }                                                   \
+    } while(0)
+
+#define IN_RETURN_ON_ERROR(x, log_action) do {  \
+        in_error_t err_rc_ = (x);               \
+        if (unlikely(err_rc_ != ESP_OK)) {      \
+            log_action;                         \
+            return err_rc_;                     \
+        }                                       \
+    } while(0)
+
 #endif
