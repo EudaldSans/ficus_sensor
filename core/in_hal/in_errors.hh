@@ -31,13 +31,6 @@ enum in_error_t {
     IN_ERR_WIFI_BASE = 0x3000
 };
 
-#define IN_ERR_RETURN_ON_TRUE(a, err_code, log_action) do {     \
-        if (unlikely(a)) {                                  \
-            log_action;                                     \
-            return err_code;                                \
-        }                                                   \
-    } while(0)
-
 #define IN_ERR_RETURN_ON_FALSE(a, err_code, log_action) do {    \
         if (unlikely(!(a))) {                                   \
             log_action;                                         \
