@@ -9,7 +9,7 @@ class IOnewireBus {
     public:
         virtual ~IOnewireBus() = default;
 
-        virtual in_error_t init() = 0;
+        virtual in_error_t init(uint32_t max_rx_bytes) = 0;
         virtual in_error_t find_device(uint64_t address, uint64_t address_mask) = 0;
         virtual in_error_t reset() = 0;
         virtual in_error_t read_bytes(std::vector<uint8_t> &rx_buf) = 0;

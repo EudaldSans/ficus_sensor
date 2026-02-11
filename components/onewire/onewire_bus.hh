@@ -10,10 +10,10 @@
 
 class OnewireBus : public IOnewireBus {
     public:
-        OnewireBus(int bus_gpio_num, uint32_t max_rx_bytes);
+        OnewireBus(int bus_gpio_num);
         ~OnewireBus();
 
-        in_error_t init() override;
+        in_error_t init(uint32_t max_rx_bytes) override;
 
         in_error_t find_device(uint64_t address, uint64_t address_mask) override;
 
@@ -29,7 +29,6 @@ class OnewireBus : public IOnewireBus {
 
         onewire_bus_handle_t bus = nullptr; 
         int bus_gpio_num;
-        uint32_t max_rx_bytes;
 
         std::vector<uint64_t> device_list;
 

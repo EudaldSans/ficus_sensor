@@ -9,16 +9,15 @@
 #include "esp_check.h"
 
 
-OnewireBus::OnewireBus(int bus_gpio_num, uint32_t max_rx_bytes) {
+OnewireBus::OnewireBus(int bus_gpio_num) {
     this->bus_gpio_num = bus_gpio_num;
-    this->max_rx_bytes = max_rx_bytes;
 }
 
 OnewireBus::~OnewireBus() {
     if (bus != nullptr) onewire_bus_del(bus);
 }
 
-in_error_t OnewireBus::init() {
+in_error_t OnewireBus::init(uint32_t max_rx_bytes) {
     onewire_bus_config_t bus_config = {};
     bus_config.bus_gpio_num = bus_gpio_num;
     bus_config.flags.en_pull_up = true;

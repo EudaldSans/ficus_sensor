@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "sensor.hh"
 #include "onewire_bus.hh"
 
@@ -13,7 +15,7 @@ class DS18B20 : public ISensor {
             resolution_12B, 
         } ds18b20_resolution_t;
         
-        DS18B20(int bus_gpio_num, ds18b20_resolution_t resolution);
+        DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution);
         ~DS18B20();
 
         esp_err_t init() override;
@@ -28,13 +30,11 @@ class DS18B20 : public ISensor {
         const std::string sensor_name = "DS18B20";
     
     private: 
-        static constexpr  uint8_t max_rx_bytes = 10;
-
         static constexpr  uint8_t cmd_convert_temp = 0x44;
         static constexpr  uint8_t cmd_write_scratchpad = 0x4E;
         static constexpr  uint8_t cmd_read_scratchpad = 0xBE;
 
-        OnewireBus bus;
+        std::shared_ptr<IOnewireBus> _bus;
         ds18b20_resolution_t resolution;
 
         constexpr static char const *TAG = "DS18B20";
