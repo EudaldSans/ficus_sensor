@@ -3,16 +3,16 @@
 #include "esp_check.h"
 
 
-AnalogHumiditySensor::AnalogHumiditySensor(uint32_t max_voltage_mv, adc_channel_t channel, adc_unit_t unit) : 
-        ISensor(), 
-        adc(channel, unit, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT) {
-    this->max_voltage_mv = max_voltage_mv;
+AnalogHumiditySensor::AnalogHumiditySensor(std::shared_ptr<IADC> adc, uint32_t _max_voltage_mv) : 
+        ISensor(), _adc(adc) {
+    
+    _max_voltage_mv = _max_voltage_mv;
 }
 
 AnalogHumiditySensor::~AnalogHumiditySensor() {}
 
 esp_err_t AnalogHumiditySensor::init() {
-    return adc.init();
+    return _adc->init();
 }
 
 esp_err_t AnalogHumiditySensor::trigger_measurement(uint16_t &measurement_delay_ms) {
@@ -23,7 +23,7 @@ esp_err_t AnalogHumiditySensor::trigger_measurement(uint16_t &measurement_delay_
 
 float AnalogHumiditySensor::get_last_measurement() {
     int voltage;
-    adc.measure(voltage);
+    _adc->measure(voltage);
     float humidity = 100 - 100 * voltage/3300;
 
     if (humidity < 0) {

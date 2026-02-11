@@ -7,7 +7,7 @@
 #ifndef ADC_H
 #define ADC_H
 
-class ADC : IADC {
+class ADC : public IADC {
     public:
         ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bitwidth_t bitwidth);        
         ~ADC();
