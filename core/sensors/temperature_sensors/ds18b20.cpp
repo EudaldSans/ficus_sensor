@@ -1,6 +1,5 @@
 #include "ds18b20.hh"
 #include "esp_log.h"
-#include "esp_check.h"
 
 typedef struct {
     uint8_t temp_lsb;      /*!< lsb of temperature */

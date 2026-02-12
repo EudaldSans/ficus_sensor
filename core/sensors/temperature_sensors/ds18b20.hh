@@ -1,7 +1,7 @@
 #include <memory>
 
 #include "sensor.hh"
-#include "onewire_bus.hh"
+#include "onewire_hal.hh"
 
 #ifndef DS18B20_H
 #define DS18B20_H

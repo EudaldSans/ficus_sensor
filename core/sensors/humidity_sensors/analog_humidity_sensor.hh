@@ -1,5 +1,5 @@
 #include "sensor.hh"
-#include "adc.hh"
+#include "adc_hal.hh"
 
 #include <memory>
 
