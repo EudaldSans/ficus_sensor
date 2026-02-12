@@ -109,20 +109,20 @@ extern "C" void app_main(void) {
     auto adc = std::make_shared<ADC>(ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT));
 
     auto sensor_endpoint_factory = SensorFactoryBuilder().build()
-        .with_onewire(onewire, "onewire_1")
-        .with_adc(adc, "adc_1");
+        .with_onewire(onewire, "onewire_0")
+        .with_adc(adc, "adc_0");
 
     SensorEndpointConfig t_sensor_config = SensorEndpointConfig{
         .sensor = DS18B20_TEMPERATURE_SENSOR, 
-        .name = "temperature_sensor", 
-        .hal_reference = "onewire_1", 
+        .name = "DS18B20_0", 
+        .hal_reference = "onewire_0", 
         .measurement_period_ms = 30000, 
         .int_params = {{"resolution", 3}} 
     }; 
     SensorEndpointConfig h_sensor_config = SensorEndpointConfig{ 
         .sensor = ANALOG_HUMIDITY_SENSOR, 
-        .name = "humidity_sensor", 
-        .hal_reference = "adc_1", 
+        .name = "analog_humidity_0", 
+        .hal_reference = "adc_0", 
         .measurement_period_ms = 20000, 
         .int_params = {{"max_voltage_mv", h_sensor_max_mv}} 
     }; 
