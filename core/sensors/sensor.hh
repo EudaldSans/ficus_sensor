@@ -23,13 +23,14 @@ public:
 template <typename T> 
 class ISensor {
 public: 
-    virtual ~ISensorMeasurement() = default; 
+    virtual ~ISensor() = default; 
     virtual in_error_t measure(T &value) = 0;
 };
 
-template <typename T> class IAsyncSensor {
+template <typename T> 
+class IAsyncSensor {
 public: 
-    virtual ~IAsyncSensorMeasurement() = default; 
+    virtual ~IAsyncSensor() = default; 
     virtual in_error_t trigger_measurement(uint16_t &measurement_delay_ms) = 0; 
     virtual in_error_t get_measurement(T &value) = 0;
     virtual bool is_ready() = 0;
