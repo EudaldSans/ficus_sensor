@@ -32,11 +32,11 @@ bool SensorEndpointConfig::get_string_param(const std::string& key, std::string&
 
 /* SENSOR ENDPOINT FACTORY */
 
-SensorFactory::SensorFactory(std::shared_ptr<HalRegistry> registry) 
+SensorEndpointFactory::SensorEndpointFactory(std::shared_ptr<HalRegistry> registry) 
     : _hal_registry(registry) {
 }
 
-std::shared_ptr<ITask> SensorFactory::create(const SensorEndpointConfig& config) {
+std::shared_ptr<ITask> SensorEndpointFactory::create(const SensorEndpointConfig& config) {
     switch (config.sensor) {
         case sensor_t::DS18B20_TEMPERATURE_SENSOR:
             return create_ds18b20_endpoint(config);
@@ -50,7 +50,7 @@ std::shared_ptr<ITask> SensorFactory::create(const SensorEndpointConfig& config)
     }
 }
 
-std::vector<std::shared_ptr<ITask>> SensorFactory::create_batch(
+std::vector<std::shared_ptr<ITask>> SensorEndpointFactory::create_batch(
     const std::vector<SensorEndpointConfig>& configs) {
     
     std::vector<std::shared_ptr<ITask>> endpoints;
@@ -68,7 +68,7 @@ std::vector<std::shared_ptr<ITask>> SensorFactory::create_batch(
     return endpoints;
 }
 
-std::shared_ptr<ITask> SensorFactory::create_ds18b20_endpoint(const SensorEndpointConfig& config) {
+std::shared_ptr<ITask> SensorEndpointFactory::create_ds18b20_endpoint(const SensorEndpointConfig& config) {
     auto bus = _hal_registry->get_onewire(config.hal_reference);
     if (!bus) {
         ESP_LOGE(TAG, "Onewire bus '%s' not found in registry", config.hal_reference.c_str());
@@ -101,7 +101,7 @@ std::shared_ptr<ITask> SensorFactory::create_ds18b20_endpoint(const SensorEndpoi
     );
 }
 
-std::shared_ptr<ITask> SensorFactory::create_analog_humidity_endpoint(const SensorEndpointConfig& config) {
+std::shared_ptr<ITask> SensorEndpointFactory::create_analog_humidity_endpoint(const SensorEndpointConfig& config) {
     auto adc = _hal_registry->get_adc(config.hal_reference);
     if (!adc) {
         ESP_LOGE(TAG, "ADC '%s' not found in registry", config.hal_reference.c_str());
@@ -126,17 +126,17 @@ std::shared_ptr<ITask> SensorFactory::create_analog_humidity_endpoint(const Sens
 
 /* SENSOR ENDPOINT FACTORY BUILDER */
 
-SensorFactoryBuilder& SensorFactoryBuilder::with_adc(const std::string& name, std::shared_ptr<IADC> adc) {
+SensorEndpointFactoryBuilder& SensorEndpointFactoryBuilder::with_adc(const std::string& name, std::shared_ptr<IADC> adc) {
     _hal_registry->register_adc(name, adc);
     return *this;
 }
 
-SensorFactoryBuilder& SensorFactoryBuilder::with_onewire(const std::string& name, std::shared_ptr<IOnewireBus> bus) {
+SensorEndpointFactoryBuilder& SensorEndpointFactoryBuilder::with_onewire(const std::string& name, std::shared_ptr<IOnewireBus> bus) {
     _hal_registry->register_onewire(name, bus);
     return *this;
 }
 
-std::unique_ptr<SensorFactory> SensorFactoryBuilder::build() {
-    return std::make_unique<SensorFactory>(_hal_registry);
+std::unique_ptr<SensorEndpointFactory> SensorEndpointFactoryBuilder::build() {
+    return std::make_unique<SensorEndpointFactory>(_hal_registry);
 }
 

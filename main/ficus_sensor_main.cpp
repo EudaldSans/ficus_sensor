@@ -108,9 +108,10 @@ extern "C" void app_main(void) {
     auto onewire = std::make_shared<OnewireBus>(OnewireBus(ONEWIRE_BUS_GPIO));
     auto adc = std::make_shared<ADC>(ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT));
 
-    auto sensor_endpoint_factory = SensorFactoryBuilder().build()
+    auto sensor_endpoint_factory = SensorEndpointFactoryBuilder()
         .with_onewire(onewire, "onewire_0")
-        .with_adc(adc, "adc_0");
+        .with_adc(adc, "adc_0")
+        .build();
 
     SensorEndpointConfig t_sensor_config = SensorEndpointConfig{
         .sensor = DS18B20_TEMPERATURE_SENSOR, 

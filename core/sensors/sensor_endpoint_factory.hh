@@ -33,10 +33,10 @@ struct SensorEndpointConfig {
 };
 
 
-class SensorFactory {
+class SensorEndpointFactory {
 public:
-    explicit SensorFactory(std::shared_ptr<HalRegistry> registry);
-    ~SensorFactory() = default;
+    explicit SensorEndpointFactory(std::shared_ptr<HalRegistry> registry);
+    ~SensorEndpointFactory() = default;
     
     std::shared_ptr<ITask> create(const SensorEndpointConfig& config);
     
@@ -54,14 +54,14 @@ private:
 };
 
 
-class SensorFactoryBuilder {
+class SensorEndpointFactoryBuilder {
 public:
-    SensorFactoryBuilder() : _hal_registry(std::make_shared<HalRegistry>()) {}
+    SensorEndpointFactoryBuilder() : _hal_registry(std::make_shared<HalRegistry>()) {}
     
-    SensorFactoryBuilder& with_adc(const std::string& name, std::shared_ptr<IADC> adc);
-    SensorFactoryBuilder& with_onewire(const std::string& name, std::shared_ptr<IOnewireBus> bus);
+    SensorEndpointFactoryBuilder& with_adc(const std::string& name, std::shared_ptr<IADC> adc);
+    SensorEndpointFactoryBuilder& with_onewire(const std::string& name, std::shared_ptr<IOnewireBus> bus);
     
-    std::unique_ptr<SensorFactory> build();
+    std::unique_ptr<SensorEndpointFactory> build();
     
 private:
     std::shared_ptr<HalRegistry> _hal_registry;
