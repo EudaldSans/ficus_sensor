@@ -6,7 +6,7 @@
 #ifndef DS18B20_H
 #define DS18B20_H
 
-class DS18B20 : public ISensor {
+class DS18B20 : public IAsyncSensor<float>, public ISensorMetadata, public ISensorLifecycle {
     public: 
         typedef enum {
             resolution_9B, 
@@ -19,15 +19,17 @@ class DS18B20 : public ISensor {
         ~DS18B20();
 
         in_error_t init() override;
-        in_error_t trigger_measurement(uint16_t &measurement_delay_ms) override;
-        float get_last_measurement() override;
-        const char* get_name() override;
+        in_error_t deinit() override {return IN_OK;}
 
-        void sensor_tic();
+        in_error_t trigger_measurement(uint16_t &measurement_delay_ms) override;
+        in_error_t get_measurement(float &value) override;
+        bool is_ready() override;
+
+        const char* get_name() override {return "DS18B20";}
+        const char* get_type() override {return "temperature";} 
+        const char* get_unit() override {return "°C";}
 
         in_error_t set_resolution(ds18b20_resolution_t resolution);
-
-        const std::string sensor_name = "DS18B20";
     
     private: 
         static constexpr  uint8_t cmd_convert_temp = 0x44;
@@ -35,7 +37,8 @@ class DS18B20 : public ISensor {
         static constexpr  uint8_t cmd_read_scratchpad = 0xBE;
 
         std::shared_ptr<IOnewireBus> _bus;
-        ds18b20_resolution_t resolution;
+        ds18b20_resolution_t _resolution;
+        uint64_t _measure_finish_time_ms = 0xFFFFFFFFFFFFFFFF;
 
         constexpr static char const *TAG = "DS18B20";
 };

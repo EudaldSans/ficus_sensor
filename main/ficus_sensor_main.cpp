@@ -113,11 +113,11 @@ extern "C" void app_main(void) {
     const std::string temp_consumer = "temp_consumer";
     const std::string humidity_consumer = "humidity_consumer";
 
-    OnewireBus bus = OnewireBus(ONEWIRE_BUS_GPIO);
-    DS18B20 temp_sensor = DS18B20(std::make_shared<OnewireBus>(bus), DS18B20::resolution_12B);
+    auto bus = std::make_shared<OnewireBus>(OnewireBus(ONEWIRE_BUS_GPIO));
+    DS18B20 temp_sensor = DS18B20(bus, DS18B20::resolution_12B);
 
-    ADC adc = ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
-    AnalogHumiditySensor humidity_sensor = AnalogHumiditySensor(std::make_shared<ADC>(adc), humidity_sensor_max_voltage_mv);
+    auto adc = std::make_shared<ADC>(ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT));
+    AnalogHumiditySensor humidity_sensor = AnalogHumiditySensor(adc, humidity_sensor_max_voltage_mv);
 
     SensorEndpoint temp_endpoint = SensorEndpoint(temp_producer, std::make_shared<DS18B20>(temp_sensor), 30000);
     SensorEndpoint humidity_endpoint = SensorEndpoint(humidity_producer, std::make_shared<AnalogHumiditySensor>(humidity_sensor), 20000);

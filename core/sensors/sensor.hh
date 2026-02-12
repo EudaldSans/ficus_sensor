@@ -5,17 +5,34 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
+class ISensorLifecycle {
+public:
+    virtual ~ISensorLifecycle() = default; 
+    virtual void init() = 0; 
+    virtual void deinit() = 0;
+};
 
+class ISensorMetadata {
+public: 
+    virtual ~ISensorMetadata() = default; 
+    virtual std::string get_name() = 0;
+    virtual std::string get_type() = 0;
+    virtual std::string get_unit() = 0;
+};
+
+template <typename T> 
 class ISensor {
-    public:
-        virtual ~ISensor() = default; 
+public: 
+    virtual ~ISensorMeasurement() = default; 
+    virtual in_error_t measure(T &value) = 0;
+};
 
-        virtual in_error_t init() = 0;
-        virtual in_error_t trigger_measurement(uint16_t &measurement_delay_ms) = 0;
-        virtual float get_last_measurement() = 0;
-        virtual const char* get_name() = 0; 
-
-        const std::string sensor_name = "Abstract sensor";        
+template <typename T> class IAsyncSensor {
+public: 
+    virtual ~IAsyncSensorMeasurement() = default; 
+    virtual in_error_t trigger_measurement(uint16_t &measurement_delay_ms) = 0; 
+    virtual in_error_t get_measurement(T &value) = 0;
+    virtual bool is_ready() = 0;
 };
 
 #endif
