@@ -11,9 +11,7 @@
 
 #include "esp_log.h"
 
-#include "ds18b20.hh"
-#include "analog_humidity_sensor.hh"
-#include "sensor_endpoints.hh"
+#include "sensor_endpoint_factory.hh"
 
 #include "task_manager.hh"
 
@@ -107,20 +105,30 @@ void blink(uint32_t time_ms, uint32_t red, uint32_t green, uint32_t blue) {
 extern "C" void app_main(void) {
     const uint32_t h_sensor_max_mv = 3300;
 
-    const std::string t_producer = "temperature producer";
-    const std::string h_producer = "humidity producer";
-
-    const std::string t_consumer = "temperature consumer";
-    const std::string h_consumer = "humidity consumer";
-
-    auto bus = std::make_shared<OnewireBus>(OnewireBus(ONEWIRE_BUS_GPIO));
-    auto t_sensor = std::make_shared<DS18B20>DS18B20((bus, DS18B20::resolution_12B));
-
+    auto onewire = std::make_shared<OnewireBus>(OnewireBus(ONEWIRE_BUS_GPIO));
     auto adc = std::make_shared<ADC>(ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT));
-    auto h_sensor = std::make_shared<AnalogHumiditySensor>(AnalogHumiditySensor(adc, h_sensor_max_mv));
 
-    auto t_endpoint = std::make_shared<AsyncSensorEndpoint<float>>(AsyncSensorEndpoint(t_producer, t_sensor, 30000));
-    auto h_endpoint = std::make_shared<SensorEndpoint<float>>(SensorEndpoint(h_producer, h_sensor, 20000));
+    auto sensor_endpoint_factory = SensorFactoryBuilder().build()
+        .with_onewire(onewire, "onewire_1")
+        .with_adc(adc, "adc_1");
+
+    SensorEndpointConfig t_sensor_config = SensorEndpointConfig{
+        .sensor = DS18B20_TEMPERATURE_SENSOR, 
+        .name = "temperature_sensor", 
+        .hal_reference = "onewire_1", 
+        .measurement_period_ms = 30000, 
+        .int_params = {{"resolution", 3}} 
+    }; 
+    SensorEndpointConfig h_sensor_config = SensorEndpointConfig{ 
+        .sensor = ANALOG_HUMIDITY_SENSOR, 
+        .name = "humidity_sensor", 
+        .hal_reference = "adc_1", 
+        .measurement_period_ms = 20000, 
+        .int_params = {{"max_voltage_mv", h_sensor_max_mv}} 
+    }; 
+    
+    auto t_endpoint = sensor_endpoint_factory->create(t_sensor_config);
+    auto h_endpoint = sensor_endpoint_factory->create(h_sensor_config);
 
     TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
     task_manager.add_task(t_endpoint);
@@ -136,6 +144,9 @@ extern "C" void app_main(void) {
 
     ChannelEndpoint consumer = ChannelEndpoint();
 
+    std::string t_consumer = "temperature_consumer"; 
+    std::string h_consumer = "humidity_consumer";
+
     consumer.add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
             ESP_LOGI(TAG, "t_consumer got %d", temperature);
@@ -148,8 +159,8 @@ extern "C" void app_main(void) {
         }
     );
 
-    Router::link<float, int>(t_endpoint, t_producer, consumer, t_consumer, conversions);
-    Router::link<float, int>(h_endpoint, h_producer, consumer, h_consumer, conversions);
+    Router::link<float, int>(t_endpoint, t_sensor_config.name, consumer, t_consumer, conversions);
+    Router::link<float, int>(h_endpoint, h_sensor_config.name, consumer, h_consumer, conversions);
 
     task_manager.start();
 
