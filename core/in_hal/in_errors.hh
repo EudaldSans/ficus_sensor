@@ -40,7 +40,7 @@ enum in_error_t {
 
 #define IN_RETURN_VALUE_ON_ERROR(x, value, log_action) do { \
         in_error_t err_rc_ = (x);                           \
-        if (unlikely(err_rc_ != ESP_OK)) {                  \
+        if (unlikely(err_rc_ != IN_OK)) {                  \
             log_action;                                     \
             return value;                                   \
         }                                                   \
@@ -48,9 +48,17 @@ enum in_error_t {
 
 #define IN_RETURN_ON_ERROR(x, log_action) do {  \
         in_error_t err_rc_ = (x);               \
-        if (unlikely(err_rc_ != ESP_OK)) {      \
+        if (unlikely(err_rc_ != IN_OK)) {       \
             log_action;                         \
             return err_rc_;                     \
+        }                                       \
+    } while(0)
+
+#define IN_RETURN_VOID_ON_ERROR(x, log_action) do {  \
+        in_error_t err_rc_ = (x);               \
+        if (unlikely(err_rc_ != IN_OK)) {       \
+            log_action;                         \
+            return;                             \
         }                                       \
     } while(0)
 

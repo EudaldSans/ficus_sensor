@@ -38,17 +38,17 @@ public:
     explicit SensorEndpointFactory(std::shared_ptr<HalRegistry> registry);
     ~SensorEndpointFactory() = default;
     
-    std::shared_ptr<ITask> create(const SensorEndpointConfig& config);
+    std::shared_ptr<IRunnableEndpoint> create(const SensorEndpointConfig& config);
     
-    std::vector<std::shared_ptr<ITask>> create_batch(
+    std::vector<std::shared_ptr<IRunnableEndpoint>> create_batch(
         const std::vector<SensorEndpointConfig>& configs
     );
     
 private:
     std::shared_ptr<HalRegistry> _hal_registry;
     
-    std::shared_ptr<ITask> create_ds18b20_endpoint(const SensorEndpointConfig& config);
-    std::shared_ptr<ITask> create_analog_humidity_endpoint(const SensorEndpointConfig& config);
+    std::shared_ptr<IRunnableEndpoint> create_ds18b20_endpoint(const SensorEndpointConfig& config);
+    std::shared_ptr<IRunnableEndpoint> create_analog_humidity_endpoint(const SensorEndpointConfig& config);
     
     constexpr static char const *TAG = "SENSOR_FACTORY";
 };

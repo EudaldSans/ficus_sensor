@@ -36,7 +36,7 @@ SensorEndpointFactory::SensorEndpointFactory(std::shared_ptr<HalRegistry> regist
     : _hal_registry(registry) {
 }
 
-std::shared_ptr<ITask> SensorEndpointFactory::create(const SensorEndpointConfig& config) {
+std::shared_ptr<IRunnableEndpoint> SensorEndpointFactory::create(const SensorEndpointConfig& config) {
     switch (config.sensor) {
         case sensor_t::DS18B20_TEMPERATURE_SENSOR:
             return create_ds18b20_endpoint(config);
@@ -50,10 +50,10 @@ std::shared_ptr<ITask> SensorEndpointFactory::create(const SensorEndpointConfig&
     }
 }
 
-std::vector<std::shared_ptr<ITask>> SensorEndpointFactory::create_batch(
+std::vector<std::shared_ptr<IRunnableEndpoint>> SensorEndpointFactory::create_batch(
     const std::vector<SensorEndpointConfig>& configs) {
     
-    std::vector<std::shared_ptr<ITask>> endpoints;
+    std::vector<std::shared_ptr<IRunnableEndpoint>> endpoints;
     endpoints.reserve(configs.size());
     
     for (const auto& config : configs) {
@@ -68,7 +68,7 @@ std::vector<std::shared_ptr<ITask>> SensorEndpointFactory::create_batch(
     return endpoints;
 }
 
-std::shared_ptr<ITask> SensorEndpointFactory::create_ds18b20_endpoint(const SensorEndpointConfig& config) {
+std::shared_ptr<IRunnableEndpoint> SensorEndpointFactory::create_ds18b20_endpoint(const SensorEndpointConfig& config) {
     auto bus = _hal_registry->get_onewire(config.hal_reference);
     if (!bus) {
         ESP_LOGE(TAG, "Onewire bus '%s' not found in registry", config.hal_reference.c_str());
@@ -101,7 +101,7 @@ std::shared_ptr<ITask> SensorEndpointFactory::create_ds18b20_endpoint(const Sens
     );
 }
 
-std::shared_ptr<ITask> SensorEndpointFactory::create_analog_humidity_endpoint(const SensorEndpointConfig& config) {
+std::shared_ptr<IRunnableEndpoint> SensorEndpointFactory::create_analog_humidity_endpoint(const SensorEndpointConfig& config) {
     auto adc = _hal_registry->get_adc(config.hal_reference);
     if (!adc) {
         ESP_LOGE(TAG, "ADC '%s' not found in registry", config.hal_reference.c_str());

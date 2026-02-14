@@ -21,6 +21,9 @@
 #include "endpoint.hh"
 #include "conversions.hh"
 
+#include "onewire_bus.hh"
+#include "adc.hh"
+
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
 
@@ -105,12 +108,12 @@ void blink(uint32_t time_ms, uint32_t red, uint32_t green, uint32_t blue) {
 extern "C" void app_main(void) {
     const uint32_t h_sensor_max_mv = 3300;
 
-    auto onewire = std::make_shared<OnewireBus>(OnewireBus(ONEWIRE_BUS_GPIO));
-    auto adc = std::make_shared<ADC>(ADC(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT));
+    auto onewire = std::make_shared<OnewireBus>(ONEWIRE_BUS_GPIO);
+    auto adc = std::make_shared<ADC>(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
 
     auto sensor_endpoint_factory = SensorEndpointFactoryBuilder()
-        .with_onewire(onewire, "onewire_0")
-        .with_adc(adc, "adc_0")
+        .with_onewire("onewire_0", onewire)
+        .with_adc("adc_0", adc)
         .build();
 
     SensorEndpointConfig t_sensor_config = SensorEndpointConfig{
@@ -118,14 +121,16 @@ extern "C" void app_main(void) {
         .name = "DS18B20_0", 
         .hal_reference = "onewire_0", 
         .measurement_period_ms = 30000, 
-        .int_params = {{"resolution", 3}} 
+        .int_params = {{"resolution", 3}},
+        .string_params = {}
     }; 
     SensorEndpointConfig h_sensor_config = SensorEndpointConfig{ 
         .sensor = ANALOG_HUMIDITY_SENSOR, 
         .name = "analog_humidity_0", 
         .hal_reference = "adc_0", 
         .measurement_period_ms = 20000, 
-        .int_params = {{"max_voltage_mv", h_sensor_max_mv}} 
+        .int_params = {{"max_voltage_mv", h_sensor_max_mv}},
+        .string_params = {}
     }; 
     
     auto t_endpoint = sensor_endpoint_factory->create(t_sensor_config);
@@ -143,18 +148,18 @@ extern "C" void app_main(void) {
 
     ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
-    ChannelEndpoint consumer = ChannelEndpoint();
+    auto consumer = std::make_shared<ChannelEndpoint>();
 
     std::string t_consumer = "temperature_consumer"; 
     std::string h_consumer = "humidity_consumer";
 
-    consumer.add_input_channel<int>(t_consumer, 
+    consumer->add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
             ESP_LOGI(TAG, "t_consumer got %d", temperature);
             set_heat_led(temperature);
         }
     );
-    consumer.add_input_channel<int>(h_consumer, 
+    consumer->add_input_channel<int>(h_consumer, 
         [](const int& humidity) {
             ESP_LOGI(TAG, "h_consumer got %d", humidity);
         }

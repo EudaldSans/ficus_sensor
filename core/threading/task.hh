@@ -1,5 +1,7 @@
 #include <inttypes.h>
 
+#include "endpoint.hh"
+
 #ifndef TASK_H
 #define TASK_H
 
@@ -12,5 +14,7 @@ class ITask {
         
         uint64_t last_run_time_ms = 0;
 };
+
+class IRunnableEndpoint : public ITask, public ChannelEndpoint {};
 
 #endif
