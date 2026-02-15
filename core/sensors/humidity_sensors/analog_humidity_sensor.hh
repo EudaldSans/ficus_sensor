@@ -6,7 +6,7 @@
 #ifndef ANALOG_HUMIDITY_SENSOR_H
 #define ANALOG_HUMIDITY_SENSOR_H
 
-class AnalogHumiditySensor : public ISensorLifecycle, public ISensorMetadata, public ISensor<float> {
+class AnalogHumiditySensor : public ISensor<float> {
     public: 
       
         AnalogHumiditySensor(std::shared_ptr<IADC> adc, uint32_t max_voltage_mv);
@@ -16,9 +16,9 @@ class AnalogHumiditySensor : public ISensorLifecycle, public ISensorMetadata, pu
         in_error_t deinit() override;
         in_error_t measure(float &value) override;
 
-        const char* get_name() override {return "Analog Humidity Sensor";}
-        const char* get_type() override {return "Analog";}
-        const char* get_unit() override {return "%";}
+        std::string_view get_name() const override {return "Analog Humidity Sensor";}
+        std::string_view get_type() const override {return "Analog";}
+        std::string_view get_unit() const override {return "%";}
 
     private: 
         std::shared_ptr<IADC> _adc;

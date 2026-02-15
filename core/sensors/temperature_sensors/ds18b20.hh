@@ -6,7 +6,7 @@
 #ifndef DS18B20_H
 #define DS18B20_H
 
-class DS18B20 : public IAsyncSensor<float>, public ISensorMetadata, public ISensorLifecycle {
+class DS18B20 : public IAsyncSensor<float> {
     public: 
         typedef enum {
             resolution_9B, 
@@ -25,9 +25,9 @@ class DS18B20 : public IAsyncSensor<float>, public ISensorMetadata, public ISens
         in_error_t get_measurement(float &value) override;
         bool is_ready() override;
 
-        const char* get_name() override {return "DS18B20";}
-        const char* get_type() override {return "temperature";} 
-        const char* get_unit() override {return "°C";}
+        std::string_view get_name() const override {return "DS18B20";}
+        std::string_view get_type() const override {return "temperature";} 
+        std::string_view get_unit() const override {return "°C";}
 
         in_error_t set_resolution(ds18b20_resolution_t resolution);
     

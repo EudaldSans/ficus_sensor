@@ -25,6 +25,8 @@ class ADC : public IADC {
         adc_oneshot_unit_handle_t adc_handle;
         adc_cali_handle_t adc_cali_handle;
 
+        bool _initialized = false;
+
         constexpr static char const *TAG = "ADC";
 };
 

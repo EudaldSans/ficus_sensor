@@ -1,5 +1,7 @@
 #include <inttypes.h>
 
+#include "endpoint.hh"
+
 #ifndef TASK_H
 #define TASK_H
 

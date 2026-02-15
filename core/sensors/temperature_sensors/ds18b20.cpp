@@ -1,6 +1,9 @@
 #include "ds18b20.hh"
 #include "esp_log.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 typedef struct {
     uint8_t temp_lsb;      /*!< lsb of temperature */
     uint8_t temp_msb;      /*!< msb of temperature */
@@ -13,7 +16,7 @@ typedef struct {
     uint8_t crc_value;     /*!< crc value of scratchpad data */
 } __attribute__((packed)) ds18b20_scratchpad_t;
 
-DS18B20::DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution) : ISensor(), _bus(bus) {
+DS18B20::DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution) : IAsyncSensor<float>(), _bus(bus) {
     _resolution = resolution;
 }
 
@@ -77,5 +80,6 @@ in_error_t DS18B20::get_measurement(float &value) {
 
     uint8_t lsb_masked = scratchpad.temp_lsb & (~lsb_mask[scratchpad.configuration >> 5]);
     int16_t temperature_raw = (((int16_t)scratchpad.temp_msb << 8) | lsb_masked);
-    return temperature_raw / 16.0f;
+    value = temperature_raw / 16.0f; 
+    return IN_OK;
 }
