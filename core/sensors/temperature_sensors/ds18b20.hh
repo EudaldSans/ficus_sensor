@@ -25,9 +25,9 @@ class DS18B20 : public IAsyncSensor<float> {
         in_error_t get_measurement(float &value) override;
         bool is_ready() override;
 
-        std::string get_name() override {return "DS18B20";}
-        std::string get_type() override {return "temperature";} 
-        std::string get_unit() override {return "°C";}
+        std::string_view get_name() const override {return "DS18B20";}
+        std::string_view get_type() const override {return "temperature";} 
+        std::string_view get_unit() const override {return "°C";}
 
         in_error_t set_resolution(ds18b20_resolution_t resolution);
     

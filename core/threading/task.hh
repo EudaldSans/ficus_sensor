@@ -15,6 +15,4 @@ class ITask {
         uint64_t last_run_time_ms = 0;
 };
 
-class IRunnableEndpoint : public ITask, public ChannelEndpoint {};
-
 #endif

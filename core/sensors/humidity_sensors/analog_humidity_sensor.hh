@@ -16,9 +16,9 @@ class AnalogHumiditySensor : public ISensor<float> {
         in_error_t deinit() override;
         in_error_t measure(float &value) override;
 
-        std::string get_name() override {return "Analog Humidity Sensor";}
-        std::string get_type() override {return "Analog";}
-        std::string get_unit() override {return "%";}
+        std::string_view get_name() const override {return "Analog Humidity Sensor";}
+        std::string_view get_type() const override {return "Analog";}
+        std::string_view get_unit() const override {return "%";}
 
     private: 
         std::shared_ptr<IADC> _adc;

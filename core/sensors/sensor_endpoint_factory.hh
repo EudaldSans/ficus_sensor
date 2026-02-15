@@ -9,6 +9,7 @@
 #include <vector>
 #include <optional>
 
+#include "sensor_endpoints.hh"
 #include "sensor.hh"
 #include "adc_hal.hh"
 #include "onewire_hal.hh"
@@ -38,17 +39,17 @@ public:
     explicit SensorEndpointFactory(std::shared_ptr<HalRegistry> registry);
     ~SensorEndpointFactory() = default;
     
-    std::shared_ptr<IRunnableEndpoint> create(const SensorEndpointConfig& config);
+    std::shared_ptr<ISensorEndpointBase> create(const SensorEndpointConfig& config);
     
-    std::vector<std::shared_ptr<IRunnableEndpoint>> create_batch(
+    std::vector<std::shared_ptr<ISensorEndpointBase>> create_batch(
         const std::vector<SensorEndpointConfig>& configs
     );
     
 private:
     std::shared_ptr<HalRegistry> _hal_registry;
     
-    std::shared_ptr<IRunnableEndpoint> create_ds18b20_endpoint(const SensorEndpointConfig& config);
-    std::shared_ptr<IRunnableEndpoint> create_analog_humidity_endpoint(const SensorEndpointConfig& config);
+    std::shared_ptr<ISensorEndpointBase> create_ds18b20_endpoint(const SensorEndpointConfig& config);
+    std::shared_ptr<ISensorEndpointBase> create_analog_humidity_endpoint(const SensorEndpointConfig& config);
     
     constexpr static char const *TAG = "SENSOR_FACTORY";
 };

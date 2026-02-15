@@ -15,20 +15,25 @@ public:
 class ISensorMetadata {
 public: 
     virtual ~ISensorMetadata() = default; 
-    virtual std::string get_name() = 0;
-    virtual std::string get_type() = 0;
-    virtual std::string get_unit() = 0;
+    virtual std::string_view get_name() const = 0;
+    virtual std::string_view get_type() const = 0;
+    virtual std::string_view get_unit() const = 0;
+};
+
+class ISensorBase : public ISensorLifecycle, public ISensorMetadata {
+public:
+    virtual ~ISensorBase() = default;
 };
 
 template <typename T> 
-class ISensor: public ISensorLifecycle, public ISensorMetadata {
+class ISensor: public virtual ISensorBase {
 public: 
     virtual ~ISensor() = default; 
     virtual in_error_t measure(T &value) = 0;
 };
 
 template <typename T> 
-class IAsyncSensor: public ISensorLifecycle, public ISensorMetadata {
+class IAsyncSensor: public virtual ISensorBase {
 public: 
     virtual ~IAsyncSensor() = default; 
     virtual in_error_t trigger_measurement(uint16_t &measurement_delay_ms) = 0; 

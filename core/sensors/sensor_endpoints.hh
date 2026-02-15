@@ -8,8 +8,13 @@
 #ifndef SENSOR_ENDPOINTS_H
 #define SENSOR_ENDPOINTS_H
 
+class ISensorEndpointBase : public ITask, public ChannelEndpoint {
+public:
+    virtual ~ISensorEndpointBase() = default;
+};
+
 template <typename T> 
-class AsyncSensorEndpoint : public IRunnableEndpoint { 
+class AsyncSensorEndpoint : public ISensorEndpointBase { 
 public: 
     AsyncSensorEndpoint(const std::string& output_name, std::shared_ptr<IAsyncSensor<T>> sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) {
         _measurement_output = add_output_channel<T>(_output_name);
@@ -49,7 +54,7 @@ private:
 };
 
 template <typename T> 
-class SensorEndpoint : public IRunnableEndpoint {
+class SensorEndpoint : public ISensorEndpointBase {
 public:
     SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor<T>> sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) { 
         _measurement_output = add_output_channel<T>(_output_name); 
