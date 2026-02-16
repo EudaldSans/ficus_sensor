@@ -18,7 +18,7 @@ in_error_t AnalogHumiditySensor::deinit() {
 in_error_t AnalogHumiditySensor::measure(float &value) {
     int voltage;
     _adc->measure(voltage);
-    float humidity = 100 - 100 * voltage/3300;
+    float humidity = 100 - 100 * voltage/_max_voltage_mv;
 
     if (humidity < 0) {
         humidity = 0;
