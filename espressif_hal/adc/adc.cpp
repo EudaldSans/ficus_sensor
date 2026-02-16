@@ -51,6 +51,8 @@ in_error_t ADC::init() {
         return IN_ERR_SDK_FAIL;
     }
 
+    _initialized = true;
+
     return IN_OK;
 }
 
