@@ -54,10 +54,12 @@ bool DS18B20::is_ready() {
 
 in_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
     const uint8_t resolution_data[4] = {0x1F, 0x3F, 0x5F, 0x7F};
-    std::vector<uint8_t> tx_buffer = {0, 0, resolution_data[_resolution]};
+    std::vector<uint8_t> tx_buffer = {0, 0, resolution_data[resolution]};
 
     IN_RETURN_ON_ERROR(_bus->reset(), ESP_LOGE(TAG, "Reset failed to set resolution"));
     IN_RETURN_ON_ERROR(_bus->write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to set resolution"));
+
+    _resolution = resolution;
 
     return IN_OK;
 }
