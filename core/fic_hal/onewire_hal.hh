@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "in_errors.hh"
+#include "fic_errorshh"
 
 #ifndef ONEWIRE_HAL_H
 #define ONEWIRE_HAL_H
