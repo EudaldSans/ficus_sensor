@@ -32,7 +32,7 @@ in_error_t DS18B20::init() {
 
     set_resolution(DS18B20::resolution_12B);
 
-    return IN_OK;
+    return FIC_OK;
 }
 
 in_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
@@ -45,7 +45,7 @@ in_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     measurement_delay_ms = resolution_delays_ms[_resolution];
     _measure_finish_time_ms = pdTICKS_TO_MS(xTaskGetTickCount()) + measurement_delay_ms;;
 
-    return IN_OK;
+    return FIC_OK;
 }
 
 bool DS18B20::is_ready() { 
@@ -61,7 +61,7 @@ in_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
 
     _resolution = resolution;
 
-    return IN_OK;
+    return FIC_OK;
 }
 
 in_error_t DS18B20::get_measurement(float &value) {
@@ -72,7 +72,7 @@ in_error_t DS18B20::get_measurement(float &value) {
 
     value = 0;
 
-    IN_ERR_RETURN_ON_FALSE(is_ready(), IN_ERR_NOT_FINISHED, ESP_LOGE(TAG, "Measurement is not yet ready"));
+    FIC_ERR_RETURN_ON_FALSE(is_ready(), FIC_ERR_NOT_FINISHED, ESP_LOGE(TAG, "Measurement is not yet ready"));
 
     IN_RETURN_ON_ERROR(_bus->reset(), ESP_LOGE(TAG, "Reset failed to get measurement"));
     IN_RETURN_ON_ERROR(_bus->write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to get measurement"));
@@ -83,5 +83,5 @@ in_error_t DS18B20::get_measurement(float &value) {
     uint8_t lsb_masked = scratchpad.temp_lsb & (~lsb_mask[scratchpad.configuration >> 5]);
     int16_t temperature_raw = (((int16_t)scratchpad.temp_msb << 8) | lsb_masked);
     value = temperature_raw / 16.0f; 
-    return IN_OK;
+    return FIC_OK;
 }

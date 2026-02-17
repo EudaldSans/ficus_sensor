@@ -12,7 +12,7 @@ in_error_t AnalogHumiditySensor::init() {
 }
 
 in_error_t AnalogHumiditySensor::deinit() { 
-    return IN_OK; 
+    return FIC_OK; 
 }
 
 in_error_t AnalogHumiditySensor::measure(float &value) {
@@ -25,5 +25,5 @@ in_error_t AnalogHumiditySensor::measure(float &value) {
     }
 
     value = humidity;
-    return IN_OK;
+    return FIC_OK;
 }

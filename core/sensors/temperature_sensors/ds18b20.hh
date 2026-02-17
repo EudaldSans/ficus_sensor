@@ -19,7 +19,7 @@ class DS18B20 : public IAsyncSensor<float> {
         ~DS18B20();
 
         in_error_t init() override;
-        in_error_t deinit() override {return IN_OK;}
+        in_error_t deinit() override {return FIC_OK;}
 
         in_error_t trigger_measurement(uint16_t &measurement_delay_ms) override;
         in_error_t get_measurement(float &value) override;

@@ -27,10 +27,10 @@ in_error_t OnewireBus::init(uint32_t max_rx_bytes) {
 
     if (onewire_new_bus_rmt(&bus_config, &rmt_config, &bus) != ESP_OK) {
         ESP_LOGE(TAG, "Unable to create new onewire unit"); 
-        return IN_ERR_SDK_FAIL;
+        return FIC_ERR_SDK_FAIL;
     }
 
-    return IN_OK;
+    return FIC_OK;
 }
 
 in_error_t OnewireBus::find_device(uint64_t address, uint64_t address_mask) {
@@ -41,7 +41,7 @@ in_error_t OnewireBus::find_device(uint64_t address, uint64_t address_mask) {
 
     if (onewire_new_device_iter(bus, &iter) != ESP_OK) {
         ESP_LOGE(TAG, "Unable to create device iterator"); 
-        return IN_ERR_SDK_FAIL;
+        return FIC_ERR_SDK_FAIL;
     }
 
     ESP_LOGI(TAG, "Device iterator created, start searching...");
@@ -63,12 +63,12 @@ in_error_t OnewireBus::find_device(uint64_t address, uint64_t address_mask) {
 
     if (onewire_del_device_iter(iter) != ESP_OK) {
         ESP_LOGE(TAG, "Unable to delete device iterator"); 
-        return IN_ERR_SDK_FAIL;
+        return FIC_ERR_SDK_FAIL;
     }
 
     ESP_LOGI(TAG, "Searching done, %d Onewire device(s) found with address 0x%x", device_num, address);
 
-    return IN_OK;
+    return FIC_OK;
 }
 
 in_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
@@ -93,14 +93,14 @@ in_error_t OnewireBus::write_to(uint64_t address, std::vector<uint8_t> tx_data) 
 }
 
 in_error_t OnewireBus::reset() {
-    return (onewire_bus_reset(bus) == ESP_OK) ? IN_OK : IN_ERR_SDK_FAIL;
+    return (onewire_bus_reset(bus) == ESP_OK) ? FIC_OK : FIC_ERR_SDK_FAIL;
 }
 
 in_error_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
-    return (onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size()) == ESP_OK) ? IN_OK : IN_ERR_SDK_FAIL;
+    return (onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size()) == ESP_OK) ? FIC_OK : FIC_ERR_SDK_FAIL;
 }
 
 in_error_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
-    return (onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size()) == ESP_OK) ? IN_OK : IN_ERR_SDK_FAIL;
+    return (onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size()) == ESP_OK) ? FIC_OK : FIC_ERR_SDK_FAIL;
 }
 
