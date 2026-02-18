@@ -7,8 +7,8 @@ class IADC {
     public:
         virtual ~IADC() = default;
 
-        virtual in_error_t measure(int &voltage) = 0;
-        virtual in_error_t init() = 0;
+        virtual fic_error_t measure(int &voltage) = 0;
+        virtual fic_error_t init() = 0;
 };
 
 

@@ -18,18 +18,18 @@ class DS18B20 : public IAsyncSensor<float> {
         DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution);
         ~DS18B20();
 
-        in_error_t init() override;
-        in_error_t deinit() override {return FIC_OK;}
+        fic_error_t init() override;
+        fic_error_t deinit() override {return FIC_OK;}
 
-        in_error_t trigger_measurement(uint16_t &measurement_delay_ms) override;
-        in_error_t get_measurement(float &value) override;
+        fic_error_t trigger_measurement(uint16_t &measurement_delay_ms) override;
+        fic_error_t get_measurement(float &value) override;
         bool is_ready() override;
 
         std::string_view get_name() const override {return "DS18B20";}
         std::string_view get_type() const override {return "temperature";} 
         std::string_view get_unit() const override {return "°C";}
 
-        in_error_t set_resolution(ds18b20_resolution_t resolution);
+        fic_error_t set_resolution(ds18b20_resolution_t resolution);
     
     private: 
         static constexpr  uint8_t cmd_convert_temp = 0x44;

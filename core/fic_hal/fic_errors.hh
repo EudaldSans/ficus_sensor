@@ -3,7 +3,7 @@
 #ifndef FIC_ERRORS_HH
 #define FIC_ERRORS_HH
 
-enum in_error_t {
+enum fic_error_t {
     FIC_OK = 0,
     FIC_ERR_FAIL = -1,
 
@@ -39,7 +39,7 @@ enum in_error_t {
     } while(0)
 
 #define IN_RETURN_VALUE_ON_ERROR(x, value, log_action) do { \
-        in_error_t err_rc_ = (x);                           \
+        fic_error_t err_rc_ = (x);                           \
         if (unlikely(err_rc_ != FIC_OK)) {                  \
             log_action;                                     \
             return value;                                   \
@@ -47,7 +47,7 @@ enum in_error_t {
     } while(0)
 
 #define IN_RETURN_ON_ERROR(x, log_action) do {  \
-        in_error_t err_rc_ = (x);               \
+        fic_error_t err_rc_ = (x);               \
         if (unlikely(err_rc_ != FIC_OK)) {       \
             log_action;                         \
             return err_rc_;                     \
@@ -55,7 +55,7 @@ enum in_error_t {
     } while(0)
 
 #define IN_RETURN_VOID_ON_ERROR(x, log_action) do {  \
-        in_error_t err_rc_ = (x);               \
+        fic_error_t err_rc_ = (x);               \
         if (unlikely(err_rc_ != FIC_OK)) {       \
             log_action;                         \
             return;                             \

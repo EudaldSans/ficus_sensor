@@ -16,7 +16,7 @@ ADC::ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bi
     this->bitwidth = bitwidth;
 }
 
-in_error_t ADC::init() {
+fic_error_t ADC::init() {
     ESP_LOGI(TAG, "Setting up ADC channel %d", channel);
     if (_initialized) {
         ESP_LOGW(TAG, "Tried to initialize an already initialized ADC!");
@@ -61,7 +61,7 @@ ADC::~ADC() {
     if (_initialized) adc_cali_delete_scheme_curve_fitting(adc_cali_handle);
 }
 
-in_error_t ADC::measure(int &voltage_out) {
+fic_error_t ADC::measure(int &voltage_out) {
     int adc_raw[2][10];
     int voltage[2][10];
 

@@ -22,7 +22,7 @@ DS18B20::DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resoluti
 
 DS18B20::~DS18B20() {}
 
-in_error_t DS18B20::init() {
+fic_error_t DS18B20::init() {
     const uint64_t ds18b20_address = 0x28;
     const uint64_t ds18b20_mask = 0xFF;
     const uint32_t max_rx_bytes = 10;
@@ -35,7 +35,7 @@ in_error_t DS18B20::init() {
     return FIC_OK;
 }
 
-in_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
+fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     constexpr uint32_t resolution_delays_ms[4] = {100, 200, 400, 800};
     std::vector<uint8_t> tx_buffer = {cmd_convert_temp};
 
@@ -52,7 +52,7 @@ bool DS18B20::is_ready() {
     return pdTICKS_TO_MS(xTaskGetTickCount()) >= _measure_finish_time_ms; 
 }
 
-in_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
+fic_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
     const uint8_t resolution_data[4] = {0x1F, 0x3F, 0x5F, 0x7F};
     std::vector<uint8_t> tx_buffer = {0, 0, resolution_data[resolution]};
 
@@ -64,7 +64,7 @@ in_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
     return FIC_OK;
 }
 
-in_error_t DS18B20::get_measurement(float &value) {
+fic_error_t DS18B20::get_measurement(float &value) {
     ds18b20_scratchpad_t scratchpad = {};
     std::vector<uint8_t> tx_buffer = {cmd_read_scratchpad};
     std::vector<uint8_t> rx_buffer(sizeof(ds18b20_scratchpad_t));

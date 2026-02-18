@@ -7,15 +7,15 @@ AnalogHumiditySensor::AnalogHumiditySensor(std::shared_ptr<IADC> adc, uint32_t m
 
 AnalogHumiditySensor::~AnalogHumiditySensor() {}
 
-in_error_t AnalogHumiditySensor::init() {
+fic_error_t AnalogHumiditySensor::init() {
     return _adc->init();
 }
 
-in_error_t AnalogHumiditySensor::deinit() { 
+fic_error_t AnalogHumiditySensor::deinit() { 
     return FIC_OK; 
 }
 
-in_error_t AnalogHumiditySensor::measure(float &value) {
+fic_error_t AnalogHumiditySensor::measure(float &value) {
     int voltage;
     _adc->measure(voltage);
     float humidity = 100 - 100 * voltage/_max_voltage_mv;
