@@ -44,6 +44,9 @@ fic_error_t LEDStripSingle::init() {
         return FIC_ERR_SDK_FAIL;
     }
 
+    led_strip_clear(_led_strip);
+    led_strip_refresh(_led_strip);
+
     _initialized = true;
 
     return FIC_OK;
