@@ -24,14 +24,14 @@ public:
     ~LEDSignaler() = default;
 
     fic_error_t set_solid(bool on);
-    fic_error_t set_blink(uint32_t on_time_ms, uint32_t off_time_ms, uint32_t cycles) = 0;
-    fic_error_t set_custom_signal(std::vector<LED_action_t> pattern_composition, uint32_t cycles) = 0;   
+    fic_error_t set_blink(uint32_t on_time_ms, uint32_t off_time_ms, uint32_t cycles);
+    fic_error_t set_custom_signal(std::vector<LED_action_t> pattern_composition, uint32_t cycles);   
     
 private: 
     void setup();
     void update();
 
-    const &ILightable _led;
+    &ILightable _led;
 };
 
 struct RGB_action_t {
@@ -42,18 +42,18 @@ struct RGB_action_t {
 
 class RGBSignaler : public ITask {
 public:
-    RGBSignaler(&IColorable led) : _led(led) {}
+    RGBSignaler(&IColorable led) : _rgb_led(led) {}
     ~RGBSignaler() = default;
 
     fic_error_t set_solid(Color color);
     fic_error_t set_blink(Color color_1, uint32_t color_1_time_ms, Color color_2, uint32_t off_time_ms, uint32_t cycles);
-    fic_error_t set_custom_signal(std::vector<LED_action_t> pattern_composition, uint32_t cycles);   
+    fic_error_t set_custom_signal(std::vector<RGB_action_t> pattern_composition, uint32_t cycles);   
     
 private: 
     void setup();
     void update();
 
-    const &IColorable _rgb_led;
+    &IColorable _rgb_led;
 };
 
 
