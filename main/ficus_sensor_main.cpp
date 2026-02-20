@@ -28,7 +28,7 @@
 
 #define LED_STRIP_RMT_RES_HZ  (10 * 1000 * 1000)
 
-LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812);
+LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
 
 static const char *TAG = "example";
 

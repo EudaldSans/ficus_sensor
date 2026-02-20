@@ -25,7 +25,7 @@ public:
 };
 
 struct Color {
-    uint8_t r, g, b;
+    uint32_t red, green, blue;
 };
 
 class IColorable : public ILightable {

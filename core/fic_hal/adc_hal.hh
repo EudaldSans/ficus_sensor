@@ -1,4 +1,4 @@
-#include "fic_errorshh"
+#include "fic_errors.hh"
 
 #ifndef ADC_HAL_H
 #define ADC_HAL_H

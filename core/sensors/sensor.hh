@@ -1,6 +1,6 @@
 #include <string>
 
-#include "fic_errorshh"
+#include "fic_errors.hh"
 
 #ifndef SENSOR_H
 #define SENSOR_H
