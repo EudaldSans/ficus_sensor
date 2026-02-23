@@ -26,7 +26,6 @@ class OnewireBus : public IOnewireBus {
         
     protected:
     private:
-
         onewire_bus_handle_t bus = nullptr; 
         int bus_gpio_num;
 

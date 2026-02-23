@@ -20,33 +20,8 @@ void TaskManager::run(void* pvParameters) {
         for (size_t i = 0; i < self->_task_count; i++) {
             ITask* task = self->_tasks[i];
 
-            if (task->get_task_type() == TaskType::ONE_SHOT) {
-                IOneShotTask* one_shot_task = static_cast<IOneShotTask*>(task);
-                if (one_shot_task->is_finished()) continue;
-
-                one_shot_task->update(now);
-
-            } else if (task->get_task_type() == TaskType::INTERVAL) {
-                IIntervalTask* interval_task = static_cast<IIntervalTask*>(task);
-                
-                if (interval_task->get_run_period_ms() + interval_task->last_run_time_ms > now) continue;
-
-                interval_task->update(now);
-                
-                uint32_t time_to_next = interval_task->get_run_period_ms() - (now - interval_task->last_run_time_ms);
-                if (time_to_next < next_run_in_ms) next_run_in_ms = time_to_next;
-
-                interval_task->last_run_time_ms = now;
-
-            } else if (task->get_task_type() == TaskType::CONTINUOUS) {
-                IContinuousTask* continuous_task = static_cast<IContinuousTask*>(task);
-
-                continuous_task->update(now);
-                next_run_in_ms = 0; // Run task continuously
-
-            } else {
-                ESP_LOGW(TAG, "Unknown task type for task in manager %s", self->_name.c_str());
-            }
+            if (!task->should_run(now)) continue;
+            task->update(now);
         }
         
         TickType_t ticks_to_wait = pdMS_TO_TICKS(next_run_in_ms);

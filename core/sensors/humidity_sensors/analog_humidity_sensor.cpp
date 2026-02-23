@@ -17,7 +17,7 @@ fic_error_t AnalogHumiditySensor::deinit() {
 
 fic_error_t AnalogHumiditySensor::measure(float &value) {
     int voltage;
-    _adc.measure(voltage);
+    FIC_RETURN_ON_ERROR(_adc.measure(voltage), ESP_LOGE(TAG, "Failed to measure ADC voltage"));
     float humidity = 100 - 100 * static_cast<float>(voltage) / static_cast<float>(_max_voltage_mv);
 
     if (humidity < 0) {

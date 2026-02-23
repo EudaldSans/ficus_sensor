@@ -35,10 +35,12 @@ public:
         uint16_t measurement_delay_ms;
 
         if (!_sensor.is_ready()) { ESP_LOGW(TAG, "Measurement not ready yet"); return;}
-        IN_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), ESP_LOGE(TAG, "Failed to get sensor value"));
+        FIC_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), ESP_LOGE(TAG, "Failed to get sensor value"));
         
         _measurement_output->emit(value);
         _sensor.trigger_measurement(measurement_delay_ms); 
+
+        last_run_time_ms = now;
     }
     
     uint32_t get_run_period_ms() override {
@@ -70,9 +72,11 @@ public:
     void update(uint64_t now) override {
         T value;
 
-        IN_RETURN_VOID_ON_ERROR(_sensor.measure(value), ESP_LOGE(TAG, "Failed to measure sensor value"));
+        FIC_RETURN_VOID_ON_ERROR(_sensor.measure(value), ESP_LOGE(TAG, "Failed to measure sensor value"));
 
         _measurement_output->emit(value);
+
+        last_run_time_ms = now;
     }
 
     uint32_t get_run_period_ms() override {return _measurement_period_ms;}

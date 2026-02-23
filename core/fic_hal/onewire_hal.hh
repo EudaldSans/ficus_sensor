@@ -16,6 +16,11 @@ class IOnewireBus {
         virtual fic_error_t write_bytes(std::vector<uint8_t> tx_data) = 0;
         virtual fic_error_t write_to_all(std::vector<uint8_t> tx_data) = 0;
         virtual fic_error_t write_to(uint64_t address, std::vector<uint8_t> tx_data) = 0;
+
+        bool is_initialized() const { return _initialized; }
+
+    private: 
+        bool _initialized = false;
 };
 
 #endif

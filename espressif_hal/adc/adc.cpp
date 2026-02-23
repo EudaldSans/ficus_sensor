@@ -62,21 +62,21 @@ ADC::~ADC() {
 }
 
 fic_error_t ADC::measure(int &voltage_out) {
-    int adc_raw[2][10];
-    int voltage[2][10];
+    int adc_raw;
+    int voltage;
 
-    if (adc_oneshot_read(adc_handle, channel, &adc_raw[0][0]) != ESP_OK) {
+    if (adc_oneshot_read(adc_handle, channel, &adc_raw) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to read raw voltage"); 
         return FIC_ERR_SDK_FAIL;
     }
 
-    if (adc_cali_raw_to_voltage(adc_cali_handle, adc_raw[0][0], &voltage[0][0]) != ESP_OK) {
+    if (adc_cali_raw_to_voltage(adc_cali_handle, adc_raw, &voltage) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to calibrate raw voltage"); 
         return FIC_ERR_SDK_FAIL;
     }
 
-    ESP_LOGD(TAG, "ADC channel %d measurement: %dmV", channel, voltage[0][0]);
-    voltage_out = voltage[0][0];
+    ESP_LOGD(TAG, "ADC channel %d measurement: %dmV", channel, voltage);
+    voltage_out = voltage;
 
     return FIC_OK;
 }

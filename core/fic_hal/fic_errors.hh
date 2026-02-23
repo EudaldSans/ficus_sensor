@@ -38,7 +38,7 @@ enum fic_error_t {
         }                                                       \
     } while(0)
 
-#define IN_RETURN_VALUE_ON_ERROR(x, value, log_action) do { \
+#define FIC_RETURN_VALUE_ON_ERROR(x, value, log_action) do { \
         fic_error_t err_rc_ = (x);                           \
         if (unlikely(err_rc_ != FIC_OK)) {                  \
             log_action;                                     \
@@ -46,7 +46,7 @@ enum fic_error_t {
         }                                                   \
     } while(0)
 
-#define IN_RETURN_ON_ERROR(x, log_action) do {  \
+#define FIC_RETURN_ON_ERROR(x, log_action) do {  \
         fic_error_t err_rc_ = (x);               \
         if (unlikely(err_rc_ != FIC_OK)) {       \
             log_action;                         \
@@ -54,7 +54,7 @@ enum fic_error_t {
         }                                       \
     } while(0)
 
-#define IN_RETURN_VOID_ON_ERROR(x, log_action) do {  \
+#define FIC_RETURN_VOID_ON_ERROR(x, log_action) do {  \
         fic_error_t err_rc_ = (x);               \
         if (unlikely(err_rc_ != FIC_OK)) {       \
             log_action;                         \

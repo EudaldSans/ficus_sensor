@@ -18,6 +18,11 @@ OnewireBus::~OnewireBus() {
 }
 
 fic_error_t OnewireBus::init(uint32_t max_rx_bytes) {
+    if (_initialized) {
+        ESP_LOGW(TAG, "Tried to initialize an already initialized bus!");
+        return FIC_ERR_NOT_ALLOWED;
+    }
+
     onewire_bus_config_t bus_config = {};
     bus_config.bus_gpio_num = bus_gpio_num;
     bus_config.flags.en_pull_up = true;
@@ -29,6 +34,8 @@ fic_error_t OnewireBus::init(uint32_t max_rx_bytes) {
         ESP_LOGE(TAG, "Unable to create new onewire unit"); 
         return FIC_ERR_SDK_FAIL;
     }
+
+    _initialized = true;
 
     return FIC_OK;
 }
