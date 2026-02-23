@@ -5,11 +5,19 @@
 #ifndef TASK_H
 #define TASK_H
 
+enum class TaskType {
+    ONE_SHOT,
+    INTERVAL,
+    CONTINUOUS
+};
+
 class ITask {
     public: 
         virtual ~ITask() = default;
         virtual void setup() = 0;
         virtual void update(uint64_t now) = 0;  
+
+        TaskType get_task_type() const { return TaskType::CONTINUOUS; }
 };
 
 class IOneShotTask : public ITask {
@@ -17,14 +25,18 @@ class IOneShotTask : public ITask {
         virtual ~IOneShotTask() = default;
         virtual bool is_finished() = 0;
         virtual bool reset() = 0; // Resets the task to be run again
+
+        TaskType get_task_type() const { return TaskType::ONE_SHOT; }
 };
 
 
-class IntervalTask : public ITask {
+class IIntervalTask : public ITask {
     public:
-        virtual ~IntervalTask() = default;
+        virtual ~IIntervalTask() = default;
 
         virtual uint32_t get_run_period_ms() = 0; // Return interval in milliseconds
+        TaskType get_task_type() const { return TaskType::INTERVAL; }
+
 
         uint64_t last_run_time_ms = 0;
 };

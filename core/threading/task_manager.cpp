@@ -11,30 +11,42 @@ void TaskManager::run(void* pvParameters) {
     
     ESP_LOGI(TAG, "Setting up tasks for manager %s", self->_name.c_str());
     for (auto& task : self->_tasks) task->setup();
-    for (auto& task : self->_interval_tasks) task->setup();
-    for (auto& task : self->_one_shot_tasks) task->setup();
 
     ESP_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
     while (self->_running) {
         uint64_t now = pdTICKS_TO_MS(xTaskGetTickCount());
+        uint32_t next_run_in_ms = 100; // Default max sleep time
 
         for (auto& task : self->_one_shot_tasks) {
             if (task->is_finished()) continue;
             task->update(now);
         }
 
-        for (auto& task : self->_interval_tasks) {
-            if (now - task->last_run_time_ms >= task->get_run_period_ms()) {
+        for (size_t i = 0; i < self->_task_count; i++) {
+            auto& task = self->_tasks[i];
+
+            if (task->get_task_type() == TaskType::ONE_SHOT) {
+                if (task->is_finished()) continue;
+
+                task->update(now);
+
+            } else if (task->get_task_type() == TaskType::INTERVAL) {
                 task->update(now);
                 task->last_run_time_ms = now;
+
+                uint32_t time_to_next = task->get_run_period_ms() - (now - task->last_run_time_ms);
+                if (time_to_next < next_run_in_ms) next_run_in_ms = time_to_next;
+
+            } else if (task->get_task_type() == TaskType::CONTINUOUS) {
+                task->update(now);
+                next_run_in_ms = 0; // Run task continuously
+
+            } else {
+                ESP_LOGW(TAG, "Unknown task type for task in manager %s", self->_name.c_str());
             }
         }
-
-        for (auto& task : self->_tasks) {
-            task->update(now);
-        }
         
-        vTaskDelay(pdMS_TO_TICKS(15));
+        vTaskDelay(pdMS_TO_TICKS(next_run_in_ms));
     }
     vTaskDelete(NULL);
 }
@@ -46,16 +58,12 @@ void TaskManager::start() {
     xTaskCreatePinnedToCore(run, _name.c_str(), _stack_size, this, 10, &_handle, _core_id);
 }
 
-void TaskManager::add_task(std::shared_ptr<ITask> task) {
-    _tasks.push_back(task);
-}
-
-void TaskManager::add_interval_task(std::shared_ptr<IntervalTask> task) {
-    _interval_tasks.push_back(task);
-}
-
-void TaskManager::add_one_shot_task(std::shared_ptr<IOneShotTask> task) {
-    _one_shot_tasks.push_back(task);
+void TaskManager::add_task(ITask* task) {
+    if (_task_count < _tasks.size()) {
+        _tasks[_task_count++] = task;
+    } else {
+        ESP_LOGE(TAG, "Task limit reached!");
+    }
 }
 
 void TaskManager::stop() { 
