@@ -14,7 +14,7 @@
 #define INFINITE_CYCLES -1
 #endif
 
-#define MAX_STEPS_IN_RGB_SIGNAL 16
+#define MAX_STEPS_IN_RGB_SIGNAL 24
 
 struct RGB_action_t {
     bool on;
