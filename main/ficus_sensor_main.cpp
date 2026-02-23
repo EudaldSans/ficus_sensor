@@ -11,8 +11,6 @@
 
 #include "esp_log.h"
 
-#include "sensor_endpoint_factory.hh"
-
 #include "task_manager.hh"
 
 #include "router.hh"
