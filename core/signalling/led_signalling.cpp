@@ -57,7 +57,7 @@ fic_error_t LEDSignaler::set_blink(uint32_t on_time_ms, uint32_t off_time_ms, in
 fic_error_t LEDSignaler::set_custom_signal(const std::vector<LED_action_t> pattern_composition, int32_t cycles) {
     std::lock_guard<std::mutex> lock(_mutex);
 
-    if (pattern_composition.size() > MAX_STEPS_IN_SIGNAL) return FIC_ERR_INVALID_ARG;
+    if (pattern_composition.size() > MAX_STEPS_IN_LED_SIGNAL) return FIC_ERR_INVALID_ARG;
     if (pattern_composition.size() == 0) return FIC_ERR_INVALID_ARG;
     
     _new_request = true;

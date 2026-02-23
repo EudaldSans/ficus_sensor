@@ -7,12 +7,14 @@
 #include "led_hal.hh"
 #include "timer.hh"
 
-
 #ifndef LED_SIGNALLING_HH
 #define LED_SIGNALLING_HH
 
-#define MAX_STEPS_IN_SIGNAL 16
+#ifndef INFINITE_CYCLES
 #define INFINITE_CYCLES -1
+#endif
+
+#define MAX_STEPS_IN_LED_SIGNAL 16
 
 struct LED_action_t {
     bool on;
@@ -32,7 +34,7 @@ private:
     struct signal_request_t {
         uint16_t steps = 0;
         int32_t cycles = 0;
-        std::array<LED_action_t, MAX_STEPS_IN_SIGNAL> pattern;
+        std::array<LED_action_t, MAX_STEPS_IN_LED_SIGNAL> pattern;
     };
 
     void setup();
@@ -41,7 +43,7 @@ private:
 
     ILightable &_led;
 
-    std::array<LED_action_t, MAX_STEPS_IN_SIGNAL> _pattern;
+    std::array<LED_action_t, MAX_STEPS_IN_LED_SIGNAL> _pattern;
 
     uint16_t _current_step = 0;
     uint16_t _active_steps = 0;
@@ -53,36 +55,5 @@ private:
 
     std::mutex _mutex;
 };
-
-struct RGB_action_t {
-    bool on;
-    Color color;
-    uint32_t duration_ms;
-};
-
-class RGBSignaler : public ITask {
-public:
-    RGBSignaler(IColorable &led) : _rgb_led(led) {};
-    ~RGBSignaler() = default;
-
-    fic_error_t set_solid(Color color);
-    fic_error_t set_blink(Color color_1, uint32_t color_1_time_ms, Color color_2, uint32_t off_time_ms, int32_t cycles);
-    fic_error_t set_custom_signal(const std::vector<RGB_action_t> pattern_composition, int32_t cycles);   
-    
-private: 
-    void setup();
-    void update(uint64_t now);
-
-    IColorable &_rgb_led;
-
-    std::array<RGB_action_t, MAX_STEPS_IN_SIGNAL> _pattern;
-
-    uint16_t _current_step = 0;
-    uint16_t _active_steps = 0;
-    int32_t _remaining_cycles = 0;
-
-    uint64_t _last_action_time_ms;
-};
-
 
 #endif
