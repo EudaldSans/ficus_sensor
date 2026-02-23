@@ -9,6 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "sdkconfig.h"
 #include "esp_log.h"
 
 #include "task_manager.hh"
@@ -16,6 +17,10 @@
 #include "router.hh"
 #include "endpoint.hh"
 #include "conversions.hh"
+
+#include "sensor_endpoints.hh"
+#include "ds18b20.hh"
+#include "analog_humidity_sensor.hh"
 
 #include "onewire_bus.hh"
 #include "adc.hh"
@@ -35,27 +40,26 @@ const uint16_t sensor_meas_period_ms = 30000;
 
 const std::string t_sensor_config_name = "ds18b20_0";
 OnewireBus onewire(ONEWIRE_BUS_GPIO);
+DS18B20 t_sensor = DS18B20(onewire, DS18B20::resolution_12B);
 AsyncSensorEndpoint<float> t_endpoint(
     t_sensor_config_name,
-    std::make_shared<DS18B20>(onewire, DS18B20::resolution_12B),
+    t_sensor,
     sensor_meas_period_ms
 );
 
 const std::string h_sensor_config_name = "analog_humidity_0";
 const uint32_t h_sensor_max_mv = 3300;
 ADC adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
+AnalogHumiditySensor h_sensor = AnalogHumiditySensor(adc, h_sensor_max_mv);
 SensorEndpoint<float> h_endpoint(
     h_sensor_config_name,
-    std::make_shared<AnalogHumiditySensor>(adc, h_sensor_max_mv),
+    h_sensor,
     sensor_meas_period_ms
 );
 
 static const char *TAG = "main";
 
-extern "C" void app_main(void) {
-    auto onewire = std::make_shared<OnewireBus>(ONEWIRE_BUS_GPIO);
-    auto adc = std::make_shared<ADC>(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
-    
+extern "C" void app_main(void) {  
     led_strip.init();
 
     TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
@@ -69,17 +73,17 @@ extern "C" void app_main(void) {
 
     ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
-    auto consumer = std::make_shared<ChannelEndpoint>();
+    auto consumer = ChannelEndpoint();
 
     std::string t_consumer = "temperature_consumer"; 
     std::string h_consumer = "humidity_consumer";
 
-    consumer->add_input_channel<int>(t_consumer, 
+    consumer.add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
             ESP_LOGI(TAG, "t_consumer got %d", temperature);
         }
     );
-    consumer->add_input_channel<int>(h_consumer, 
+    consumer.add_input_channel<int>(h_consumer, 
         [](const int& humidity) {
             ESP_LOGI(TAG, "h_consumer got %d", humidity);
         }

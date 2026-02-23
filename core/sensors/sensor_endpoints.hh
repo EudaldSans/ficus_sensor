@@ -16,7 +16,7 @@ public:
 template <typename T> 
 class AsyncSensorEndpoint : public ISensorEndpointBase { 
 public: 
-    AsyncSensorEndpoint(const std::string& output_name, std::shared_ptr<IAsyncSensor<T>> sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) {
+    AsyncSensorEndpoint(const std::string& output_name, IAsyncSensor<T> &sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) {
         _measurement_output = add_output_channel<T>(_output_name);
     }
     ~AsyncSensorEndpoint() = default; 
@@ -24,19 +24,21 @@ public:
     void setup() override { 
         uint16_t measurement_delay_ms;
 
-        _sensor->init(); 
-        _sensor->trigger_measurement(measurement_delay_ms); 
+        ESP_LOGI(TAG, "Setting up AsyncSensorEndpoint");
+
+        _sensor.init(); 
+        _sensor.trigger_measurement(measurement_delay_ms); 
     }
 
     void update(uint64_t now) override { 
         T value;
         uint16_t measurement_delay_ms;
 
-        if (!_sensor->is_ready()) { ESP_LOGW(TAG, "Measurement not ready yet"); return;}
-        IN_RETURN_VOID_ON_ERROR(_sensor->get_measurement(value), ESP_LOGE(TAG, "Failed to get sensor value"));
+        if (!_sensor.is_ready()) { ESP_LOGW(TAG, "Measurement not ready yet"); return;}
+        IN_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), ESP_LOGE(TAG, "Failed to get sensor value"));
         
         _measurement_output->emit(value);
-        _sensor->trigger_measurement(measurement_delay_ms); 
+        _sensor.trigger_measurement(measurement_delay_ms); 
     }
     
     uint32_t get_run_period_ms() override {
@@ -47,7 +49,7 @@ private:
     OutputChannel<T>* _measurement_output; 
     
     const std::string _output_name; 
-    std::shared_ptr<IAsyncSensor<T>> _sensor; 
+    IAsyncSensor<T> &_sensor; 
     const uint16_t _measurement_period_ms;
     
     constexpr static char const *TAG = "AsyncSensorEndpoint"; 
@@ -56,19 +58,19 @@ private:
 template <typename T> 
 class SensorEndpoint : public ISensorEndpointBase {
 public:
-    SensorEndpoint(const std::string& output_name, std::shared_ptr<ISensor<T>> sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) { 
+    SensorEndpoint(const std::string& output_name, ISensor<T> &sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) { 
         _measurement_output = add_output_channel<T>(_output_name); 
     } 
     ~SensorEndpoint() = default; 
 
     void setup() override {
-        _sensor->init();
+        _sensor.init();
     }
     
     void update(uint64_t now) override {
         T value;
 
-        IN_RETURN_VOID_ON_ERROR(_sensor->measure(value), ESP_LOGE(TAG, "Failed to measure sensor value"));
+        IN_RETURN_VOID_ON_ERROR(_sensor.measure(value), ESP_LOGE(TAG, "Failed to measure sensor value"));
 
         _measurement_output->emit(value);
     }
@@ -79,7 +81,7 @@ private:
     OutputChannel<T>* _measurement_output;
 
     const std::string _output_name;
-    const std::shared_ptr<ISensor<T>> _sensor;
+    ISensor<T> &_sensor;
     const uint16_t _measurement_period_ms;
 
     constexpr static char const *TAG = "SensorEndpoint";

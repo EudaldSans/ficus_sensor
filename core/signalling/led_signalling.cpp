@@ -15,11 +15,11 @@ fic_error_t LEDSignaler::set_solid(bool on) {
     _new_signal = {
         .steps = 1,
         .cycles = INFINITE_CYCLES,
-        .pattern = {0}
+        .pattern = {}
     };
 
     _new_signal.pattern[0] = {on, 0xFFFFFFFF};
-
+    
     return FIC_OK;
 }
 
@@ -38,7 +38,7 @@ fic_error_t LEDSignaler::set_blink(uint32_t on_time_ms, uint32_t off_time_ms, in
     _new_signal = {
         .steps = 2,
         .cycles = cycles,
-        .pattern = {0}
+        .pattern = {}
     };
 
     _new_signal.pattern[0] = {true, on_time_ms};
@@ -64,7 +64,7 @@ fic_error_t LEDSignaler::set_custom_signal(const std::vector<LED_action_t> patte
     _new_signal = {
         .steps = static_cast<uint16_t>(pattern_composition.size()),
         .cycles = cycles,
-        .pattern = {0}
+        .pattern = {}
     };
 
     std::copy(pattern_composition.begin(), pattern_composition.end(), _new_signal.pattern.begin());

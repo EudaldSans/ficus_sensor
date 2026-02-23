@@ -16,7 +16,7 @@ typedef struct {
     uint8_t crc_value;     /*!< crc value of scratchpad data */
 } __attribute__((packed)) ds18b20_scratchpad_t;
 
-DS18B20::DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution) : IAsyncSensor<float>(), _bus(bus) {
+DS18B20::DS18B20(IOnewireBus &bus, ds18b20_resolution_t resolution) : IAsyncSensor<float>(), _bus(bus) {
     _resolution = resolution;
 }
 
@@ -27,8 +27,8 @@ fic_error_t DS18B20::init() {
     const uint64_t ds18b20_mask = 0xFF;
     const uint32_t max_rx_bytes = 10;
 
-    IN_RETURN_ON_ERROR(_bus->init(max_rx_bytes), ESP_LOGE(TAG, "Failed to initialize bus"));
-    IN_RETURN_ON_ERROR(_bus->find_device(ds18b20_address, ds18b20_mask), ESP_LOGE(TAG, "Failed to find device"));
+    IN_RETURN_ON_ERROR(_bus.init(max_rx_bytes), ESP_LOGE(TAG, "Failed to initialize bus"));
+    IN_RETURN_ON_ERROR(_bus.find_device(ds18b20_address, ds18b20_mask), ESP_LOGE(TAG, "Failed to find device"));
 
     set_resolution(DS18B20::resolution_12B);
 
@@ -39,8 +39,8 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     constexpr uint32_t resolution_delays_ms[4] = {100, 200, 400, 800};
     std::vector<uint8_t> tx_buffer = {cmd_convert_temp};
 
-    IN_RETURN_ON_ERROR(_bus->reset(), ESP_LOGE(TAG, "Reset failed to trigger measurement"));
-    IN_RETURN_ON_ERROR(_bus->write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to trigger measurement"));
+    IN_RETURN_ON_ERROR(_bus.reset(), ESP_LOGE(TAG, "Reset failed to trigger measurement"));
+    IN_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to trigger measurement"));
 
     measurement_delay_ms = resolution_delays_ms[_resolution];
     _measure_finish_time_ms = pdTICKS_TO_MS(xTaskGetTickCount()) + measurement_delay_ms;;
@@ -56,8 +56,10 @@ fic_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
     const uint8_t resolution_data[4] = {0x1F, 0x3F, 0x5F, 0x7F};
     std::vector<uint8_t> tx_buffer = {0, 0, resolution_data[resolution]};
 
-    IN_RETURN_ON_ERROR(_bus->reset(), ESP_LOGE(TAG, "Reset failed to set resolution"));
-    IN_RETURN_ON_ERROR(_bus->write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to set resolution"));
+    ESP_LOGI(TAG, "Setting resolution to %d", resolution);
+
+    IN_RETURN_ON_ERROR(_bus.reset(), ESP_LOGE(TAG, "Reset failed to set resolution"));
+    IN_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to set resolution"));
 
     _resolution = resolution;
 
@@ -74,9 +76,9 @@ fic_error_t DS18B20::get_measurement(float &value) {
 
     FIC_ERR_RETURN_ON_FALSE(is_ready(), FIC_ERR_NOT_FINISHED, ESP_LOGE(TAG, "Measurement is not yet ready"));
 
-    IN_RETURN_ON_ERROR(_bus->reset(), ESP_LOGE(TAG, "Reset failed to get measurement"));
-    IN_RETURN_ON_ERROR(_bus->write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to get measurement"));
-    IN_RETURN_ON_ERROR(_bus->read_bytes(rx_buffer), ESP_LOGE(TAG, "Read data failed to get measurement"));
+    IN_RETURN_ON_ERROR(_bus.reset(), ESP_LOGE(TAG, "Reset failed to get measurement"));
+    IN_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to get measurement"));
+    IN_RETURN_ON_ERROR(_bus.read_bytes(rx_buffer), ESP_LOGE(TAG, "Read data failed to get measurement"));
 
     memcpy(&scratchpad, rx_buffer.data(), sizeof(ds18b20_scratchpad_t));
 

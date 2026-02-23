@@ -21,7 +21,7 @@ class ITask {
 class IContinuousTask : public ITask {
     public:
         virtual ~IContinuousTask() = default;
-        TaskType get_task_type() const { return TaskType::CONTINUOUS; }
+        TaskType get_task_type() { return TaskType::CONTINUOUS; }
 };
 
 class IOneShotTask : public ITask {
@@ -30,7 +30,7 @@ class IOneShotTask : public ITask {
         virtual bool is_finished() = 0;
         virtual bool reset() = 0; // Resets the task to be run again
 
-        TaskType get_task_type() const { return TaskType::ONE_SHOT; }
+        TaskType get_task_type() { return TaskType::ONE_SHOT; }
 };
 
 
@@ -39,7 +39,7 @@ class IIntervalTask : public ITask {
         virtual ~IIntervalTask() = default;
 
         virtual uint32_t get_run_period_ms() = 0; // Return interval in milliseconds
-        TaskType get_task_type() const { return TaskType::INTERVAL; }
+        TaskType get_task_type() { return TaskType::INTERVAL; }
 
 
         uint64_t last_run_time_ms = 0;

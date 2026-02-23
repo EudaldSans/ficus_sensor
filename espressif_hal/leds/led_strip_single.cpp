@@ -1,6 +1,8 @@
 
 #include "led_strip_single.hh"
 
+#include "esp_log.h"
+
 /**
  * @brief Construct a new LEDStripSingle::LEDStripSingle object
  * 

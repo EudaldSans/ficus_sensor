@@ -20,7 +20,7 @@ fic_error_t RGBSignaler::set_solid(Color color) {
 	_new_signal = {
 		.steps = 1,
 		.cycles = INFINITE_CYCLES,
-		.pattern = {0}
+		.pattern = {}
 	};
 
 	_new_signal.pattern[0] = {led_on, color, 0xFFFFFFFF};
@@ -56,7 +56,7 @@ fic_error_t RGBSignaler::set_blink(Color color_1, uint32_t color_1_time_ms, Colo
 	_new_signal = {
 		.steps = 2,
 		.cycles = cycles,
-		.pattern = {0}
+		.pattern = {}
 	};
 
 	_new_signal.pattern[0] = {color_1_on, color_1, color_1_time_ms};
@@ -75,7 +75,7 @@ fic_error_t RGBSignaler::set_custom_signal(const std::vector<RGB_action_t> patte
 	_new_signal = {
 		.steps = static_cast<uint16_t>(pattern_composition.size()),
 		.cycles = cycles,
-		.pattern = {0}
+		.pattern = {}
 	};
 
 	std::copy(pattern_composition.begin(), pattern_composition.end(), _new_signal.pattern.begin());

@@ -15,7 +15,7 @@ class DS18B20 : public IAsyncSensor<float> {
             resolution_12B, 
         } ds18b20_resolution_t;
         
-        DS18B20(std::shared_ptr<IOnewireBus> bus, ds18b20_resolution_t resolution);
+        DS18B20(IOnewireBus& bus, ds18b20_resolution_t resolution);
         ~DS18B20();
 
         fic_error_t init() override;
@@ -36,7 +36,7 @@ class DS18B20 : public IAsyncSensor<float> {
         static constexpr  uint8_t cmd_write_scratchpad = 0x4E;
         static constexpr  uint8_t cmd_read_scratchpad = 0xBE;
 
-        std::shared_ptr<IOnewireBus> _bus;
+        IOnewireBus &_bus;
         ds18b20_resolution_t _resolution;
         uint64_t _measure_finish_time_ms = 0xFFFFFFFFFFFFFFFF;
 

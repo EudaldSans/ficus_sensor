@@ -9,7 +9,7 @@
 class AnalogHumiditySensor : public ISensor<float> {
     public: 
       
-        AnalogHumiditySensor(std::shared_ptr<IADC> adc, uint32_t max_voltage_mv);
+        AnalogHumiditySensor(IADC& adc, uint32_t max_voltage_mv);
         ~AnalogHumiditySensor();
 
         fic_error_t init() override;
@@ -21,7 +21,7 @@ class AnalogHumiditySensor : public ISensor<float> {
         std::string_view get_unit() const override {return "%";}
 
     private: 
-        std::shared_ptr<IADC> _adc;
+        IADC &_adc;
         uint32_t _max_voltage_mv;
 
         constexpr static char const *TAG = "ANALOG HUMIDITY";

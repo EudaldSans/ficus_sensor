@@ -10,7 +10,7 @@ void TaskManager::run(void* pvParameters) {
     auto* self = static_cast<TaskManager*>(pvParameters);
     
     ESP_LOGI(TAG, "Setting up tasks for manager %s", self->_name.c_str());
-    for (auto& task : self->_tasks) task->setup();
+    for (size_t i = 0; i < self->_task_count; i++) self->_tasks[i]->setup();
 
     ESP_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
     while (self->_running) {
@@ -18,23 +18,30 @@ void TaskManager::run(void* pvParameters) {
         uint32_t next_run_in_ms = 100; // Default max sleep time
 
         for (size_t i = 0; i < self->_task_count; i++) {
-            auto& task = self->_tasks[i];
+            ITask* task = self->_tasks[i];
 
             if (task->get_task_type() == TaskType::ONE_SHOT) {
-                if (task->is_finished()) continue;
+                IOneShotTask* one_shot_task = static_cast<IOneShotTask*>(task);
+                if (one_shot_task->is_finished()) continue;
 
-                task->update(now);
+                one_shot_task->update(now);
 
             } else if (task->get_task_type() == TaskType::INTERVAL) {
-                task->update(now);
+                IIntervalTask* interval_task = static_cast<IIntervalTask*>(task);
+                
+                if (interval_task->get_run_period_ms() + interval_task->last_run_time_ms > now) continue;
 
-                uint32_t time_to_next = task->get_run_period_ms() - (now - task->last_run_time_ms);
+                interval_task->update(now);
+                
+                uint32_t time_to_next = interval_task->get_run_period_ms() - (now - interval_task->last_run_time_ms);
                 if (time_to_next < next_run_in_ms) next_run_in_ms = time_to_next;
 
-                task->last_run_time_ms = now;
+                interval_task->last_run_time_ms = now;
 
             } else if (task->get_task_type() == TaskType::CONTINUOUS) {
-                task->update(now);
+                IContinuousTask* continuous_task = static_cast<IContinuousTask*>(task);
+
+                continuous_task->update(now);
                 next_run_in_ms = 0; // Run task continuously
 
             } else {
@@ -42,7 +49,12 @@ void TaskManager::run(void* pvParameters) {
             }
         }
         
-        vTaskDelay(pdMS_TO_TICKS(next_run_in_ms));
+        TickType_t ticks_to_wait = pdMS_TO_TICKS(next_run_in_ms);
+        if (ticks_to_wait >= 1) {
+            vTaskDelay(ticks_to_wait);
+        } else {
+            vTaskDelay(1);
+        }
     }
     vTaskDelete(NULL);
 }

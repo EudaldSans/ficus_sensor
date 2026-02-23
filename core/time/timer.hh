@@ -1,3 +1,5 @@
+#include <inttypes.h>
+
 #ifndef TIMER_HH
 #define TIMER_HH
 
