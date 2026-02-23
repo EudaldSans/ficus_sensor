@@ -22,11 +22,16 @@ class TaskManager {
 
         void start();
         void stop();
+
         void add_task(std::shared_ptr<ITask> task);
+        void add_interval_task(std::shared_ptr<IntervalTask> task);
+        void add_one_shot_task(std::shared_ptr<IOneShotTask> task);
 
     private: 
         static void run(void* pvParameters);
         std::vector<std::shared_ptr<ITask>> _tasks;
+        std::vector<std::shared_ptr<IntervalTask>> _interval_tasks;
+        std::vector<std::shared_ptr<IOneShotTask>> _one_shot_tasks;
 
         std::atomic_bool _running = false;
 
