@@ -1,6 +1,6 @@
 #include <string>
 
-#include "in_errors.hh"
+#include "fic_errors.hh"
 
 #ifndef SENSOR_H
 #define SENSOR_H
@@ -8,8 +8,8 @@
 class ISensorLifecycle {
 public:
     virtual ~ISensorLifecycle() = default; 
-    virtual in_error_t init() = 0; 
-    virtual in_error_t deinit() = 0;
+    virtual fic_error_t init() = 0; 
+    virtual fic_error_t deinit() = 0;
 };
 
 class ISensorMetadata {
@@ -29,15 +29,15 @@ template <typename T>
 class ISensor: public virtual ISensorBase {
 public: 
     virtual ~ISensor() = default; 
-    virtual in_error_t measure(T &value) = 0;
+    virtual fic_error_t measure(T &value) = 0;
 };
 
 template <typename T> 
 class IAsyncSensor: public virtual ISensorBase {
 public: 
     virtual ~IAsyncSensor() = default; 
-    virtual in_error_t trigger_measurement(uint16_t &measurement_delay_ms) = 0; 
-    virtual in_error_t get_measurement(T &value) = 0;
+    virtual fic_error_t trigger_measurement(uint16_t &measurement_delay_ms) = 0; 
+    virtual fic_error_t get_measurement(T &value) = 0;
     virtual bool is_ready() = 0;
 };
 

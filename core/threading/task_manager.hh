@@ -15,6 +15,8 @@
 #ifndef TASK_MANAGER_H
 #define TASK_MANAGER_H
 
+#define MAX_TASKS 32
+
 class TaskManager {
     public: 
         TaskManager(std::string name, uint32_t stack_size, BaseType_t _core_id = tskNO_AFFINITY);
@@ -22,11 +24,13 @@ class TaskManager {
 
         void start();
         void stop();
-        void add_task(std::shared_ptr<ITask> task);
+
+        void add_task(ITask* task);
 
     private: 
         static void run(void* pvParameters);
-        std::vector<std::shared_ptr<ITask>> _tasks;
+        std::array<ITask*, MAX_TASKS> _tasks;
+        size_t _task_count = 0;
 
         std::atomic_bool _running = false;
 

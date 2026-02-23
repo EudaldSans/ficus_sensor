@@ -9,168 +9,99 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "sdkconfig.h"
 #include "esp_log.h"
 
-#include "sensor_endpoint_factory.hh"
-
 #include "task_manager.hh"
-
-#include "led_strip.h"
 
 #include "router.hh"
 #include "endpoint.hh"
 #include "conversions.hh"
 
+#include "sensor_endpoints.hh"
+#include "ds18b20.hh"
+#include "analog_humidity_sensor.hh"
+
 #include "onewire_bus.hh"
 #include "adc.hh"
+
+#include "led_strip_single.hh"
+#include "rgb_signalling.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
 
 #define LED_STRIP_RMT_RES_HZ  (10 * 1000 * 1000)
 
-led_strip_handle_t led_strip;
+LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
+RGBSignaler rgb_signaler(led_strip);
 
-static const char *TAG = "example";
+const uint16_t sensor_meas_period_ms = 30000;
 
-void configure_led(void) {
-    led_strip_config_t strip_config = {};
-    // Set the GPIO8 that the LED is connected
-    strip_config.strip_gpio_num = LED_GPIO;
-    // Set the number of connected LEDs, 1
-    strip_config.max_leds = 1;
-    // Set the pixel format of your LED strip
-    strip_config.led_pixel_format = LED_PIXEL_FORMAT_GRB;
-    // LED model
-    strip_config.led_model = LED_MODEL_WS2812;
-    // In some cases, the logic is inverted
-    strip_config.flags.invert_out = false;
+const std::string t_sensor_config_name = "ds18b20_0";
+OnewireBus onewire(ONEWIRE_BUS_GPIO);
+DS18B20 t_sensor = DS18B20(onewire, DS18B20::resolution_12B);
+AsyncSensorEndpoint<float> t_endpoint(
+    t_sensor_config_name,
+    t_sensor,
+    sensor_meas_period_ms
+);
 
-    led_strip_rmt_config_t rmt_config = {};
-    // Set the clock source
-    rmt_config.clk_src = RMT_CLK_SRC_DEFAULT;
-    // Set the RMT counter clock
-    rmt_config.resolution_hz = LED_STRIP_RMT_RES_HZ;
-    // Set the DMA feature (not supported on the ESP32-C6)
-    rmt_config.flags.with_dma = false;
+const std::string h_sensor_config_name = "analog_humidity_0";
+const uint32_t h_sensor_max_mv = 3300;
+ADC adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
+AnalogHumiditySensor h_sensor = AnalogHumiditySensor(adc, h_sensor_max_mv);
+SensorEndpoint<float> h_endpoint(
+    h_sensor_config_name,
+    h_sensor,
+    sensor_meas_period_ms
+);
 
-    led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip);
-}
+static const char *TAG = "main";
 
-typedef struct {
-    uint32_t red = 0;
-    uint32_t green = 0;
-    uint32_t blue = 0;
-} temp_point;
-
-void set_heat_led(float value) {
-    float min = 16;
-    float max = 32;
-
-    uint32_t red = 0, green = 0, blue = 0;
-    float point = 8 * (value - min) / (max - min);
-
-    if (point < 0 ) point = 0;
-    if (point > 7) point = 7;
-
-    int point_low = point;
-    int point_high = point + 1;
-
-    temp_point temperature_points[9];
-    temperature_points[0] = {204, 216, 253};
-    temperature_points[1] = {242, 241, 254};
-    temperature_points[2] = {254, 229, 207};
-    temperature_points[3] = {254, 199, 140};
-    temperature_points[4] = {254, 164, 73};
-    temperature_points[5] = {254, 123, 0};
-    temperature_points[6] = {253, 74, 0};
-    temperature_points[7] = {254, 0, 0};
-    temperature_points[8] = {254, 0, 0};
-
-    red = temperature_points[point_low].red * (1 - (point - point_low)) + temperature_points[point_high].red * (point - point_low);
-    blue = temperature_points[point_low].blue * (1 - (point - point_low)) + temperature_points[point_high].blue * (point - point_low);
-    green = temperature_points[point_low].green * (1 - (point - point_low)) + temperature_points[point_high].green * (point - point_low);
-
-    led_strip_set_pixel(led_strip, 0, 0.05 * red, 0.05 * green, 0.05 * blue);
-    led_strip_refresh(led_strip);
-}
-
-void blink(uint32_t time_ms, uint32_t red, uint32_t green, uint32_t blue) {
-    led_strip_set_pixel(led_strip, 0, 0, 0, 0);
-    led_strip_refresh(led_strip);
-    vTaskDelay(pdMS_TO_TICKS(time_ms));
-
-    led_strip_set_pixel(led_strip, 0, red, green, blue);
-    led_strip_refresh(led_strip);
-    vTaskDelay(pdMS_TO_TICKS(time_ms));
-}
-
-extern "C" void app_main(void) {
-    const uint32_t h_sensor_max_mv = 3300;
-
-    auto onewire = std::make_shared<OnewireBus>(ONEWIRE_BUS_GPIO);
-    auto adc = std::make_shared<ADC>(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
-
-    auto sensor_endpoint_factory = SensorEndpointFactoryBuilder()
-        .with_onewire("onewire_0", onewire)
-        .with_adc("adc_0", adc)
-        .build();
-
-    SensorEndpointConfig t_sensor_config = SensorEndpointConfig{
-        .sensor = DS18B20_TEMPERATURE_SENSOR, 
-        .name = "DS18B20_0", 
-        .hal_reference = "onewire_0", 
-        .measurement_period_ms = 30000, 
-        .int_params = {{"resolution", 3}},
-        .string_params = {}
-    }; 
-    SensorEndpointConfig h_sensor_config = SensorEndpointConfig{ 
-        .sensor = ANALOG_HUMIDITY_SENSOR, 
-        .name = "analog_humidity_0", 
-        .hal_reference = "adc_0", 
-        .measurement_period_ms = 20000, 
-        .int_params = {{"max_voltage_mv", h_sensor_max_mv}},
-        .string_params = {}
-    }; 
-    
-    auto t_endpoint = sensor_endpoint_factory->create(t_sensor_config);
-    auto h_endpoint = sensor_endpoint_factory->create(h_sensor_config);
+extern "C" void app_main(void) {  
+    led_strip.init();
 
     TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
-    task_manager.add_task(t_endpoint);
-    task_manager.add_task(h_endpoint);
+    task_manager.add_task(&t_endpoint);
+    task_manager.add_task(&h_endpoint);
 
-    configure_led();
-    led_strip_refresh(led_strip);
-
+    task_manager.add_task(&rgb_signaler);
+    
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
 
     ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
-    auto consumer = std::make_shared<ChannelEndpoint>();
+    auto consumer = ChannelEndpoint();
 
     std::string t_consumer = "temperature_consumer"; 
     std::string h_consumer = "humidity_consumer";
 
-    consumer->add_input_channel<int>(t_consumer, 
+    consumer.add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
             ESP_LOGI(TAG, "t_consumer got %d", temperature);
-            set_heat_led(temperature);
         }
     );
-    consumer->add_input_channel<int>(h_consumer, 
+    consumer.add_input_channel<int>(h_consumer, 
         [](const int& humidity) {
             ESP_LOGI(TAG, "h_consumer got %d", humidity);
         }
     );
 
-    Router::link<float, int>(t_endpoint, t_sensor_config.name, consumer, t_consumer, conversions);
-    Router::link<float, int>(h_endpoint, h_sensor_config.name, consumer, h_consumer, conversions);
+    Router::link<float, int>(t_endpoint, t_sensor_config_name, consumer, t_consumer, conversions);
+    Router::link<float, int>(h_endpoint, h_sensor_config_name, consumer, h_consumer, conversions);
 
     task_manager.start();
 
     while (1) {
-        vTaskDelay(1000/portTICK_PERIOD_MS);
+        rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 255}, 500, INFINITE_CYCLES);
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        rgb_signaler.set_blink({0, 0, 0}, 500, {255, 255, 255}, 500, INFINITE_CYCLES);
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        rgb_signaler.set_solid({0, 0, 0});
+        vTaskDelay(2000/portTICK_PERIOD_MS);
+        rgb_signaler.set_solid({0, 255, 0});
+        vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }

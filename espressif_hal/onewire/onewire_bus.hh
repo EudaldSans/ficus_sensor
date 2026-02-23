@@ -13,16 +13,16 @@ class OnewireBus : public IOnewireBus {
         OnewireBus(int bus_gpio_num);
         ~OnewireBus();
 
-        in_error_t init(uint32_t max_rx_bytes) override;
+        fic_error_t init(uint32_t max_rx_bytes) override;
 
-        in_error_t find_device(uint64_t address, uint64_t address_mask) override;
+        fic_error_t find_device(uint64_t address, uint64_t address_mask) override;
 
-        in_error_t reset() override;
-        in_error_t read_bytes(std::vector<uint8_t> &rx_buf) override;
-        in_error_t write_bytes(std::vector<uint8_t> tx_data) override;
+        fic_error_t reset() override;
+        fic_error_t read_bytes(std::vector<uint8_t> &rx_buf) override;
+        fic_error_t write_bytes(std::vector<uint8_t> tx_data) override;
 
-        in_error_t write_to_all(std::vector<uint8_t> tx_data) override;
-        in_error_t write_to(uint64_t address, std::vector<uint8_t> tx_data) override;
+        fic_error_t write_to_all(std::vector<uint8_t> tx_data) override;
+        fic_error_t write_to(uint64_t address, std::vector<uint8_t> tx_data) override;
         
     protected:
     private:

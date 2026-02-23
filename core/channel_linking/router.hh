@@ -12,12 +12,12 @@
 class Router {
     public: 
     template <typename producerType, typename consumerType>
-    static void link(const std::shared_ptr<ChannelEndpoint>& producer, const std::string& outName,
-                     const std::shared_ptr<ChannelEndpoint>& consumer, const std::string& inName,
+    static void link(ChannelEndpoint& producer, const std::string& outName,
+                     ChannelEndpoint& consumer, const std::string& inName,
                      std::vector<std::shared_ptr<IConversion<producerType>>> conversion_pipeline) {
         
-        auto* outCh = producer->get_output<producerType>(outName);
-        auto* inCh = consumer->get_input<consumerType>(inName);
+        auto* outCh = producer.get_output<producerType>(outName);
+        auto* inCh = consumer.get_input<consumerType>(inName);
         
         // Signal conversions and type conversion
         std::function<void(const producerType&)> adapter = [inCh, conversion_pipeline](const producerType& data) {

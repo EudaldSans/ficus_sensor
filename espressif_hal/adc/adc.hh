@@ -12,8 +12,8 @@ class ADC : public IADC {
         ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bitwidth_t bitwidth);        
         ~ADC();
         
-        in_error_t measure(int &voltage) override;
-        in_error_t init() override;
+        fic_error_t measure(int &voltage) override;
+        fic_error_t init() override;
 
     protected: 
     private: 
