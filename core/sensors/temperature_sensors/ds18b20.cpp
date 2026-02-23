@@ -46,7 +46,7 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to trigger measurement"));
 
     measurement_delay_ms = resolution_delays_ms[_resolution];
-    _measure_finish_time_ms = pdTICKS_TO_MS(xTaskGetTickCount()) + measurement_delay_ms;;
+    _measure_finish_time_ms = pdTICKS_TO_MS(xTaskGetTickCount()) + measurement_delay_ms;
 
     return FIC_OK;
 }

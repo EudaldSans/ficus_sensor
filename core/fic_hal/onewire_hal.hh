@@ -19,7 +19,7 @@ class IOnewireBus {
 
         bool is_initialized() const { return _initialized; }
 
-    private: 
+    protected: 
         bool _initialized = false;
 };
 

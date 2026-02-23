@@ -30,7 +30,7 @@ class IOneShotTask : public ITask {
         virtual bool is_finished() = 0;
         virtual bool reset() = 0; // Resets the task to be run again
 
-        bool should_run(uint64_t now) override { return is_finished(); }
+        bool should_run(uint64_t now) override { return !is_finished(); }
 };
 
 

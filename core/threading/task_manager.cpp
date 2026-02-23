@@ -15,7 +15,6 @@ void TaskManager::run(void* pvParameters) {
     ESP_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
     while (self->_running) {
         uint64_t now = pdTICKS_TO_MS(xTaskGetTickCount());
-        uint32_t next_run_in_ms = 100; // Default max sleep time
 
         for (size_t i = 0; i < self->_task_count; i++) {
             ITask* task = self->_tasks[i];
@@ -24,12 +23,7 @@ void TaskManager::run(void* pvParameters) {
             task->update(now);
         }
         
-        TickType_t ticks_to_wait = pdMS_TO_TICKS(next_run_in_ms);
-        if (ticks_to_wait >= 1) {
-            vTaskDelay(ticks_to_wait);
-        } else {
-            vTaskDelay(1);
-        }
+        vTaskDelay(1);
     }
     vTaskDelete(NULL);
 }

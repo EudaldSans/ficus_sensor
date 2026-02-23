@@ -1,3 +1,3 @@
-idf_component_register( SRCS "hal_registry.cpp"
+idf_component_register( SRCS
                         REQUIRES threading
                         INCLUDE_DIRS ".")
