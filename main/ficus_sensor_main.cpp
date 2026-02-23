@@ -31,31 +31,28 @@
 LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
 RGBSignaler rgb_signaler(led_strip);
 
+const uint16_t sensor_meas_period_ms = 30000;
+
+const std::string t_sensor_config_name = "ds18b20_0";
 OnewireBus onewire(ONEWIRE_BUS_GPIO);
 AsyncSensorEndpoint<float> t_endpoint(
-    "ds18b20_0",
+    t_sensor_config_name,
     std::make_shared<DS18B20>(onewire, DS18B20::resolution_12B),
-    30000
+    sensor_meas_period_ms
 );
 
+const std::string h_sensor_config_name = "analog_humidity_0";
+const uint32_t h_sensor_max_mv = 3300;
 ADC adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
 SensorEndpoint<float> h_endpoint(
-    "analog_humidity_0",
-    std::make_shared<AnalogHumiditySensor>(adc, 3300),
-    20000
+    h_sensor_config_name,
+    std::make_shared<AnalogHumiditySensor>(adc, h_sensor_max_mv),
+    sensor_meas_period_ms
 );
 
-static const char *TAG = "example";
-
-typedef struct {
-    uint32_t red = 0;
-    uint32_t green = 0;
-    uint32_t blue = 0;
-} temp_point;
+static const char *TAG = "main";
 
 extern "C" void app_main(void) {
-    const uint32_t h_sensor_max_mv = 3300;
-
     auto onewire = std::make_shared<OnewireBus>(ONEWIRE_BUS_GPIO);
     auto adc = std::make_shared<ADC>(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
     
@@ -89,12 +86,19 @@ extern "C" void app_main(void) {
         }
     );
 
-    Router::link<float, int>(t_endpoint, t_sensor_config.name, consumer, t_consumer, conversions);
-    Router::link<float, int>(h_endpoint, h_sensor_config.name, consumer, h_consumer, conversions);
+    Router::link<float, int>(t_endpoint, t_sensor_config_name, consumer, t_consumer, conversions);
+    Router::link<float, int>(h_endpoint, h_sensor_config_name, consumer, h_consumer, conversions);
 
     task_manager.start();
 
     while (1) {
-        vTaskDelay(1000/portTICK_PERIOD_MS);
+        rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 255}, 500, INFINITE_CYCLES);
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        rgb_signaler.set_blink({0, 0, 0}, 500, {255, 255, 255}, 500, INFINITE_CYCLES);
+        vTaskDelay(5000/portTICK_PERIOD_MS);
+        rgb_signaler.set_solid({0, 0, 0});
+        vTaskDelay(2000/portTICK_PERIOD_MS);
+        rgb_signaler.set_solid({0, 255, 0});
+        vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }
