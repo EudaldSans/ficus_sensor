@@ -21,7 +21,7 @@ struct LED_action_t {
     uint32_t duration_ms;
 };
 
-class LEDSignaler : public ITask {
+class LEDSignaler : public IContinuousTask {
 public:
     LEDSignaler(ILightable &led) : _led(led) {};
     ~LEDSignaler() = default;
@@ -37,8 +37,8 @@ private:
         std::array<LED_action_t, MAX_STEPS_IN_LED_SIGNAL> pattern;
     };
 
-    void setup();
-    void update(uint64_t now);
+    void setup() override;
+    void update(uint64_t now) override;
     void perform_action(LED_action_t action, uint64_t now);
 
     ILightable &_led;

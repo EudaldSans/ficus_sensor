@@ -22,7 +22,7 @@ struct RGB_action_t {
     uint32_t duration_ms;
 };
 
-class RGBSignaler : public ITask {
+class RGBSignaler : public IContinuousTask {
 public:
     RGBSignaler(IColorable &led) : _rgb_led(led) {};
     ~RGBSignaler() = default;
@@ -38,8 +38,8 @@ private:
         std::array<RGB_action_t, MAX_STEPS_IN_RGB_SIGNAL> pattern;
     };
 
-    void setup();
-    void update(uint64_t now);
+    void setup() override;
+    void update(uint64_t now) override;
     void perform_action(RGB_action_t action, uint64_t now);
 
     IColorable &_rgb_led;

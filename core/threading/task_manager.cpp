@@ -17,11 +17,6 @@ void TaskManager::run(void* pvParameters) {
         uint64_t now = pdTICKS_TO_MS(xTaskGetTickCount());
         uint32_t next_run_in_ms = 100; // Default max sleep time
 
-        for (auto& task : self->_one_shot_tasks) {
-            if (task->is_finished()) continue;
-            task->update(now);
-        }
-
         for (size_t i = 0; i < self->_task_count; i++) {
             auto& task = self->_tasks[i];
 
@@ -32,10 +27,11 @@ void TaskManager::run(void* pvParameters) {
 
             } else if (task->get_task_type() == TaskType::INTERVAL) {
                 task->update(now);
-                task->last_run_time_ms = now;
 
                 uint32_t time_to_next = task->get_run_period_ms() - (now - task->last_run_time_ms);
                 if (time_to_next < next_run_in_ms) next_run_in_ms = time_to_next;
+
+                task->last_run_time_ms = now;
 
             } else if (task->get_task_type() == TaskType::CONTINUOUS) {
                 task->update(now);

@@ -23,7 +23,7 @@ struct Timer {
      * @param now Current time, use in intensive loops where multiple timers are checked
      * @return @c true if timer has expired
      */
-    bool has_expired(uint64_t now) {
+    bool has_expired(uint64_t now) {      
         if (now - _activation_time >= _duration_ms) {
             // Do this to avoid phase shifting in long loops
             _activation_time += _duration_ms; 

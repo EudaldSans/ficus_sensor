@@ -77,7 +77,6 @@ extern "C" void app_main(void) {
     consumer->add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
             ESP_LOGI(TAG, "t_consumer got %d", temperature);
-            set_heat_led(temperature);
         }
     );
     consumer->add_input_channel<int>(h_consumer, 

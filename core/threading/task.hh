@@ -1,7 +1,5 @@
 #include <inttypes.h>
 
-#include "endpoint.hh"
-
 #ifndef TASK_H
 #define TASK_H
 
@@ -17,6 +15,12 @@ class ITask {
         virtual void setup() = 0;
         virtual void update(uint64_t now) = 0;  
 
+        virtual TaskType get_task_type() = 0;
+};
+
+class IContinuousTask : public ITask {
+    public:
+        virtual ~IContinuousTask() = default;
         TaskType get_task_type() const { return TaskType::CONTINUOUS; }
 };
 

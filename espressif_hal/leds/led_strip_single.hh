@@ -3,7 +3,7 @@
 #include "led_hal.hh"
 
 #ifndef LEDS_LED_STRIP_SINGLE_HH
-#define EDS_LED_STRIP_SINGLE_HH
+#define LEDS_LED_STRIP_SINGLE_HH
 
 
 class LEDStripSingle : public ILEDLifecycle, public IColorable {
@@ -23,10 +23,10 @@ private:
     const led_model_t _model;
     uint32_t _resolution_hz;
 
-    Color _color;
+    Color _color = {0, 0, 0};
     led_strip_handle_t _led_strip;
 
-    bool _initialized;
+    bool _initialized = false;
 
     constexpr static char const *TAG = "LEDStripSingle"; 
 };

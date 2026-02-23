@@ -103,7 +103,7 @@ fic_error_t LEDStripSingle::on() {
 fic_error_t LEDStripSingle::set_color(Color color) {
     _color = color;
     
-    led_strip_set_pixel(_led_strip, 0, 0.05 * _color.red, 0.05 * _color.green, 0.05 * _color.blue);
+    led_strip_set_pixel(_led_strip, 0, _color.red, _color.green, _color.blue);
     led_strip_refresh(_led_strip);
     return FIC_OK;
 }
