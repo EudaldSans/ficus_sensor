@@ -1,5 +1,5 @@
 #include "analog_humidity_sensor.hh"
-#include "esp_log.h"
+#include "fic_log.hh"
 
 AnalogHumiditySensor::AnalogHumiditySensor(IADC &adc, uint32_t max_voltage_mv) : 
         ISensor<float>(), _adc(adc), _max_voltage_mv(max_voltage_mv) {
@@ -17,7 +17,7 @@ fic_error_t AnalogHumiditySensor::deinit() {
 
 fic_error_t AnalogHumiditySensor::measure(float &value) {
     int voltage;
-    FIC_RETURN_ON_ERROR(_adc.measure(voltage), ESP_LOGE(TAG, "Failed to measure ADC voltage"));
+    FIC_RETURN_ON_ERROR(_adc.measure(voltage), FIC_LOGE(TAG, "Failed to measure ADC voltage"));
     float humidity = 100 - 100 * static_cast<float>(voltage) / static_cast<float>(_max_voltage_mv);
 
     if (humidity < 0) {

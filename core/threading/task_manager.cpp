@@ -1,6 +1,6 @@
 #include "task_manager.hh"
 
-#include "esp_log.h"
+#include "fic_log.hh"
 
 TaskManager::TaskManager(std::string name, uint32_t stack_size, BaseType_t core_id): _name(name), _stack_size(stack_size), _core_id(core_id) {
 
@@ -9,10 +9,10 @@ TaskManager::TaskManager(std::string name, uint32_t stack_size, BaseType_t core_
 void TaskManager::run(void* pvParameters) {
     auto* self = static_cast<TaskManager*>(pvParameters);
     
-    ESP_LOGI(TAG, "Setting up tasks for manager %s", self->_name.c_str());
+    FIC_LOGI(TAG, "Setting up tasks for manager %s", self->_name.c_str());
     for (size_t i = 0; i < self->_task_count; i++) self->_tasks[i]->setup();
 
-    ESP_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
+    FIC_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
     while (self->_running) {
         uint64_t now = pdTICKS_TO_MS(xTaskGetTickCount());
 
@@ -39,7 +39,7 @@ void TaskManager::add_task(ITask* task) {
     if (_task_count < _tasks.size()) {
         _tasks[_task_count++] = task;
     } else {
-        ESP_LOGE(TAG, "Task limit reached!");
+        FIC_LOGE(TAG, "Task limit reached!");
     }
 }
 

@@ -5,12 +5,12 @@
  */
 
 #include <stdio.h>
-#include "esp_log.h"
+#include "fic_log.hh"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "sdkconfig.h"
-#include "esp_log.h"
+#include "fic_log.hh"
 
 #include "task_manager.hh"
 
@@ -27,6 +27,8 @@
 
 #include "led_strip_single.hh"
 #include "rgb_signalling.hh"
+
+#include "esp_fic_log.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
@@ -60,6 +62,8 @@ SensorEndpoint<float> h_endpoint(
 static const char *TAG = "main";
 
 extern "C" void app_main(void) {  
+    fic_log_set_backend(esp32_backend);
+
     led_strip.init();
 
     TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
@@ -71,7 +75,7 @@ extern "C" void app_main(void) {
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
 
-    ESP_LOGI(TAG, "Size of conversions: %d", conversions.size());
+    FIC_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
     auto consumer = ChannelEndpoint();
 
@@ -80,12 +84,12 @@ extern "C" void app_main(void) {
 
     consumer.add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
-            ESP_LOGI(TAG, "t_consumer got %d", temperature);
+            FIC_LOGI(TAG, "t_consumer got %d", temperature);
         }
     );
     consumer.add_input_channel<int>(h_consumer, 
         [](const int& humidity) {
-            ESP_LOGI(TAG, "h_consumer got %d", humidity);
+            FIC_LOGI(TAG, "h_consumer got %d", humidity);
         }
     );
 

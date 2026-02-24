@@ -4,7 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "soc/soc_caps.h"
-#include "esp_log.h"
+#include "fic_log.hh"
 #include "esp_check.h"
 
 #include "adc.hh"
@@ -17,9 +17,9 @@ ADC::ADC(adc_channel_t channel, adc_unit_t unit, adc_atten_t attenuation, adc_bi
 }
 
 fic_error_t ADC::init() {
-    ESP_LOGI(TAG, "Setting up ADC channel %d", channel);
+    FIC_LOGI(TAG, "Setting up ADC channel %d", channel);
     if (_initialized) {
-        ESP_LOGW(TAG, "Tried to initialize an already initialized ADC!");
+        FIC_LOGW(TAG, "Tried to initialize an already initialized ADC!");
         return FIC_ERR_NOT_ALLOWED;
     }
 
@@ -37,17 +37,17 @@ fic_error_t ADC::init() {
     cali_config.bitwidth = bitwidth;
 
     if (adc_oneshot_new_unit(&init_config, &adc_handle) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to create new adc unit"); 
+        FIC_LOGE(TAG, "Unable to create new adc unit"); 
         return FIC_ERR_SDK_FAIL;
     }
 
     if (adc_oneshot_config_channel(adc_handle, channel, &adc_config) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to config channel %d", channel); 
+        FIC_LOGE(TAG, "Unable to config channel %d", channel); 
         return FIC_ERR_SDK_FAIL;
     }
 
     if (adc_cali_create_scheme_curve_fitting(&cali_config, &adc_cali_handle) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to Create calibration scheme", channel); 
+        FIC_LOGE(TAG, "Unable to Create calibration scheme", channel); 
         return FIC_ERR_SDK_FAIL;
     }
 
@@ -57,7 +57,7 @@ fic_error_t ADC::init() {
 }
 
 ADC::~ADC() {
-    ESP_LOGI(TAG, "Deregister Curve Fitting calibration scheme for ADC channel %d", channel);
+    FIC_LOGI(TAG, "Deregister Curve Fitting calibration scheme for ADC channel %d", channel);
     if (_initialized) adc_cali_delete_scheme_curve_fitting(adc_cali_handle);
 }
 
@@ -66,16 +66,16 @@ fic_error_t ADC::measure(int &voltage_out) {
     int voltage;
 
     if (adc_oneshot_read(adc_handle, channel, &adc_raw) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to read raw voltage"); 
+        FIC_LOGE(TAG, "Failed to read raw voltage"); 
         return FIC_ERR_SDK_FAIL;
     }
 
     if (adc_cali_raw_to_voltage(adc_cali_handle, adc_raw, &voltage) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to calibrate raw voltage"); 
+        FIC_LOGE(TAG, "Failed to calibrate raw voltage"); 
         return FIC_ERR_SDK_FAIL;
     }
 
-    ESP_LOGD(TAG, "ADC channel %d measurement: %dmV", channel, voltage);
+    FIC_LOGD(TAG, "ADC channel %d measurement: %dmV", channel, voltage);
     voltage_out = voltage;
 
     return FIC_OK;

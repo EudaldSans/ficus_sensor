@@ -1,5 +1,5 @@
 #include "ds18b20.hh"
-#include "esp_log.h"
+#include "fic_log.hh"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -28,10 +28,10 @@ fic_error_t DS18B20::init() {
     const uint32_t max_rx_bytes = 10;
 
     if (!_bus.is_initialized()) {
-        FIC_RETURN_ON_ERROR(_bus.init(max_rx_bytes), ESP_LOGE(TAG, "Failed to initialize bus"));
+        FIC_RETURN_ON_ERROR(_bus.init(max_rx_bytes), FIC_LOGE(TAG, "Failed to initialize bus"));
     }
 
-    FIC_RETURN_ON_ERROR(_bus.find_device(ds18b20_address, ds18b20_mask), ESP_LOGE(TAG, "Failed to find device"));
+    FIC_RETURN_ON_ERROR(_bus.find_device(ds18b20_address, ds18b20_mask), FIC_LOGE(TAG, "Failed to find device"));
 
     set_resolution(DS18B20::resolution_12B);
 
@@ -42,8 +42,8 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     constexpr uint32_t resolution_delays_ms[4] = {100, 200, 400, 800};
     std::vector<uint8_t> tx_buffer = {cmd_convert_temp};
 
-    FIC_RETURN_ON_ERROR(_bus.reset(), ESP_LOGE(TAG, "Reset failed to trigger measurement"));
-    FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to trigger measurement"));
+    FIC_RETURN_ON_ERROR(_bus.reset(), FIC_LOGE(TAG, "Reset failed to trigger measurement"));
+    FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), FIC_LOGE(TAG, "Write data failed to trigger measurement"));
 
     measurement_delay_ms = resolution_delays_ms[_resolution];
     _measure_finish_time_ms = pdTICKS_TO_MS(xTaskGetTickCount()) + measurement_delay_ms;
@@ -59,10 +59,10 @@ fic_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
     const uint8_t resolution_data[4] = {0x1F, 0x3F, 0x5F, 0x7F};
     std::vector<uint8_t> tx_buffer = {0, 0, resolution_data[resolution]};
 
-    ESP_LOGI(TAG, "Setting resolution to %d", resolution);
+    FIC_LOGI(TAG, "Setting resolution to %d", resolution);
 
-    FIC_RETURN_ON_ERROR(_bus.reset(), ESP_LOGE(TAG, "Reset failed to set resolution"));
-    FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to set resolution"));
+    FIC_RETURN_ON_ERROR(_bus.reset(), FIC_LOGE(TAG, "Reset failed to set resolution"));
+    FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), FIC_LOGE(TAG, "Write data failed to set resolution"));
 
     _resolution = resolution;
 
@@ -77,11 +77,11 @@ fic_error_t DS18B20::get_measurement(float &value) {
 
     value = 0;
 
-    FIC_ERR_RETURN_ON_FALSE(is_ready(), FIC_ERR_NOT_FINISHED, ESP_LOGE(TAG, "Measurement is not yet ready"));
+    FIC_ERR_RETURN_ON_FALSE(is_ready(), FIC_ERR_NOT_FINISHED, FIC_LOGE(TAG, "Measurement is not yet ready"));
 
-    FIC_RETURN_ON_ERROR(_bus.reset(), ESP_LOGE(TAG, "Reset failed to get measurement"));
-    FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), ESP_LOGE(TAG, "Write data failed to get measurement"));
-    FIC_RETURN_ON_ERROR(_bus.read_bytes(rx_buffer), ESP_LOGE(TAG, "Read data failed to get measurement"));
+    FIC_RETURN_ON_ERROR(_bus.reset(), FIC_LOGE(TAG, "Reset failed to get measurement"));
+    FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), FIC_LOGE(TAG, "Write data failed to get measurement"));
+    FIC_RETURN_ON_ERROR(_bus.read_bytes(rx_buffer), FIC_LOGE(TAG, "Read data failed to get measurement"));
 
     memcpy(&scratchpad, rx_buffer.data(), sizeof(ds18b20_scratchpad_t));
 

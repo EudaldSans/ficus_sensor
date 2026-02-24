@@ -1,6 +1,6 @@
 #include <functional>
 
-#include "esp_log.h"
+#include "fic_log.hh"
 
 #include "endpoint.hh"
 #include "channels.hh"
@@ -34,7 +34,7 @@ class Router {
 
         outCh->connect(adapter);
         
-        ESP_LOGI(TAG, "Linked %s -> %s", outName.data(), inName.data());
+        FIC_LOGI(TAG, "Linked %s -> %s", outName.data(), inName.data());
     }
 
     private: 

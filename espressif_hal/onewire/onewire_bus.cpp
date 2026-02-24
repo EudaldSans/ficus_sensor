@@ -5,7 +5,7 @@
 #include "onewire_cmd.h"
 #include "onewire_crc.h"
 
-#include "esp_log.h"
+#include "fic_log.hh"
 #include "esp_check.h"
 
 
@@ -19,7 +19,7 @@ OnewireBus::~OnewireBus() {
 
 fic_error_t OnewireBus::init(uint32_t max_rx_bytes) {
     if (_initialized) {
-        ESP_LOGW(TAG, "Tried to initialize an already initialized bus!");
+        FIC_LOGW(TAG, "Tried to initialize an already initialized bus!");
         return FIC_ERR_NOT_ALLOWED;
     }
 
@@ -31,7 +31,7 @@ fic_error_t OnewireBus::init(uint32_t max_rx_bytes) {
     rmt_config.max_rx_bytes = max_rx_bytes;
 
     if (onewire_new_bus_rmt(&bus_config, &rmt_config, &bus) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to create new onewire unit"); 
+        FIC_LOGE(TAG, "Unable to create new onewire unit"); 
         return FIC_ERR_SDK_FAIL;
     }
 
@@ -47,33 +47,33 @@ fic_error_t OnewireBus::find_device(uint64_t address, uint64_t address_mask) {
     esp_err_t search_result = ESP_OK;
 
     if (onewire_new_device_iter(bus, &iter) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to create device iterator"); 
+        FIC_LOGE(TAG, "Unable to create device iterator"); 
         return FIC_ERR_SDK_FAIL;
     }
 
-    ESP_LOGI(TAG, "Device iterator created, start searching...");
+    FIC_LOGI(TAG, "Device iterator created, start searching...");
 
     do {
         search_result = onewire_device_iter_get_next(iter, &next_onewire_device);
         if (search_result == ESP_OK) {
 
             if ((next_onewire_device.address & address_mask) == address) {
-                ESP_LOGI(TAG, "Found a Onewire device[%d], address: %016llX", device_num, address);
+                FIC_LOGI(TAG, "Found a Onewire device[%d], address: %016llX", device_num, address);
                 device_list.push_back(next_onewire_device.address);
                 device_num++;
 
             } else {
-                ESP_LOGI(TAG, "Found an unknown device, address: %016llX", next_onewire_device.address);
+                FIC_LOGI(TAG, "Found an unknown device, address: %016llX", next_onewire_device.address);
             }
         }
     } while (search_result != ESP_ERR_NOT_FOUND);
 
     if (onewire_del_device_iter(iter) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to delete device iterator"); 
+        FIC_LOGE(TAG, "Unable to delete device iterator"); 
         return FIC_ERR_SDK_FAIL;
     }
 
-    ESP_LOGI(TAG, "Searching done, %d Onewire device(s) found with address 0x%x", device_num, address);
+    FIC_LOGI(TAG, "Searching done, %d Onewire device(s) found with address 0x%x", device_num, address);
 
     return FIC_OK;
 }

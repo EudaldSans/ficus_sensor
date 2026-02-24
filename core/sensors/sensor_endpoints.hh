@@ -24,7 +24,7 @@ public:
     void setup() override { 
         uint16_t measurement_delay_ms;
 
-        ESP_LOGI(TAG, "Setting up AsyncSensorEndpoint");
+        FIC_LOGI(TAG, "Setting up AsyncSensorEndpoint");
 
         _sensor.init(); 
         _sensor.trigger_measurement(measurement_delay_ms); 
@@ -34,8 +34,8 @@ public:
         T value;
         uint16_t measurement_delay_ms;
 
-        if (!_sensor.is_ready()) { ESP_LOGW(TAG, "Measurement not ready yet"); return;}
-        FIC_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), ESP_LOGE(TAG, "Failed to get sensor value"));
+        if (!_sensor.is_ready()) { FIC_LOGW(TAG, "Measurement not ready yet"); return;}
+        FIC_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), FIC_LOGE(TAG, "Failed to get sensor value"));
         
         _measurement_output->emit(value);
         _sensor.trigger_measurement(measurement_delay_ms); 
@@ -72,7 +72,7 @@ public:
     void update(uint64_t now) override {
         T value;
 
-        FIC_RETURN_VOID_ON_ERROR(_sensor.measure(value), ESP_LOGE(TAG, "Failed to measure sensor value"));
+        FIC_RETURN_VOID_ON_ERROR(_sensor.measure(value), FIC_LOGE(TAG, "Failed to measure sensor value"));
 
         _measurement_output->emit(value);
 

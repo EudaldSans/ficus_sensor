@@ -1,7 +1,7 @@
 
 #include "led_strip_single.hh"
 
-#include "esp_log.h"
+#include "fic_log.hh"
 
 /**
  * @brief Construct a new LEDStripSingle::LEDStripSingle object
@@ -25,7 +25,7 @@ LEDStripSingle::~LEDStripSingle() {
  */
 fic_error_t LEDStripSingle::init() {
     if (_initialized) {
-        ESP_LOGW(TAG, "LED strip already initialized");
+        FIC_LOGW(TAG, "LED strip already initialized");
         return FIC_OK;
     }
     
@@ -42,7 +42,7 @@ fic_error_t LEDStripSingle::init() {
     rmt_config.flags.with_dma = false; // DMA is not supported on ESP32-C6
 
     if (led_strip_new_rmt_device(&strip_config, &rmt_config, &_led_strip) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to create new led strip device"); 
+        FIC_LOGE(TAG, "Unable to create new led strip device"); 
         return FIC_ERR_SDK_FAIL;
     }
 
@@ -61,12 +61,12 @@ fic_error_t LEDStripSingle::init() {
  */
 fic_error_t LEDStripSingle::deinit() {
     if (!_initialized) {
-        ESP_LOGW(TAG, "LED strip not initialized");
+        FIC_LOGW(TAG, "LED strip not initialized");
         return FIC_OK;
     }
 
     if (led_strip_del(_led_strip) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to delete led strip device");
+        FIC_LOGE(TAG, "Unable to delete led strip device");
         return FIC_ERR_SDK_FAIL;
     }
 
