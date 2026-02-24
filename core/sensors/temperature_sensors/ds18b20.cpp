@@ -1,3 +1,5 @@
+#include <memory.h>
+
 #include "ds18b20.hh"
 #include "fic_log.hh"
 

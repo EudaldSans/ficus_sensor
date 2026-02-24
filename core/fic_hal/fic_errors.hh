@@ -32,34 +32,34 @@ enum fic_error_t {
 };
 
 #define FIC_ERR_RETURN_ON_FALSE(a, err_code, log_action) do {    \
-        if (unlikely(!(a))) {                                   \
-            log_action;                                         \
-            return err_code;                                    \
-        }                                                       \
+        if (!a) [[unlikely]] {                                   \
+            log_action;                                          \
+            return err_code;                                     \
+        }                                                        \
     } while(0)
 
 #define FIC_RETURN_VALUE_ON_ERROR(x, value, log_action) do { \
         fic_error_t err_rc_ = (x);                           \
-        if (unlikely(err_rc_ != FIC_OK)) {                  \
-            log_action;                                     \
-            return value;                                   \
-        }                                                   \
+        if (err_rc_ != FIC_OK) [[unlikely]] {                \
+            log_action;                                      \
+            return value;                                    \
+        }                                                    \
     } while(0)
 
 #define FIC_RETURN_ON_ERROR(x, log_action) do {  \
         fic_error_t err_rc_ = (x);               \
-        if (unlikely(err_rc_ != FIC_OK)) {       \
-            log_action;                         \
-            return err_rc_;                     \
-        }                                       \
+        if (err_rc_ != FIC_OK) [[unlikely]] {    \
+            log_action;                          \
+            return err_rc_;                      \
+        }                                        \
     } while(0)
 
 #define FIC_RETURN_VOID_ON_ERROR(x, log_action) do {  \
         fic_error_t err_rc_ = (x);               \
-        if (unlikely(err_rc_ != FIC_OK)) {       \
-            log_action;                         \
-            return;                             \
-        }                                       \
+        if (err_rc_ != FIC_OK) [[unlikely]] {    \
+            log_action;                          \
+            return;                              \
+        }                                        \
     } while(0)
 
 #endif

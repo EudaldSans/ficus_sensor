@@ -18,10 +18,10 @@ void TaskManager::run(void* pvParameters) {
     auto* self = static_cast<TaskManager*>(pvParameters);
     self->_active = true;
     
-    FIC_LOGI(TAG, "Setting up tasks for manager %s", self->_name.c_str());
+    FIC_LOGI(TAG, "Setting up tasks for manager %s", self->_name);
     for (size_t i = 0; i < self->_task_count; i++) self->_tasks[i]->setup();
 
-    FIC_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
+    FIC_LOGI(TAG, "Manager %s tasks start", self->_name);
     while (self->_running) {
         uint64_t now = ITimeSource::get_time_ms();
 

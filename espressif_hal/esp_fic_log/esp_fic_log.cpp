@@ -30,9 +30,6 @@ void esp32_backend(log_level_t level, const char* tag, const char* format, va_li
         case FIC_ERROR:
             esp_level = ESP_LOG_ERROR;
             break;
-        case FIC_CRITICAL:
-            esp_level = ESP_LOG_FATAL;
-            break;
     }
     
     esp_log_writev(esp_level, tag, format, args); 
