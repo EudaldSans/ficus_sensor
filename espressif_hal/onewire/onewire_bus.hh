@@ -1,5 +1,4 @@
 #include "fic_log.hh"
-#include "esp_check.h"
 #include "onewire_types.h"
 #include "onewire_bus_interface.h"
 

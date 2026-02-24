@@ -5,7 +5,6 @@
 #include "freertos/task.h"
 #include "soc/soc_caps.h"
 #include "fic_log.hh"
-#include "esp_check.h"
 
 #include "adc.hh"
 

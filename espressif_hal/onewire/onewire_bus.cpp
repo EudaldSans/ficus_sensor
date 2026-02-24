@@ -6,7 +6,6 @@
 #include "onewire_crc.h"
 
 #include "fic_log.hh"
-#include "esp_check.h"
 
 
 OnewireBus::OnewireBus(int bus_gpio_num) {
