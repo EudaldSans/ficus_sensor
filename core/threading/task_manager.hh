@@ -6,8 +6,7 @@
 
 #include <inttypes.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "task_hal.hh"
 
 #include "task.hh"
 
@@ -19,7 +18,7 @@
 
 class TaskManager {
     public: 
-        TaskManager(std::string name, uint32_t stack_size, BaseType_t _core_id = tskNO_AFFINITY);
+        TaskManager(const char* name, std::unique_ptr<ITaskRunner> task_runner);
         ~TaskManager();
 
         void start();
@@ -33,12 +32,10 @@ class TaskManager {
         size_t _task_count = 0;
 
         std::atomic_bool _running = false;
+        std::atomic_bool _active = false;
 
-        const std::string _name;
-        const uint32_t _stack_size;
-        const BaseType_t _core_id;
-
-        TaskHandle_t _handle = nullptr;
+        const char* _name;
+        std::unique_ptr<ITaskRunner> _task_runner;
 
         constexpr static char const *TAG = "TaskManager";
 };

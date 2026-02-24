@@ -2,12 +2,20 @@
 
 #include "fic_log.hh"
 
-TaskManager::TaskManager(std::string name, uint32_t stack_size, BaseType_t core_id): _name(name), _stack_size(stack_size), _core_id(core_id) {
+TaskManager::TaskManager(const char* name, std::unique_ptr<ITaskRunner> task_runner)
+    : _name(name), _task_runner(std::move(task_runner)) {}
 
+TaskManager::~TaskManager() {
+    stop();
+
+    while(!_active) {
+        _task_runner->delay(10); // FIXME: use clock or delay source, not task runner
+    }
 }
 
 void TaskManager::run(void* pvParameters) {
     auto* self = static_cast<TaskManager*>(pvParameters);
+    self->_active = true;
     
     FIC_LOGI(TAG, "Setting up tasks for manager %s", self->_name.c_str());
     for (size_t i = 0; i < self->_task_count; i++) self->_tasks[i]->setup();
@@ -23,16 +31,18 @@ void TaskManager::run(void* pvParameters) {
             task->update(now);
         }
         
-        vTaskDelay(1);
+        self->_task_runner->delay(1);
     }
-    vTaskDelete(NULL);
+
+    self->_task_runner->delete_task();
+    self->_active = false;
 }
 
 void TaskManager::start() {
     if (_running) return;
     _running = true;
 
-    xTaskCreatePinnedToCore(run, _name.c_str(), _stack_size, this, 10, &_handle, _core_id);
+    _task_runner->create_task(run, this);
 }
 
 void TaskManager::add_task(ITask* task) {
