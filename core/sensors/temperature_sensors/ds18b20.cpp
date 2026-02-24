@@ -1,8 +1,7 @@
 #include "ds18b20.hh"
 #include "fic_log.hh"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "fic_time.hh"
 
 typedef struct {
     uint8_t temp_lsb;      /*!< lsb of temperature */
@@ -46,13 +45,13 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), FIC_LOGE(TAG, "Write data failed to trigger measurement"));
 
     measurement_delay_ms = resolution_delays_ms[_resolution];
-    _measure_finish_time_ms = pdTICKS_TO_MS(xTaskGetTickCount()) + measurement_delay_ms;
+    _measure_finish_time_ms = ITimeSource::get_time_ms() + measurement_delay_ms;
 
     return FIC_OK;
 }
 
 bool DS18B20::is_ready() { 
-    return pdTICKS_TO_MS(xTaskGetTickCount()) >= _measure_finish_time_ms; 
+    return ITimeSource::get_time_ms() >= _measure_finish_time_ms; 
 }
 
 fic_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {

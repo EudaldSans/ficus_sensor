@@ -23,6 +23,11 @@ set(logging
     esp_fic_log
 )
 
+set(timing 
+    fic_time
+    esp_fic_time
+)
+
 idf_component_register(
     SRCS "ficus_sensor_main.cpp"
     INCLUDE_DIRS "."
@@ -32,9 +37,5 @@ idf_component_register(
         ${core_logic}
         ${sensor_logic}
         ${logging}
+        ${timing}
 )
-
-
-idf_component_register(SRCS "ficus_sensor_main.cpp"
-                       PRIV_REQUIRES spi_flash sensors sensor_adapters channel_linking adc onewire leds signalling fic_log esp_fic_log
-                       INCLUDE_DIRS ".")

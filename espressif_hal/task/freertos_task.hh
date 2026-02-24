@@ -14,7 +14,6 @@ class FreeRTOS_TaskRunner : public ITaskRunner {
         void create_task(void (*run)(void*), void* params) override;
 
         void delete_task() override;
-        void delay(uint32_t ms) override;
 
     private: 
         const char* _name;

@@ -9,7 +9,6 @@ class ITaskRunner {
         virtual void create_task(void (*run)(void*), void* params) = 0;
 
         virtual void delete_task() = 0;
-        virtual void delay(uint32_t ms) = 0;
 };
 
 #endif 

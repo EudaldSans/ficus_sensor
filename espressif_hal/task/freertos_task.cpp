@@ -17,10 +17,3 @@ void FreeRTOS_TaskRunner::delete_task() {
     }
 }
 
-void FreeRTOS_TaskRunner::delay(uint32_t ms) {
-    uint32_t ticks = pdMS_TO_TICKS(ms);
-    if (ticks == 0) ticks = 1; // Ensure at least a 1 tick delay
-
-    vTaskDelay(ticks);
-}
-

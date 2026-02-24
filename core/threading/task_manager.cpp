@@ -1,6 +1,7 @@
 #include "task_manager.hh"
 
 #include "fic_log.hh"
+#include "fic_time.hh"
 
 TaskManager::TaskManager(const char* name, std::unique_ptr<ITaskRunner> task_runner)
     : _name(name), _task_runner(std::move(task_runner)) {}
@@ -9,7 +10,7 @@ TaskManager::~TaskManager() {
     stop();
 
     while(!_active) {
-        _task_runner->delay(10); // FIXME: use clock or delay source, not task runner
+        ITimeDelay::delay_ms(10);
     }
 }
 
@@ -22,7 +23,7 @@ void TaskManager::run(void* pvParameters) {
 
     FIC_LOGI(TAG, "Manager %s tasks start", self->_name.c_str());
     while (self->_running) {
-        uint64_t now = pdTICKS_TO_MS(xTaskGetTickCount());
+        uint64_t now = ITimeSource::get_time_ms();
 
         for (size_t i = 0; i < self->_task_count; i++) {
             ITask* task = self->_tasks[i];
@@ -31,7 +32,7 @@ void TaskManager::run(void* pvParameters) {
             task->update(now);
         }
         
-        self->_task_runner->delay(1);
+        ITimeDelay::delay_ms(1);
     }
 
     self->_task_runner->delete_task();

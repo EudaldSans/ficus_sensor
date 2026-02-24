@@ -29,6 +29,7 @@
 #include "rgb_signalling.hh"
 
 #include "esp_fic_log.hh"
+#include "freertos_task.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
@@ -64,9 +65,15 @@ static const char *TAG = "main";
 extern "C" void app_main(void) {  
     fic_log_set_backend(esp32_backend);
 
+    ITimeSource::set_instance(&EspTimeSource::instance());
+    ITimeDelay::set_instance(&EspTimeDelay::instance());
+
+    FIC_LOGI(TAG, "Initializing hardware");
     led_strip.init();
 
-    TaskManager task_manager = TaskManager("main_task_manager", 4096, tskNO_AFFINITY);
+    FIC_LOGI(TAG, "Setting up task manager");
+    auto task_manager_ptr = std::make_unique<FreertosTaskManager>("main_task_manager", 4096, tskNO_AFFINITY);
+    TaskManager task_manager = TaskManager("main_task_manager", task_manager_ptr);
     task_manager.add_task(&t_endpoint);
     task_manager.add_task(&h_endpoint);
 
@@ -82,6 +89,7 @@ extern "C" void app_main(void) {
     std::string t_consumer = "temperature_consumer"; 
     std::string h_consumer = "humidity_consumer";
 
+    FIC_LOGI(TAG, "Creating and linking channels");
     consumer.add_input_channel<int>(t_consumer, 
         [](const int& temperature) {
             FIC_LOGI(TAG, "t_consumer got %d", temperature);
