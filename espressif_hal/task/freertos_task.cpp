@@ -5,7 +5,6 @@ FreeRTOS_TaskRunner::FreeRTOS_TaskRunner(const char* name, uint32_t stack_size, 
     : _name(name), _stack_size(stack_size), _core_id(core_id) {}
 
 
-FreeRTOS_TaskRunner::~FreeRTOS_TaskRunner() = default;
 void FreeRTOS_TaskRunner::create_task(void (*run)(void*), void* params) {
     xTaskCreatePinnedToCore(run, _name, _stack_size, params, 10, &_handle, _core_id);
 }

@@ -22,6 +22,7 @@
 #include "ds18b20.hh"
 #include "analog_humidity_sensor.hh"
 
+#include "esp_time.hh"
 #include "onewire_bus.hh"
 #include "adc.hh"
 
@@ -72,11 +73,13 @@ extern "C" void app_main(void) {
     led_strip.init();
 
     FIC_LOGI(TAG, "Setting up task manager");
-    auto task_manager_ptr = std::make_unique<FreertosTaskManager>("main_task_manager", 4096, tskNO_AFFINITY);
-    TaskManager task_manager = TaskManager("main_task_manager", task_manager_ptr);
+    TaskManager task_manager = TaskManager(
+        "main_task_manager", 
+        std::make_unique<FreeRTOS_TaskRunner>("main_task_manager", 4096, tskNO_AFFINITY)
+    );
+
     task_manager.add_task(&t_endpoint);
     task_manager.add_task(&h_endpoint);
-
     task_manager.add_task(&rgb_signaler);
     
     std::vector<std::shared_ptr<IConversion<float>>> conversions;

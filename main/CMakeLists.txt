@@ -1,5 +1,8 @@
 set(base_deps 
     spi_flash 
+    fic_time
+    esp_fic_time
+    task
 )
 
 set(hardware_deps 
@@ -21,11 +24,6 @@ set(core_logic
 set(logging 
     fic_log 
     esp_fic_log
-)
-
-set(timing 
-    fic_time
-    esp_fic_time
 )
 
 idf_component_register(

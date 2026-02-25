@@ -1,6 +1,8 @@
 #ifndef FIC_TIME_HH
 #define FIC_TIME_HH
 
+#include <inttypes.h>
+
 class ITimeSource {
 public:
     virtual ~ITimeSource() = default;

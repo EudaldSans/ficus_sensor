@@ -1,3 +1,3 @@
 idf_component_register( SRCS "led_strip_single.cpp"
-                        REQUIRES fic_hal espressif__led_strip
+                        REQUIRES fic_hal espressif__led_strip fic_log
                         INCLUDE_DIRS ".")

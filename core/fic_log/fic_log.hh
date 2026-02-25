@@ -11,8 +11,7 @@ enum log_level_t {
     FIC_DEBUG,
     FIC_INFO,
     FIC_WARNING,
-    FIC_ERROR,
-    FIC_CRITICAL
+    FIC_ERROR
 };
 
 typedef void (*fic_log_backend_t)(log_level_t level, const char* tag, const char* format, va_list args);
@@ -26,6 +25,5 @@ void fic_log_dispatch(log_level_t level, const char* tag, const char* format, ..
 #define FIC_LOGI(tag, format, ...) fic_log_dispatch(FIC_INFO, tag, format, ##__VA_ARGS__)
 #define FIC_LOGW(tag, format, ...) fic_log_dispatch(FIC_WARNING, tag, format, ##__VA_ARGS__)
 #define FIC_LOGE(tag, format, ...) fic_log_dispatch(FIC_ERROR, tag, format, ##__VA_ARGS__)
-#define FIC_LOGC(tag, format, ...) fic_log_dispatch(FIC_CRITICAL, tag, format, ##__VA_ARGS__)
 
 #endif
