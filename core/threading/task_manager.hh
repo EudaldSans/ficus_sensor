@@ -27,7 +27,7 @@ class TaskManager {
         void add_task(ITask* task);
 
     private: 
-        static void run(void* pvParameters);
+        static void run(void* instance);
         std::array<ITask*, MAX_TASKS> _tasks;
         size_t _task_count = 0;
 

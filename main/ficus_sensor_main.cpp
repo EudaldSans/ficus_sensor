@@ -32,6 +32,8 @@
 #include "esp_fic_log.hh"
 #include "freertos_task.hh"
 
+#include "wifi_driver.hh"
+
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
 
@@ -61,6 +63,8 @@ SensorEndpoint<float> h_endpoint(
     sensor_meas_period_ms
 );
 
+WifiDriver wifi = WifiDriver();
+
 static const char *TAG = "main";
 
 extern "C" void app_main(void) {  
@@ -71,6 +75,9 @@ extern "C" void app_main(void) {
 
     FIC_LOGI(TAG, "Initializing hardware");
     led_strip.init();
+
+    wifi.init();
+    wifi.sta_connect("dimmer_mem_fase_0", "1234567890");
 
     FIC_LOGI(TAG, "Setting up task manager");
     TaskManager task_manager = TaskManager(

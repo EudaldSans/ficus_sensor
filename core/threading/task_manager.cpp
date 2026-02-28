@@ -14,8 +14,8 @@ TaskManager::~TaskManager() {
     }
 }
 
-void TaskManager::run(void* pvParameters) {
-    auto* self = static_cast<TaskManager*>(pvParameters);
+void TaskManager::run(void* instance) {
+    auto* self = static_cast<TaskManager*>(instance);
     self->_active = true;
     
     FIC_LOGI(TAG, "Setting up tasks for manager %s", self->_name);

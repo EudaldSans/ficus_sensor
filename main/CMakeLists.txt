@@ -9,6 +9,7 @@ set(hardware_deps
     adc 
     onewire
     leds
+    wifi
 )
 
 set(sensor_logic 
