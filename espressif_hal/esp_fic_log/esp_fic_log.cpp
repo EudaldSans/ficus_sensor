@@ -32,5 +32,8 @@ void esp32_backend(log_level_t level, const char* tag, const char* format, va_li
             break;
     }
     
-    esp_log_writev(esp_level, tag, format, args); 
+    esp_log_config_t config = ESP_LOG_CONFIG_INIT((esp_level) | ESP_LOG_CONFIGS_DEFAULT);
+
+    esp_log_va(config, tag, format, args);
+    // esp_log_writev(esp_level, tag, format, args); 
 }
