@@ -77,7 +77,7 @@ extern "C" void app_main(void) {
     led_strip.init();
 
     wifi.init();
-    wifi.sta_connect("dimmer_mem_fase_0", "1234567890");
+    wifi.sta_connect("HUAWEI-2.4GHz-tE4c", "Mh9gcxu5");
 
     FIC_LOGI(TAG, "Setting up task manager");
     TaskManager task_manager = TaskManager(
