@@ -30,6 +30,7 @@ enum class WiFiState {
 
     AP_STARTING,
     AP_ACTIVE,
+    AP_STOPPING,  
     AP_STOPPED,
 
     SCANNING,

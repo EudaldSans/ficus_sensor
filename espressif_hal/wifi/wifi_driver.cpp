@@ -99,6 +99,10 @@ void WifiDriver::stop() {
         return;
     }
 
+    if (_esp_netif != nullptr) {
+        esp_netif_destroy_default_wifi(_esp_netif);
+    }
+
     _current_mode = InternalMode::NONE;
     _state = WiFiState::IDLE;
 }
@@ -182,6 +186,9 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
         return FIC_ERR_SDK_FAIL;
     }
 
+    if (_esp_netif != nullptr) {
+        esp_netif_destroy_default_wifi(_esp_netif);
+    }
     _esp_netif = esp_netif_create_default_wifi_sta();
 
     if (esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config) != ESP_OK) {
@@ -214,6 +221,7 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
 fic_error_t WifiDriver::sta_disconnect() {
     if (_current_mode != InternalMode::STATION) {return FIC_ERR_INVALID_STATE;}
 
+    _state = WiFiState::STA_DISCONNECTING;
     stop();
 
     return FIC_OK;
@@ -252,6 +260,9 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
         return FIC_ERR_SDK_FAIL;
     }
 
+    if (_esp_netif != nullptr) {
+        esp_netif_destroy_default_wifi(_esp_netif);
+    }
     _esp_netif = esp_netif_create_default_wifi_ap();
 
     if (esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config) != ESP_OK) {
@@ -280,6 +291,7 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
 fic_error_t WifiDriver::stop_ap() {
     if (_current_mode != InternalMode::ACCESS_POINT) {return FIC_ERR_INVALID_STATE;}
 
+    _state = WiFiState::AP_STOPPING;
     stop();
 
     return FIC_OK;
