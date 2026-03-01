@@ -47,6 +47,7 @@ fic_error_t WifiDriver::init() {
         return FIC_ERR_SDK_FAIL;
     }
     
+    _cfg = WIFI_INIT_CONFIG_DEFAULT();
     if (esp_wifi_init(&_cfg) != ESP_OK) {
         FIC_LOGE(TAG, "Could not initialize wifi config"); 
         return FIC_ERR_SDK_FAIL;
@@ -188,6 +189,11 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
         return FIC_ERR_SDK_FAIL;
     }
 
+    if (esp_wifi_start()) {
+        FIC_LOGE(TAG, "Failed to start WiFi");
+        return FIC_ERR_SDK_FAIL;
+    }
+
     FIC_LOGI(TAG, "STA connecting");
     _state = WiFiState::STA_CONNECTING;
     _current_mode = InternalMode::STATION;
@@ -235,6 +241,11 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
         return FIC_ERR_SDK_FAIL;
     }
 
+    if (esp_wifi_start()) {
+        FIC_LOGE(TAG, "Failed to start WiFi");
+        return FIC_ERR_SDK_FAIL;
+    }
+
     FIC_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d", ssid, password, channel);
 
     _current_mode = InternalMode::ACCESS_POINT;
@@ -266,6 +277,16 @@ void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base,
         esp_wifi_connect();
         FIC_LOGI(TAG, "Station started");
         self->_state = WiFiState::STA_CONNECTING;
+
+    }else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        if (self->_retries < self->_max_retries) {
+            esp_wifi_connect();
+            self->_retries++;
+            FIC_LOGW(TAG, "retrying to connect to the AP");
+        } else {
+            FIC_LOGE(TAG,"failed to connect to AP , reverting to OFF");
+            // xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
