@@ -49,7 +49,7 @@ class IWiFiScanner {
         virtual fic_error_t start_scan() = 0; 
 
         virtual bool is_scan_busy() const = 0;
-        virtual fic_error_t get_scan_results(WiFiScanItem* results, size_t* count) const = 0;
+        virtual fic_error_t get_scan_results(WiFiScanItem* results, size_t &max_results) const = 0;
 };
 
 class IWiFiStatusManager {

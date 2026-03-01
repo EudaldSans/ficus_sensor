@@ -35,7 +35,7 @@ public:
 
     fic_error_t start_scan() override; 
     bool is_scan_busy() const override;
-    fic_error_t get_scan_results(WiFiScanItem* results, size_t* count) const override;
+    fic_error_t get_scan_results(WiFiScanItem* results, size_t &max_results) const override;
 
     WiFiState get_state() const override;  
     ConnectionDetails get_details() const override;   
@@ -61,7 +61,7 @@ private:
     uint8_t _max_retries = 5;
 
     enum class InternalMode { NONE, STATION, ACCESS_POINT, SCANNING };
-    InternalMode _current_mode = InternalMode::NONE;
+    InternalMode _mode = InternalMode::NONE;
 
     std::mutex _mutex;
 
