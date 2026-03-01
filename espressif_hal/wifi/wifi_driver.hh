@@ -41,8 +41,10 @@ public:
     ConnectionDetails get_details() const override;   
     
     fic_error_t sta_connect(const char* ssid, const char* password) override;
+    fic_error_t sta_disconnect() override;
 
-    fic_error_t start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connection) override;
+    fic_error_t start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) override;
+    fic_error_t stop_ap() override;
 
 private:
     static void wifi_event_handler(void *instance, esp_event_base_t event_base, int32_t event_id, void *event_data);

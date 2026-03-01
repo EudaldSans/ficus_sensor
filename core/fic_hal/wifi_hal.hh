@@ -74,13 +74,15 @@ class IWiFiStation {
         virtual ~IWiFiStation() = default;
 
         virtual fic_error_t sta_connect(const char* ssid, const char* password) = 0;
+        virtual fic_error_t sta_disconnect() = 0;
 };
 
 class IWiFiAccessPoint {
     public:
         virtual ~IWiFiAccessPoint() = default;
 
-        virtual fic_error_t start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connection) = 0;
+        virtual fic_error_t start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) = 0;
+        virtual fic_error_t stop_ap() = 0;
 };
 
 #endif 

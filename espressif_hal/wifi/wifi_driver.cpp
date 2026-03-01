@@ -94,8 +94,13 @@ fic_error_t WifiDriver::deinit() {
  * @brief Stops the current WiFi process
  */
 void WifiDriver::stop() {
-    FIC_LOGE(TAG, "NOT YET IMPLEMENTED");
-    return;
+    if (esp_wifi_stop() != ESP_OK) {
+        FIC_LOGE(TAG, "Failed to stop WiFi station");
+        return;
+    }
+
+    _current_mode = InternalMode::NONE;
+    _state = WiFiState::IDLE;
 }
 
 /**
@@ -190,7 +195,7 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
     }
 
     if (esp_wifi_start()) {
-        FIC_LOGE(TAG, "Failed to start WiFi");
+        FIC_LOGE(TAG, "Failed to start WiFi station");
         return FIC_ERR_SDK_FAIL;
     }
 
@@ -202,15 +207,28 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
 }
 
 /**
+ * @brief Stops the AP if it is active
+ * 
+ * @return @c fic_error_t with relevant errors, @c FIC_OK if AP stopped successfuly
+ */
+fic_error_t WifiDriver::sta_disconnect() {
+    if (_current_mode != InternalMode::STATION) {return FIC_ERR_INVALID_STATE;}
+
+    stop();
+
+    return FIC_OK;
+}
+
+/**
  * @brief Starts a secure access point on the device.
  * 
  * @param ssid SSID of the access point
  * @param password Password for the access point (empty for non secure AP)
  * @param channel The channel to open the AP on
- * @param max_connection Maxumun number of connection to the AP
+ * @param max_connections Maxumun number of connection to the AP
  * @return @c fic_error_t with relevant errors, @c FIC_OK if AP started successfuly
  */
-fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connection) {
+fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) {
     if (_current_mode != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
 
     wifi_config_t wifi_ap_config = {};
@@ -225,7 +243,7 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
     strncpy((char*)wifi_ap_config.ap.password, password, sizeof(wifi_ap_config.ap.password) - 1);
 
     wifi_ap_config.ap.channel = channel;
-    wifi_ap_config.ap.max_connection = max_connection;
+    wifi_ap_config.ap.max_connection = max_connections;
     wifi_ap_config.ap.authmode = (strlen(password) == 0) ? WIFI_AUTH_OPEN : WIFI_AUTH_WPA2_PSK;
     wifi_ap_config.ap.pmf_cfg.required = false;
 
@@ -242,7 +260,7 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
     }
 
     if (esp_wifi_start()) {
-        FIC_LOGE(TAG, "Failed to start WiFi");
+        FIC_LOGE(TAG, "Failed to start WiFi AP");
         return FIC_ERR_SDK_FAIL;
     }
 
@@ -250,6 +268,19 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
 
     _current_mode = InternalMode::ACCESS_POINT;
     _state = WiFiState::AP_ACTIVE;
+
+    return FIC_OK;
+}
+
+/**
+ * @brief Stops the AP if it is active
+ * 
+ * @return @c fic_error_t with relevant errors, @c FIC_OK if AP stopped successfuly
+ */
+fic_error_t WifiDriver::stop_ap() {
+    if (_current_mode != InternalMode::ACCESS_POINT) {return FIC_ERR_INVALID_STATE;}
+
+    stop();
 
     return FIC_OK;
 }
@@ -264,35 +295,44 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
  */
 void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base, int32_t event_id, void *event_data) {
     auto* self = static_cast<WifiDriver*>(instance);
-    
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
-        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
-        FIC_LOGI(TAG, "Station " MACSTR " joined, AID=%d", MAC2STR(event->mac), event->aid);
 
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
-        FIC_LOGI(TAG, "Station " MACSTR " left, AID=%d, reason:%d", MAC2STR(event->mac), event->aid, event->reason);
+    if (event_base == WIFI_EVENT) {
+        if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+            wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
+            FIC_LOGI(TAG, "Station " MACSTR " joined, AID=%d", MAC2STR(event->mac), event->aid);
 
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
-        FIC_LOGI(TAG, "Station started");
-        self->_state = WiFiState::STA_CONNECTING;
+        } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+            wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
+            FIC_LOGI(TAG, "Station " MACSTR " left, AID=%d, reason:%d", MAC2STR(event->mac), event->aid, event->reason);
 
-    }else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (self->_retries < self->_max_retries) {
+        } else if (event_id == WIFI_EVENT_STA_START) {
             esp_wifi_connect();
-            self->_retries++;
-            FIC_LOGW(TAG, "retrying to connect to the AP");
-        } else {
-            FIC_LOGE(TAG,"failed to connect to AP , reverting to OFF");
-            // xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+            FIC_LOGI(TAG, "Station started");
+            self->_state = WiFiState::STA_CONNECTING;
+
+        }else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
+            if (self->_retries < self->_max_retries) {
+                esp_wifi_connect();
+                self->_retries++;
+                FIC_LOGW(TAG, "retrying to connect to the AP");
+            } else {
+                FIC_LOGE(TAG,"failed to connect to AP");
+                self->stop();
+                self->_state = WiFiState::ERROR_AUTH_FAILED;
+            }
+        
+        } else if (event_id == WIFI_EVENT_STA_STOP) {
+            FIC_LOGI(TAG, "Station stopped");
+            esp_wifi_disconnect();
+        } 
+
+    } else if (event_base == IP_EVENT) {
+        if (event_id == IP_EVENT_STA_GOT_IP) {
+            ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
+            FIC_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
+            self->_retries = 0;
+
+            self->_state = WiFiState::STA_CONNECTED;
         }
-
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
-        FIC_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
-        self->_retries = 0;
-
-        self->_state = WiFiState::STA_CONNECTED;
     }
 }
