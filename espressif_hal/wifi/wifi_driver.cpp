@@ -156,6 +156,7 @@ ConnectionDetails WifiDriver::get_details() const {
     esp_wifi_sta_get_ap_info(&ap);
 
     details.rssi = ap.rssi;
+    details.addr = _current_ip;
     memcpy(details.ssid, ap.ssid, sizeof(ap.ssid));
 
     return details;
@@ -343,6 +344,7 @@ void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base,
             ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
             FIC_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
             self->_retries = 0;
+            self->_current_ip = event->ip_info.ip.addr;
 
             self->_state = WiFiState::STA_CONNECTED;
         }

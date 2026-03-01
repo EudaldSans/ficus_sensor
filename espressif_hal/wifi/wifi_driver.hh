@@ -52,6 +52,7 @@ private:
     EventGroupHandle_t _wifi_event_group;
     wifi_init_config_t _cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_netif_t *_esp_netif;
+    uint32_t _current_ip;
 
     std::atomic<WiFiState> _state = WiFiState::OFF;
     std::atomic<bool> _initialized = false;

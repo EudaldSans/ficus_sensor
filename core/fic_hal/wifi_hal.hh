@@ -7,7 +7,7 @@
 #include "fic_errors.hh"
 
 struct ConnectionDetails {
-    // char ip_address[16];
+    uint32_t addr;
     char ssid[33];
     int8_t rssi;
 };
