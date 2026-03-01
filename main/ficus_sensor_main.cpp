@@ -116,40 +116,13 @@ extern "C" void app_main(void) {
 
     task_manager.start();
 
-    std::array<RGB_action_t, MAX_STEPS_IN_RGB_SIGNAL> sos_pattern = {{
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 300},
-
-        {true, {50, 50, 50}, 300},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 300},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 300},
-        {false, {0, 0, 0}, 300},
-
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 700},
-    }};
-
     while (1) {
-        rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 255}, 500, INFINITE_CYCLES);
-        vTaskDelay(5000/portTICK_PERIOD_MS);
-        rgb_signaler.set_blink({0, 0, 0}, 500, {255, 255, 255}, 500, INFINITE_CYCLES);
-        vTaskDelay(5000/portTICK_PERIOD_MS);
-        rgb_signaler.set_solid({0, 0, 0});
-        vTaskDelay(2000/portTICK_PERIOD_MS);
-        rgb_signaler.set_solid({0, 255, 0});
-        vTaskDelay(2000/portTICK_PERIOD_MS);
+        if (wifi.get_state() != WiFiState::STA_CONNECTED) {
+            rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 0}, 500, 2);
+        } else {
+            rgb_signaler.set_solid({0, 0, 0});
+        }
 
-        rgb_signaler.set_custom_signal({sos_pattern.begin(), sos_pattern.end()}, INFINITE_CYCLES);
-        vTaskDelay(20000/portTICK_PERIOD_MS);
+        vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }

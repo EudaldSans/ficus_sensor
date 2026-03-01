@@ -47,7 +47,7 @@ public:
 private:
     static void wifi_event_handler(void *instance, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
-    static EventGroupHandle_t _wifi_event_group;
+    EventGroupHandle_t _wifi_event_group;
     wifi_init_config_t _cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_netif_t *_esp_netif;
 

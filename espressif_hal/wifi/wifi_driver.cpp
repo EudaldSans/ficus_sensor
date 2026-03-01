@@ -106,9 +106,22 @@ fic_error_t WifiDriver::start_scan() {
     FIC_LOGE(TAG, "NOT YET IMPLEMENTED");
     return FIC_ERR_NOT_FOUND;
 }
+/**
+ * @brief Checks whether a scan is currently running
+ * 
+ * @return @c true if a scan is running, @c false otherwise
+ */
 bool WifiDriver::is_scan_busy() const {
     return _state != WiFiState::SCANNING;
 }
+
+/**
+ * @brief Returns the last scan results.
+ * 
+ * @param results pointer to @c WiFiScanItem array
+ * @param count pointer to @c size_t
+ * @return @c fic_error_t with relevant errors
+ */
 fic_error_t WifiDriver::get_scan_results(WiFiScanItem* results, size_t* count) const {
     FIC_LOGE(TAG, "NOT YET IMPLEMENTED");
     return FIC_ERR_NOT_FOUND;
@@ -120,9 +133,22 @@ fic_error_t WifiDriver::get_scan_results(WiFiScanItem* results, size_t* count) c
  * @return @c WiFiState 
  */
 WiFiState WifiDriver::get_state() const {return _state;}  
+
+/**
+ * @brief returns the current connection details
+ * 
+ * @return @c ConnectionDetails
+ */
 ConnectionDetails WifiDriver::get_details() const {
-    FIC_LOGE(TAG, "NOT YET IMPLEMENTED");
-    return {0};
+    wifi_ap_record_t ap;
+    ConnectionDetails details = {};
+
+    esp_wifi_sta_get_ap_info(&ap);
+
+    details.rssi = ap.rssi;
+    memcpy(details.ssid, ap.ssid, sizeof(ap.ssid));
+
+    return details;
 }  
 
 /**
@@ -230,11 +256,11 @@ void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base,
     
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *) event_data;
-        FIC_LOGI(TAG, "Station "MACSTR" joined, AID=%d", MAC2STR(event->mac), event->aid);
+        FIC_LOGI(TAG, "Station " MACSTR " joined, AID=%d", MAC2STR(event->mac), event->aid);
 
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *) event_data;
-        FIC_LOGI(TAG, "Station "MACSTR" left, AID=%d, reason:%d", MAC2STR(event->mac), event->aid, event->reason);
+        FIC_LOGI(TAG, "Station " MACSTR " left, AID=%d, reason:%d", MAC2STR(event->mac), event->aid, event->reason);
 
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();

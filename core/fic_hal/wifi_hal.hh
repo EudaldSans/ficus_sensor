@@ -7,12 +7,13 @@
 #include "fic_errors.hh"
 
 struct ConnectionDetails {
-    char ip_address[16];
+    // char ip_address[16];
+    char ssid[33];
     int8_t rssi;
 };
 
 struct WiFiScanItem {
-    char ssid[32];
+    char ssid[33];
     int8_t rssi;
     uint8_t channel;
     bool secure;
@@ -65,7 +66,7 @@ class IWiFiLifecycle {
         virtual fic_error_t init() = 0;
         virtual fic_error_t deinit() = 0;
 
-        virtual void stop();
+        virtual void stop() = 0;
 };
 
 class IWiFiStation {
