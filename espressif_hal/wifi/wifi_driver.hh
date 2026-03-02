@@ -23,42 +23,77 @@
 enum class InternalMode { NONE, STATION, ACCESS_POINT, SCANNING };
 
 struct WiFiContext {
-    esp_netif_t* netif = nullptr;
-    EventGroupHandle_t event_group;
-    std::mutex _mutex;
+    esp_netif_t* netif = nullptr;    
+    
     WiFiState state = WiFiState::OFF;
     InternalMode mode = InternalMode::NONE;
+    
+    std::recursive_mutex _mutex;    
 };
 
 class WiFiController : public IWiFiLifecycle, public IWiFiStatusManager {
 public:
+    WiFiController(WiFiContext& ctx) : _ctx(ctx) {}
+
+    fic_error_t init() override;
+    fic_error_t deinit() override;
+    void stop() override;
+
+    WiFiState get_state() const override;  
+    ConnectionDetails get_details() const override;   
 
 private:
+    static void wifi_event_handler(void *instance, esp_event_base_t event_base, int32_t event_id, void *event_data);
+
     WiFiContext& _ctx;
+    uint32_t _current_ip;
+
+    std::atomic<bool> _initialized = false;
+    wifi_init_config_t _cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+    EventGroupHandle_t _event_group;
+
+    constexpr static char const *TAG = "WiFi Controller";
 };
 
 class WiFiScanner : public IWiFiScanner {
 public:
+    WiFiScanner(WiFiContext& ctx) : _ctx(ctx) {}
+
+    fic_error_t start_scan() override; 
+    bool is_scan_busy() const override;
+    fic_error_t get_scan_results(WiFiScanItem* results, size_t &max_results) const override;
 
 private:
     WiFiContext& _ctx;
 
+    constexpr static char const *TAG = "WiFi Scanner";
 };
 
 class WiFiAccessPoint : public IWiFiAccessPoint {
 public:
+    WiFiAccessPoint(WiFiContext& ctx) : _ctx(ctx) {}
+
+    fic_error_t start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) override;
+    fic_error_t stop_ap() override;
 
 private:
     WiFiContext& _ctx;
 
+    constexpr static char const *TAG = "WiFi AP";
 };
 
 class WiFiStation : public IWiFiStation {
 public:
+    WiFiStation(WiFiContext& ctx) : _ctx(ctx) {}
+
+    fic_error_t sta_connect(const char* ssid, const char* password) override;
+    fic_error_t sta_disconnect() override;
 
 private:
     WiFiContext& _ctx;
 
+    constexpr static char const *TAG = "WiFi STA";
 };
  
 class WifiDriver :  public IWiFiScanner, 
@@ -101,12 +136,6 @@ private:
     uint8_t _retries = 0;
     uint8_t _max_retries = 5;
 
-    enum class InternalMode { NONE, STATION, ACCESS_POINT, SCANNING };
-    InternalMode _mode = InternalMode::NONE;
-
-    std::mutex _mutex;
-
-    constexpr static char const *TAG = "WiFi Driver";
 };
 
 #endif
