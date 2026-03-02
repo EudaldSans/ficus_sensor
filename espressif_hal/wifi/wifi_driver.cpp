@@ -373,7 +373,7 @@ void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base,
             FIC_LOGI(TAG, "Station " MACSTR " left, AID=%d, reason:%d", MAC2STR(event->mac), event->aid, event->reason);
 
         } else if (event_id == WIFI_EVENT_STA_START) {
-            if (self->_mode == InternalMode::STATION) esp_wifi_connect();
+            if (self->_mode != InternalMode::SCANNING) esp_wifi_connect();
             FIC_LOGI(TAG, "Station started");
             self->_state = WiFiState::STA_CONNECTING;
 

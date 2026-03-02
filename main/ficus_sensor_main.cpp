@@ -77,7 +77,8 @@ extern "C" void app_main(void) {
     led_strip.init();
 
     wifi.init();
-    wifi.sta_connect("XTA_47592", "Mh9gcxu5");
+    // wifi.sta_connect("XTA_47592", "Mh9gcxu5");
+    wifi.start_scan();
 
     FIC_LOGI(TAG, "Setting up task manager");
     TaskManager task_manager = TaskManager(
@@ -116,12 +117,69 @@ extern "C" void app_main(void) {
 
     task_manager.start();
 
+    ConnectionDetails details = {};
+
+    size_t results_size = 16;
+    WiFiScanItem results[results_size];
+
+    int state = 0;
+
     while (1) {
-        if (wifi.get_state() != WiFiState::STA_CONNECTED) {
-            rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 0}, 500, 2);
-        } else {
-            rgb_signaler.set_solid({0, 0, 0});
+        switch(state) {
+            case 0:
+                results_size = 16;
+
+                if (wifi.is_scan_busy()) {
+                    rgb_signaler.set_blink({0, 0, 255}, 225, {0, 0, 0}, 225, 4);
+
+                } else {
+                    wifi.get_scan_results(results, results_size);
+
+                    for (int i = 0; i < results_size; i++) {
+                        FIC_LOGI(TAG, "RSSI: %d\t\tChannel:%d\t\tSSID:%s", results[i].rssi, results[i].channel, results[i].ssid);
+                    }
+
+                    rgb_signaler.set_solid({0, 255, 0});
+                    wifi.stop();
+
+                    state = 1;
+                }
+                break;
+
+            case 1:
+                switch (wifi.get_state()) {
+                    case WiFiState::IDLE:
+                    case WiFiState::OFF:
+                        wifi.sta_connect("XTA_47592", "Mh9gcxu5");
+                        break;
+
+                    case WiFiState::STA_CONNECTED:
+                        rgb_signaler.set_solid({0, 0, 0});
+
+                        details = wifi.get_details();
+
+                        FIC_LOGI(TAG, "Connection details - IP: %d.%d.%d.%d, RSSI: %d, SSID: %s", (details.addr >> 24) & 0xFF, (details.addr >> 16) & 0xFF, (details.addr >> 8) & 0xFF, details.addr & 0xFF, details.rssi, details.ssid);
+
+                        wifi.stop();
+                        wifi.start_ap("mem_dimmer_fase_0", "1234567890", 1, 1);
+
+                        break;
+
+                    case WiFiState::STA_CONNECTING:
+                        rgb_signaler.set_blink({0, 0, 255}, 500, {0, 0, 0}, 500, 2);
+
+                        break;
+
+                    case WiFiState::ERROR_AUTH_FAILED:
+                        rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 0}, 500, 2);
+                        break;
+
+                    default:
+                        rgb_signaler.set_solid({0, 255, 0});
+                        break;
+                }
         }
+        
 
         vTaskDelay(2000/portTICK_PERIOD_MS);
     }
