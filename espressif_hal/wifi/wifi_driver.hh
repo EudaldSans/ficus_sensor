@@ -19,6 +19,47 @@
 #include "lwip/inet.h"
 #include "lwip/netdb.h"
 #include "lwip/sockets.h"
+
+enum class InternalMode { NONE, STATION, ACCESS_POINT, SCANNING };
+
+struct WiFiContext {
+    esp_netif_t* netif = nullptr;
+    EventGroupHandle_t event_group;
+    std::mutex _mutex;
+    WiFiState state = WiFiState::OFF;
+    InternalMode mode = InternalMode::NONE;
+};
+
+class WiFiController : public IWiFiLifecycle, public IWiFiStatusManager {
+public:
+
+private:
+    WiFiContext& _ctx;
+};
+
+class WiFiScanner : public IWiFiScanner {
+public:
+
+private:
+    WiFiContext& _ctx;
+
+};
+
+class WiFiAccessPoint : public IWiFiAccessPoint {
+public:
+
+private:
+    WiFiContext& _ctx;
+
+};
+
+class WiFiStation : public IWiFiStation {
+public:
+
+private:
+    WiFiContext& _ctx;
+
+};
  
 class WifiDriver :  public IWiFiScanner, 
                     public IWiFiStation, 
