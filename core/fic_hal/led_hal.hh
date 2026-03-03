@@ -28,6 +28,12 @@ struct Color {
     uint32_t red, green, blue;
 };
 
+#define LED_WHITE {255, 255, 255}
+#define LED_RED {255, 0, 0}
+#define LED_GREEN {0, 255, 0}
+#define LED_BLUE {0, 0, 255}
+#define LED_OFF {0, 0, 0}
+
 class IColorable : public ILightable {
 public: 
     virtual ~IColorable() = default;

@@ -9,6 +9,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "nvs_flash.h"
+
 #include "sdkconfig.h"
 #include "fic_log.hh"
 
@@ -31,6 +33,12 @@
 
 #include "esp_fic_log.hh"
 #include "freertos_task.hh"
+
+#include "wifi_context.hh"
+#include "wifi_controller.hh"
+#include "wifi_station.hh"
+#include "wifi_access_point.hh"
+#include "wifi_scanner.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
@@ -61,6 +69,12 @@ SensorEndpoint<float> h_endpoint(
     sensor_meas_period_ms
 );
 
+WiFiContext wifi_context;
+WiFiController wifi(wifi_context);
+WiFiStation wifi_station(wifi_context);
+WiFiScanner wifi_scanner(wifi_context);
+WiFiAccessPoint wifi_ap(wifi_context);
+
 static const char *TAG = "main";
 
 extern "C" void app_main(void) {  
@@ -71,6 +85,8 @@ extern "C" void app_main(void) {
 
     FIC_LOGI(TAG, "Initializing hardware");
     led_strip.init();
+
+    nvs_flash_init();
 
     FIC_LOGI(TAG, "Setting up task manager");
     TaskManager task_manager = TaskManager(
@@ -109,40 +125,33 @@ extern "C" void app_main(void) {
 
     task_manager.start();
 
-    std::array<RGB_action_t, MAX_STEPS_IN_RGB_SIGNAL> sos_pattern = {{
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 300},
+    size_t results_size = 16;
+    WiFiScanItem results[results_size];
 
-        {true, {50, 50, 50}, 300},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 300},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 300},
-        {false, {0, 0, 0}, 300},
-
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 100},
-        {true, {50, 50, 50}, 100},
-        {false, {0, 0, 0}, 700},
-    }};
+    wifi.init();
+    wifi_scanner.start_scan();
 
     while (1) {
-        rgb_signaler.set_blink({255, 0, 0}, 500, {0, 0, 255}, 500, INFINITE_CYCLES);
-        vTaskDelay(5000/portTICK_PERIOD_MS);
-        rgb_signaler.set_blink({0, 0, 0}, 500, {255, 255, 255}, 500, INFINITE_CYCLES);
-        vTaskDelay(5000/portTICK_PERIOD_MS);
-        rgb_signaler.set_solid({0, 0, 0});
-        vTaskDelay(2000/portTICK_PERIOD_MS);
-        rgb_signaler.set_solid({0, 255, 0});
-        vTaskDelay(2000/portTICK_PERIOD_MS);
+        results_size = 16;
 
-        rgb_signaler.set_custom_signal({sos_pattern.begin(), sos_pattern.end()}, INFINITE_CYCLES);
-        vTaskDelay(20000/portTICK_PERIOD_MS);
+        if (wifi_scanner.is_scan_busy()) {
+            uint32_t blink_time = 225;
+            uint16_t cycles = 4;
+            rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
+
+        } else {
+            wifi_scanner.get_scan_results(results, results_size);
+
+            FIC_LOGI(TAG, "GOT %d results", results_size);
+
+            for (int i = 0; i < results_size; i++) {
+                FIC_LOGI(TAG, "RSSI: %d\t\tChannel:%d\t\tSSID:%s", results[i].rssi, results[i].channel, results[i].ssid);
+            }
+
+            rgb_signaler.set_solid(LED_GREEN);
+            wifi_scanner.start_scan();
+        }
+
+        vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }
