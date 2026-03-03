@@ -81,7 +81,6 @@ fic_error_t WiFiController::deinit() {
 
     esp_netif_deinit();
 
-    auto context = _ctx.lock();
     context.set_mode(InternalMode::NONE);
     context.set_state(WiFiState::IDLE);
     FIC_LOGI(TAG, "WifiDriver deinitialized successfully");
@@ -391,7 +390,6 @@ void WiFiController::wifi_event_handler(void *instance, esp_event_base_t event_b
             }
 
             esp_wifi_connect();
-            self->_retries++;
             FIC_LOGW(TAG, "retrying to connect to the AP");
         
         } else if (event_id == WIFI_EVENT_STA_STOP) {
