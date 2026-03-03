@@ -32,7 +32,11 @@
 #include "esp_fic_log.hh"
 #include "freertos_task.hh"
 
-#include "wifi_driver.hh"
+#include "wifi_context.hh"
+#include "wifi_controller.hh"
+#include "wifi_station.hh"
+#include "wifi_access_point.hh"
+#include "wifi_scanner.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
