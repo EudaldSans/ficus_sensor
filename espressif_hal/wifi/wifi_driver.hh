@@ -22,13 +22,28 @@
 
 enum class InternalMode { NONE, STATION, ACCESS_POINT, SCANNING };
 
-struct WiFiContext {
+class WiFiContext {
+private:
     esp_netif_t* netif = nullptr;    
     
-    WiFiState state = WiFiState::OFF;
-    InternalMode mode = InternalMode::NONE;
+    WiFiState _state = WiFiState::OFF;
+    InternalMode _mode = InternalMode::NONE;
     
-    std::recursive_mutex _mutex;    
+    std::recursive_mutex _mutex;  
+
+public:
+    class ScopedAccess {
+        std::lock_guard<std::recursive_mutex> _lock;
+        WiFiContext& _ctx;
+    public:
+        ScopedAccess(WiFiContext& ctx) : _ctx(ctx), _lock(ctx._mutex) {}
+        
+        WiFiState state() { return _ctx._state; }
+        void set_state(WiFiState s) { _ctx._state = s; }
+    };
+
+    // Factory method to get a lock
+    ScopedAccess lock() { return ScopedAccess(*this); }  
 };
 
 class WiFiController : public IWiFiLifecycle, public IWiFiStatusManager {
