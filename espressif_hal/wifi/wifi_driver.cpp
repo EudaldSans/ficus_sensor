@@ -9,11 +9,11 @@
 #include "fic_log.hh"
 
 /**
- * @brief Initializes the driver
+ * @brief Initializes the controller
  * 
- * @return @c fic_error_t with any error, @c FIC_OK if Driver correctly initialized
+ * @return @c fic_error_t with any error, @c FIC_OK if Controller correctly initialized
  */
-fic_error_t WifiDriver::init() {
+fic_error_t WiFiController::init() {
     if (_initialized) return FIC_OK;
 
     if (esp_netif_init() != ESP_OK) {
@@ -26,18 +26,11 @@ fic_error_t WifiDriver::init() {
         return FIC_ERR_SDK_FAIL;
     }
 
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ret = nvs_flash_erase();
-        if (ret == ESP_OK) ret = nvs_flash_init();
+    if (_event_group != NULL) {
+        vEventGroupDelete(_event_group);
+        _event_group = NULL;
     }
-
-    if (ret != ESP_OK) {
-        FIC_LOGE(TAG, "Could not initialize nvs flash"); 
-        return FIC_ERR_SDK_FAIL;
-    }
-
-    _wifi_event_group = xEventGroupCreate();
+    _event_group = xEventGroupCreate();
 
     if (esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, NULL) != ESP_OK) {
         FIC_LOGE(TAG, "Could not register instance WIFI_EVENT"); 
@@ -54,10 +47,13 @@ fic_error_t WifiDriver::init() {
         return FIC_ERR_SDK_FAIL;
     }
 
-    FIC_LOGI(TAG, "WifiDriver initialized successfully");
+    auto context = _ctx.lock();
+    context.set_mode(InternalMode::NONE);
+    context.set_state(WiFiState::IDLE);
 
-    _state = WiFiState::IDLE;
     _initialized = true;
+
+    FIC_LOGI(TAG, "WifiDriver initialized successfully");
 
     return FIC_OK;
 }
@@ -67,25 +63,27 @@ fic_error_t WifiDriver::init() {
  * 
  * @return @c fic_error_t with any error, @c FIC_OK if Driver correctly deinitialized
  */
-fic_error_t WifiDriver::deinit() {
+fic_error_t WiFiController::deinit() {
     if (!_initialized) return FIC_OK;
 
     esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler);
     esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler);
 
-    if (_wifi_event_group != NULL) {
-        vEventGroupDelete(_wifi_event_group);
-        _wifi_event_group = NULL;
+    if (_event_group != NULL) {
+        vEventGroupDelete(_event_group);
+        _event_group = NULL;
     }
 
     esp_event_loop_delete_default();
 
+    auto context = _ctx.lock();
+    context.delete_netif();
+
     esp_netif_deinit();
 
-    nvs_flash_deinit();
-
-    _initialized = false;
-    _state = WiFiState::OFF;
+    auto context = _ctx.lock();
+    context.set_mode(InternalMode::NONE);
+    context.set_state(WiFiState::IDLE);
     FIC_LOGI(TAG, "WifiDriver deinitialized successfully");
 
     return FIC_OK;
@@ -94,19 +92,18 @@ fic_error_t WifiDriver::deinit() {
 /**
  * @brief Stops the current WiFi process
  */
-void WifiDriver::stop() {
+void WiFiController::stop() {
     if (esp_wifi_stop() != ESP_OK) {
         FIC_LOGE(TAG, "Failed to stop WiFi station");
         return;
     }
 
-    if (_esp_netif != nullptr) {
-        esp_netif_destroy_default_wifi(_esp_netif);
-        _esp_netif = nullptr;
-    }
+    auto context = _ctx.lock();
+    context.delete_netif();
+    context.set_mode(InternalMode::NONE);
+    context.set_state(WiFiState::IDLE);
 
-    _mode = InternalMode::NONE;
-    _state = WiFiState::IDLE;
+    FIC_LOGI(TAG, "WiFi stopped successfully");
 }
 
 /**
@@ -114,14 +111,11 @@ void WifiDriver::stop() {
  * 
  * @return @c fic_error_t with relevant errors, @c FIC_OK if scan started successfuly
  */
-fic_error_t WifiDriver::start_scan() {
-    if (_mode != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
+fic_error_t WiFiScanner::start_scan() {
+    auto context = _ctx.lock();
+    if (context.mode() != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
 
-    if (_esp_netif != nullptr) {
-        esp_netif_destroy_default_wifi(_esp_netif);
-    }
-
-    _esp_netif = esp_netif_create_default_wifi_sta();
+    context.set_netif(esp_netif_create_default_wifi_sta());
 
     if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK) {
         FIC_LOGE(TAG, "Failed to set mode to WIFI_MODE_STA for scan");
@@ -135,18 +129,48 @@ fic_error_t WifiDriver::start_scan() {
 
     esp_wifi_scan_start(NULL, false);
 
-    _state = WiFiState::SCANNING;
-    _mode = InternalMode::SCANNING;
+    context.set_state(WiFiState::SCANNING);
+    context.set_mode(InternalMode::SCANNING);
     
     return FIC_OK;
 }
+
+/**
+ * @brief Returns the current Driver state
+ * 
+ * @return @c WiFiState 
+ */
+WiFiState WiFiController::get_state() const {
+    auto context = _ctx.lock();
+    return context.state();
+}  
+
+/**
+ * @brief returns the current connection details
+ * 
+ * @return @c ConnectionDetails
+ */
+ConnectionDetails WiFiController::get_details() const {
+    wifi_ap_record_t ap;
+    ConnectionDetails details = {};
+
+    esp_wifi_sta_get_ap_info(&ap);
+
+    details.rssi = ap.rssi;
+    details.addr = _current_ip;
+    memcpy(details.ssid, ap.ssid, sizeof(ap.ssid));
+
+    return details;
+}  
+
 /**
  * @brief Checks whether a scan is currently running
  * 
  * @return @c true if a scan is running, @c false otherwise
  */
-bool WifiDriver::is_scan_busy() const {
-    return _state == WiFiState::SCANNING;
+bool WiFiScanner::is_scan_busy() const {
+    auto context = _ctx.lock();
+    return context.state() == WiFiState::SCANNING;
 }
 
 /**
@@ -157,7 +181,7 @@ bool WifiDriver::is_scan_busy() const {
  *                As output param, it receives the actual AP number this API returns.
  * @return @c fic_error_t with relevant errors
  */
-fic_error_t WifiDriver::get_scan_results(WiFiScanItem* results, size_t &max_results) const {
+fic_error_t WiFiScanner::get_scan_results(WiFiScanItem* results, size_t &max_results) const {
     uint16_t result_count = max_results;
     uint16_t ap_count = 0;
 
@@ -188,43 +212,22 @@ fic_error_t WifiDriver::get_scan_results(WiFiScanItem* results, size_t &max_resu
         memcpy(results[i].ssid, ap_info[i].ssid, sizeof(ap_info[i].ssid));
     }
 
+    delete[] ap_info;
+
     return FIC_OK;
 }
-
-/**
- * @brief Returns the current Driver state
- * 
- * @return @c WiFiState 
- */
-WiFiState WifiDriver::get_state() const {return _state;}  
-
-/**
- * @brief returns the current connection details
- * 
- * @return @c ConnectionDetails
- */
-ConnectionDetails WifiDriver::get_details() const {
-    wifi_ap_record_t ap;
-    ConnectionDetails details = {};
-
-    esp_wifi_sta_get_ap_info(&ap);
-
-    details.rssi = ap.rssi;
-    details.addr = _current_ip;
-    memcpy(details.ssid, ap.ssid, sizeof(ap.ssid));
-
-    return details;
-}  
 
 /**
  * @brief Starts driver process to conect to a WiFi access point
  * 
  * @param ssid The SSID of the access point
  * @param password The password of the access point
+ * @param retries Number of times to retry connecting to the AP before giving up and setting the state to @c ERROR_AUTH_FAILED
  * @return @c FIC_ERR_INVALID_STATE if the Driver is already connecting to an STA, or is set to AP mode
  */
-fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
-    if (_mode != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
+fic_error_t WiFiStation::sta_connect(const char* ssid, const char* password, uint16_t retries) {
+    auto context = _ctx.lock();
+    if (context.mode() != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
 
     wifi_config_t wifi_sta_config = {};
 
@@ -232,7 +235,7 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
     strncpy((char*)wifi_sta_config.sta.password, password, sizeof(wifi_sta_config.sta.password) - 1);
 
     wifi_sta_config.sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
-    wifi_sta_config.sta.failure_retry_cnt = _max_retries;
+    wifi_sta_config.sta.failure_retry_cnt = retries;
     wifi_sta_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_sta_config.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 
@@ -241,17 +244,14 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
         return FIC_ERR_SDK_FAIL;
     }
 
-    if (_esp_netif != nullptr) {
-        esp_netif_destroy_default_wifi(_esp_netif);
-    }
-    _esp_netif = esp_netif_create_default_wifi_sta();
+    context.set_netif(esp_netif_create_default_wifi_sta());
 
     if (esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config) != ESP_OK) {
         FIC_LOGE(TAG, "Failed to set STA config");
         return FIC_ERR_SDK_FAIL;
     }
 
-    if (esp_netif_set_default_netif(_esp_netif)) {
+    if (esp_netif_set_default_netif(context.netif())) {
         FIC_LOGE(TAG, "Failed to set default netif");
         return FIC_ERR_SDK_FAIL;
     }
@@ -262,8 +262,8 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
     }
 
     FIC_LOGI(TAG, "STA connecting");
-    _state = WiFiState::STA_CONNECTING;
-    _mode = InternalMode::STATION;
+    context.set_state(WiFiState::STA_CONNECTING);
+    context.set_mode(InternalMode::STATION);
 
     return FIC_OK;
 }
@@ -273,11 +273,12 @@ fic_error_t WifiDriver::sta_connect(const char* ssid, const char* password) {
  * 
  * @return @c fic_error_t with relevant errors, @c FIC_OK if AP stopped successfuly
  */
-fic_error_t WifiDriver::sta_disconnect() {
-    if (_mode != InternalMode::STATION) {return FIC_ERR_INVALID_STATE;}
+fic_error_t WiFiStation::sta_disconnect() {
+    auto context = _ctx.lock();
+    if (context.mode() != InternalMode::STATION) {return FIC_ERR_INVALID_STATE;}
 
-    _state = WiFiState::STA_DISCONNECTING;
-    stop();
+    context.set_state(WiFiState::STA_DISCONNECTING);
+    esp_wifi_stop();
 
     return FIC_OK;
 }
@@ -291,8 +292,9 @@ fic_error_t WifiDriver::sta_disconnect() {
  * @param max_connections Maxumun number of connection to the AP
  * @return @c fic_error_t with relevant errors, @c FIC_OK if AP started successfuly
  */
-fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) {
-    if (_mode != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
+fic_error_t WiFiAccessPoint::start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) {
+    auto context = _ctx.lock();
+    if (context.mode() != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
 
     wifi_config_t wifi_ap_config = {};
 
@@ -315,10 +317,7 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
         return FIC_ERR_SDK_FAIL;
     }
 
-    if (_esp_netif != nullptr) {
-        esp_netif_destroy_default_wifi(_esp_netif);
-    }
-    _esp_netif = esp_netif_create_default_wifi_ap();
+    context.set_netif(esp_netif_create_default_wifi_ap());
 
     if (esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config) != ESP_OK) {
         FIC_LOGE(TAG, "Failed to set mode to WIFI_MODE_AP");
@@ -331,9 +330,9 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
     }
 
     FIC_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d", ssid, password, channel);
-
-    _mode = InternalMode::ACCESS_POINT;
-    _state = WiFiState::AP_ACTIVE;
+    
+    context.set_mode(InternalMode::ACCESS_POINT);
+    context.set_state(WiFiState::AP_ACTIVE);
 
     return FIC_OK;
 }
@@ -343,11 +342,12 @@ fic_error_t WifiDriver::start_ap(const char* ssid, const char* password, uint8_t
  * 
  * @return @c fic_error_t with relevant errors, @c FIC_OK if AP stopped successfuly
  */
-fic_error_t WifiDriver::stop_ap() {
-    if (_mode != InternalMode::ACCESS_POINT) {return FIC_ERR_INVALID_STATE;}
+fic_error_t WiFiAccessPoint::stop_ap() {
+    auto context = _ctx.lock();
+    if (context.mode() != InternalMode::ACCESS_POINT) {return FIC_ERR_INVALID_STATE;}
 
-    _state = WiFiState::AP_STOPPING;
-    stop();
+    context.set_state(WiFiState::AP_STOPPING);
+    esp_wifi_stop();
 
     return FIC_OK;
 }
@@ -355,13 +355,13 @@ fic_error_t WifiDriver::stop_ap() {
 /**
  * @brief Event handle for ESP IDF to dump all event information
  * 
- * @param instance Instance to @c WifiDriver
+ * @param instance Instance to @c WiFiController
  * @param event_base The type of event
  * @param event_id The event identifier
  * @param event_data Pointer to data relevant to the event
  */
-void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    auto* self = static_cast<WifiDriver*>(instance);
+void WiFiController::wifi_event_handler(void *instance, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+    auto* self = static_cast<WiFiController*>(instance);
 
     if (event_base == WIFI_EVENT) {
         if (event_id == WIFI_EVENT_AP_STACONNECTED) {
@@ -373,29 +373,38 @@ void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base,
             FIC_LOGI(TAG, "Station " MACSTR " left, AID=%d, reason:%d", MAC2STR(event->mac), event->aid, event->reason);
 
         } else if (event_id == WIFI_EVENT_STA_START) {
-            if (self->_mode != InternalMode::SCANNING) esp_wifi_connect();
+            auto context = self->_ctx.lock();
+
+            if (context.mode() != InternalMode::SCANNING) esp_wifi_connect();
+            
             FIC_LOGI(TAG, "Station started");
-            self->_state = WiFiState::STA_CONNECTING;
+            context.set_state(WiFiState::STA_CONNECTING);
 
         }else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
-            if (self->_retries < self->_max_retries) {
-                esp_wifi_connect();
-                self->_retries++;
-                FIC_LOGW(TAG, "retrying to connect to the AP");
-            } else {
-                FIC_LOGE(TAG,"failed to connect to AP");
-                self->stop();
-                self->_state = WiFiState::ERROR_AUTH_FAILED;
+            auto context = self->_ctx.lock();
+
+            if (context.state() == WiFiState::STA_DISCONNECTING) {
+                FIC_LOGI(TAG, "Station disconnected");
+                context.set_state(WiFiState::IDLE);
+                context.set_mode(InternalMode::NONE);
+                return;
             }
+
+            esp_wifi_connect();
+            self->_retries++;
+            FIC_LOGW(TAG, "retrying to connect to the AP");
         
         } else if (event_id == WIFI_EVENT_STA_STOP) {
             FIC_LOGI(TAG, "Station stopped");
-            esp_wifi_disconnect();
+            context.set_mode(InternalMode::NONE);
+            context.set_state(WiFiState::IDLE);
 
         } else if (event_id == WIFI_EVENT_SCAN_DONE) {
             FIC_LOGI(TAG, "Scan done");
-            self->_state = WiFiState::IDLE;
-            self->_mode = InternalMode::NONE;
+
+            auto context = self->_ctx.lock();
+            context.set_mode(InternalMode::NONE);
+            context.set_state(WiFiState::IDLE);
         }
 
     } else if (event_base == IP_EVENT) {
@@ -405,7 +414,8 @@ void WifiDriver::wifi_event_handler(void *instance, esp_event_base_t event_base,
             self->_retries = 0;
             self->_current_ip = event->ip_info.ip.addr;
 
-            self->_state = WiFiState::STA_CONNECTED;
+            auto context = self->_ctx.lock();
+            context.set_state(WiFiState::STA_CONNECTED);
         }
     }
 }

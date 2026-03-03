@@ -26,7 +26,6 @@ enum class WiFiState {
     STA_CONNECTING,
     STA_CONNECTED,
     STA_DISCONNECTING,
-    STA_DISCONNECTED,
 
     AP_STARTING,
     AP_ACTIVE,
@@ -74,7 +73,7 @@ class IWiFiStation {
     public:
         virtual ~IWiFiStation() = default;
 
-        virtual fic_error_t sta_connect(const char* ssid, const char* password) = 0;
+        virtual fic_error_t sta_connect(const char* ssid, const char* password, uint16_t retries) = 0;
         virtual fic_error_t sta_disconnect() = 0;
 };
 
