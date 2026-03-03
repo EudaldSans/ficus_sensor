@@ -32,6 +32,8 @@ private:
     
     std::recursive_mutex _mutex;  
 
+    uint16_t _attempts = 0;
+
 public:
     class ScopedAccess {
         std::lock_guard<std::recursive_mutex> _lock;
@@ -58,6 +60,10 @@ public:
                 _ctx.netif = nullptr;
             }
         }
+
+        uint16_t attempts() { return _ctx._attempts; }
+        void increment_attempts() { _ctx._attempts++; }
+        void reset_attempts() { _ctx._attempts = 0; }
     };
 
     /**

@@ -378,6 +378,7 @@ void WiFiController::wifi_event_handler(void *instance, esp_event_base_t event_b
             
             FIC_LOGI(TAG, "Station started");
             context.set_state(WiFiState::STA_CONNECTING);
+            context.reset_attempts();
 
         }else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
             auto context = self->_ctx.lock();
@@ -391,11 +392,13 @@ void WiFiController::wifi_event_handler(void *instance, esp_event_base_t event_b
 
             esp_wifi_connect();
             FIC_LOGW(TAG, "retrying to connect to the AP");
+            context.increment_attempts();
         
         } else if (event_id == WIFI_EVENT_STA_STOP) {
             FIC_LOGI(TAG, "Station stopped");
             context.set_mode(InternalMode::NONE);
             context.set_state(WiFiState::IDLE);
+            context.reset_attempts();
 
         } else if (event_id == WIFI_EVENT_SCAN_DONE) {
             FIC_LOGI(TAG, "Scan done");
@@ -409,11 +412,11 @@ void WiFiController::wifi_event_handler(void *instance, esp_event_base_t event_b
         if (event_id == IP_EVENT_STA_GOT_IP) {
             ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
             FIC_LOGI(TAG, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
-            self->_retries = 0;
             self->_current_ip = event->ip_info.ip.addr;
 
             auto context = self->_ctx.lock();
             context.set_state(WiFiState::STA_CONNECTED);
+            context.reset_attempts();
         }
     }
 }
