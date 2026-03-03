@@ -6,6 +6,7 @@
 
 #include "wifi_hal.hh"
 
+#include "esp_wifi.h"
 #include "esp_netif_net_stack.h"
 #include "esp_netif.h"
 
@@ -25,8 +26,8 @@ private:
 
 public:
     class ScopedAccess {
-        std::lock_guard<std::recursive_mutex> _lock;
         WiFiContext& _ctx;
+        std::lock_guard<std::recursive_mutex> _lock;
     public:
         ScopedAccess(WiFiContext& ctx) : _ctx(ctx), _lock(ctx._mutex) {}
         

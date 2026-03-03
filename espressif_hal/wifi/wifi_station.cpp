@@ -1,4 +1,7 @@
-#include "wifi_scanner.hh"
+#include <string>
+#include <cstring>
+
+#include "wifi_station.hh"
 #include "fic_log.hh"
 
 /**

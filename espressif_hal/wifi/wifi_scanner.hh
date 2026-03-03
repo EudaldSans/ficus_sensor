@@ -2,7 +2,8 @@
 #define WIFI_SCANNER_HH
 
 #include "wifi_context.hh"
-#include "esp_wifi.h"
+
+#include "fic_errors.hh"
 
 class WiFiScanner : public IWiFiScanner {
 public:

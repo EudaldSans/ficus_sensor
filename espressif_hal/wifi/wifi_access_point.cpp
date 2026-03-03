@@ -1,3 +1,6 @@
+#include <string>
+#include <cstring>
+
 #include "wifi_access_point.hh"
 #include "fic_log.hh"
 

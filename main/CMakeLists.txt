@@ -10,6 +10,7 @@ set(hardware_deps
     onewire
     leds
     wifi
+    nvs_flash
 )
 
 set(sensor_logic 

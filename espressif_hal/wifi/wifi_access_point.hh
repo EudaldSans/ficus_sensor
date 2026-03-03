@@ -2,7 +2,8 @@
 #define WIFI_ACCESS_POINT_HH
 
 #include "wifi_context.hh"
-#include "esp_wifi.h"
+
+#include "fic_errors.hh"
 
 class WiFiAccessPoint : public IWiFiAccessPoint {
 public:

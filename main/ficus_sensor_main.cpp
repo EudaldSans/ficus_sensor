@@ -9,6 +9,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "nvs_flash.h"
+
 #include "sdkconfig.h"
 #include "fic_log.hh"
 
@@ -86,9 +88,6 @@ extern "C" void app_main(void) {
 
     nvs_flash_init();
 
-    wifi.init();
-    wifi_scanner.start_scan();
-
     FIC_LOGI(TAG, "Setting up task manager");
     TaskManager task_manager = TaskManager(
         "main_task_manager", 
@@ -133,28 +132,29 @@ extern "C" void app_main(void) {
 
     int state = 0;
 
+    wifi.init();
+    wifi_scanner.start_scan();
+
     while (1) {
         switch(state) {
             case 0:
                 results_size = 16;
 
                 if (wifi_scanner.is_scan_busy()) {
-                    auto on_color = {0, 0, 255};
-                    auto off_color = {0, 0, 0};
-                    auto blink_time_ms = 225;
-                    auto cycles = 2;
-                    
-                    rgb_signaler.set_blink(on_color, blink_time_ms, off_color, blink_time_ms, cycles);
+                    uint32_t blink_time = 225;
+                    uint16_t cycles = 4;
+                    rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
 
                 } else {
                     wifi_scanner.get_scan_results(results, results_size);
+
+                    FIC_LOGI(TAG, "GOT %d results", results_size);
 
                     for (int i = 0; i < results_size; i++) {
                         FIC_LOGI(TAG, "RSSI: %d\t\tChannel:%d\t\tSSID:%s", results[i].rssi, results[i].channel, results[i].ssid);
                     }
 
-                    auto color = {0, 255, 0};
-                    rgb_signaler.set_solid(color);
+                    rgb_signaler.set_solid(LED_GREEN);
                     wifi.stop();
 
                     state = 1;
@@ -164,16 +164,16 @@ extern "C" void app_main(void) {
             case 1:
                 switch (wifi.get_state()) {
                     case WiFiState::IDLE:
-                    case WiFiState::OFF:
+                    case WiFiState::OFF: {
                         uint16_t retries = 5;
                         wifi_station.sta_connect("XTA_47592", "Mh9gcxu5", retries);
                         break;
+                    }
 
-                    case WiFiState::STA_CONNECTED:
-                        auto color = {0, 0, 0};
-                        rgb_signaler.set_solid(color);
+                    case WiFiState::STA_CONNECTED: {
+                        rgb_signaler.set_solid(LED_OFF);
 
-                        details = wifi_station.get_details();
+                        details = wifi.get_details();
 
                         FIC_LOGI(TAG, "Connection details - IP: %d.%d.%d.%d, RSSI: %d, SSID: %s", (details.addr >> 24) & 0xFF, (details.addr >> 16) & 0xFF, (details.addr >> 8) & 0xFF, details.addr & 0xFF, details.rssi, details.ssid);
 
@@ -181,30 +181,27 @@ extern "C" void app_main(void) {
                         wifi_ap.start_ap("mem_dimmer_fase_0", "1234567890", 1, 1);
 
                         break;
+                    }
 
-                    case WiFiState::STA_CONNECTING:
-                        auto on_color = {0, 0, 255};
-                        auto off_color = {0, 0, 0};
-                        auto blink_time_ms = 500;
-                        auto cycles = 2;
-
-                        rgb_signaler.set_blink(on_color, blink_time_ms, off_color, blink_time_ms, cycles);
+                    case WiFiState::STA_CONNECTING: {
+                        uint32_t blink_time = 500;
+                        uint16_t cycles = 2;
+                        rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
 
                         break;
+                    }
 
-                    case WiFiState::ERROR_AUTH_FAILED:
-                        auto on_color = {255, 0, 0};
-                        auto off_color = {0, 0, 0};
-                        auto blink_time_ms = 500;
-                        auto cycles = 2;
-
-                        rgb_signaler.set_blink(on_color, blink_time_ms, off_color, blink_time_ms, cycles);
+                    case WiFiState::ERROR_AUTH_FAILED: {
+                        uint32_t blink_time = 500;
+                        uint16_t cycles = 2;
+                        rgb_signaler.set_blink(LED_RED, blink_time, LED_OFF, blink_time, cycles);
                         break;
+                    }
 
-                    default:
-                        auto color = {0, 255, 0};
-                        rgb_signaler.set_solid(color);
+                    default: {
+                        rgb_signaler.set_solid(LED_GREEN);
                         break;
+                    }
                 }
         }
         

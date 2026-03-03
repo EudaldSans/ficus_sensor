@@ -1,3 +1,6 @@
+#include <string>
+#include <cstring>
+
 #include "esp_mac.h"
 
 #include "wifi_controller.hh"
@@ -173,6 +176,8 @@ void WiFiController::wifi_event_handler(void *instance, esp_event_base_t event_b
         
         } else if (event_id == WIFI_EVENT_STA_STOP) {
             FIC_LOGI(TAG, "Station stopped");
+
+            auto context = self->_ctx.lock();
             context.set_mode(InternalMode::NONE);
             context.set_state(WiFiState::IDLE);
             context.reset_attempts();

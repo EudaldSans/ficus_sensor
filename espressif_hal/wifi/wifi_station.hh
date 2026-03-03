@@ -2,7 +2,8 @@
 #define WIFI_STATION_HH
 
 #include "wifi_context.hh"
-#include "esp_wifi.h"
+
+#include "fic_errors.hh"
 
 class WiFiStation : public IWiFiStation {
 public:
