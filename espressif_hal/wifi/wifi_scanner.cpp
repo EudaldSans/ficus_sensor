@@ -13,7 +13,7 @@ fic_error_t WiFiScanner::start_scan() {
     auto context = _ctx.lock();
     if (context.mode() != InternalMode::NONE) {return FIC_ERR_INVALID_STATE;}
 
-    context.set_netif(esp_netif_create_default_wifi_sta());
+    context.set_netif(esp_netif_create_default_wifi_sta);
 
     if (esp_wifi_set_mode(WIFI_MODE_STA) != ESP_OK) {
         FIC_LOGE(TAG, "Failed to set mode to WIFI_MODE_STA for scan");

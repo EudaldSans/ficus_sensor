@@ -38,7 +38,7 @@ fic_error_t WiFiAccessPoint::start_ap(const char* ssid, const char* password, ui
         return FIC_ERR_SDK_FAIL;
     }
 
-    context.set_netif(esp_netif_create_default_wifi_ap());
+    context.set_netif(esp_netif_create_default_wifi_ap);
 
     if (esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config) != ESP_OK) {
         FIC_LOGE(TAG, "Failed to set mode to WIFI_MODE_AP");

@@ -125,86 +125,32 @@ extern "C" void app_main(void) {
 
     task_manager.start();
 
-    ConnectionDetails details = {};
-
     size_t results_size = 16;
     WiFiScanItem results[results_size];
-
-    int state = 0;
 
     wifi.init();
     wifi_scanner.start_scan();
 
     while (1) {
-        switch(state) {
-            case 0:
-                results_size = 16;
+        results_size = 16;
 
-                if (wifi_scanner.is_scan_busy()) {
-                    uint32_t blink_time = 225;
-                    uint16_t cycles = 4;
-                    rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
+        if (wifi_scanner.is_scan_busy()) {
+            uint32_t blink_time = 225;
+            uint16_t cycles = 4;
+            rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
 
-                } else {
-                    wifi_scanner.get_scan_results(results, results_size);
+        } else {
+            wifi_scanner.get_scan_results(results, results_size);
 
-                    FIC_LOGI(TAG, "GOT %d results", results_size);
+            FIC_LOGI(TAG, "GOT %d results", results_size);
 
-                    for (int i = 0; i < results_size; i++) {
-                        FIC_LOGI(TAG, "RSSI: %d\t\tChannel:%d\t\tSSID:%s", results[i].rssi, results[i].channel, results[i].ssid);
-                    }
+            for (int i = 0; i < results_size; i++) {
+                FIC_LOGI(TAG, "RSSI: %d\t\tChannel:%d\t\tSSID:%s", results[i].rssi, results[i].channel, results[i].ssid);
+            }
 
-                    rgb_signaler.set_solid(LED_GREEN);
-                    wifi.stop();
-
-                    state = 1;
-                }
-                break;
-
-            case 1:
-                switch (wifi.get_state()) {
-                    case WiFiState::IDLE:
-                    case WiFiState::OFF: {
-                        uint16_t retries = 5;
-                        wifi_station.sta_connect("XTA_47592", "Mh9gcxu5", retries);
-                        break;
-                    }
-
-                    case WiFiState::STA_CONNECTED: {
-                        rgb_signaler.set_solid(LED_OFF);
-
-                        details = wifi.get_details();
-
-                        FIC_LOGI(TAG, "Connection details - IP: %d.%d.%d.%d, RSSI: %d, SSID: %s", (details.addr >> 24) & 0xFF, (details.addr >> 16) & 0xFF, (details.addr >> 8) & 0xFF, details.addr & 0xFF, details.rssi, details.ssid);
-
-                        wifi_station.sta_disconnect();
-                        wifi_ap.start_ap("mem_dimmer_fase_0", "1234567890", 1, 1);
-
-                        break;
-                    }
-
-                    case WiFiState::STA_CONNECTING: {
-                        uint32_t blink_time = 500;
-                        uint16_t cycles = 2;
-                        rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
-
-                        break;
-                    }
-
-                    case WiFiState::ERROR_AUTH_FAILED: {
-                        uint32_t blink_time = 500;
-                        uint16_t cycles = 2;
-                        rgb_signaler.set_blink(LED_RED, blink_time, LED_OFF, blink_time, cycles);
-                        break;
-                    }
-
-                    default: {
-                        rgb_signaler.set_solid(LED_GREEN);
-                        break;
-                    }
-                }
+            rgb_signaler.set_solid(LED_GREEN);
+            wifi_scanner.start_scan();
         }
-        
 
         vTaskDelay(2000/portTICK_PERIOD_MS);
     }

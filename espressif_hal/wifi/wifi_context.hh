@@ -35,14 +35,15 @@ public:
         void set_state(WiFiState s) { _ctx._state = s; }
 
         InternalMode mode() { return _ctx._mode; }
-        void set_mode(InternalMode m) { _ctx._mode = m; }
+        void set_mode(InternalMode m) { _ctx._mode = m; }   
 
+        using netif_creator = std::function<esp_netif_t*()>;
         esp_netif_t* netif() { return _ctx.netif; }
-        void set_netif(esp_netif_t* n) { 
+        void set_netif(netif_creator n) { 
             if (_ctx.netif != nullptr) {
                 delete_netif();
             }
-            _ctx.netif = n; 
+            _ctx.netif = n(); 
         }
         void delete_netif() { 
             if (_ctx.netif != nullptr) {
