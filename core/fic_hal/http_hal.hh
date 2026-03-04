@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "fic_errors.hh"
+
 class IHttpClient {
 public:
     virtual ~IHttpClient() = default;
@@ -18,11 +20,11 @@ public:
         size_t bytes_written;
     };
 
-    virtual Response patch(const Request& req, char* rx_buffer, size_t rx_size) = 0;
-    virtual Response post(const Request& req, char* rx_buffer, size_t rx_size) = 0;
-    virtual Response get(const Request& req, char* rx_buffer, size_t rx_size) = 0;
-    virtual Response del(const Request& req, char* rx_buffer, size_t rx_size) = 0;
-    virtual Response put(const Request& req, char* rx_buffer, size_t rx_size) = 0;
+    virtual fic_error_t patch(const Request& req, Response& resp, char* rx_buffer, size_t rx_size) = 0;
+    virtual fic_error_t post(const Request& req, Response& resp, char* rx_buffer, size_t rx_size) = 0;
+    virtual fic_error_t get(const Request& req, Response& resp, char* rx_buffer, size_t rx_size) = 0;
+    virtual fic_error_t del(const Request& req, Response& resp, char* rx_buffer, size_t rx_size) = 0;
+    virtual fic_error_t put(const Request& req, Response& resp, char* rx_buffer, size_t rx_size) = 0;
 };
 
 #endif

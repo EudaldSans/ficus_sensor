@@ -43,7 +43,12 @@ enum class WiFiState {
 
 class IWiFiScanner {
     public:
+        IWiFiScanner() = default;
         virtual ~IWiFiScanner() = default;
+
+        IWiFiScanner(const IWiFiScanner&) = delete;            
+        IWiFiScanner& operator=(const IWiFiScanner&) = delete; 
+        IWiFiScanner(IWiFiScanner&&) = delete;      
 
         virtual fic_error_t start_scan() = 0; 
 
@@ -53,7 +58,12 @@ class IWiFiScanner {
 
 class IWiFiStatusManager {
     public:
+        IWiFiStatusManager() = default;
         virtual ~IWiFiStatusManager() = default;
+
+        IWiFiStatusManager(const IWiFiStatusManager&) = delete;            
+        IWiFiStatusManager& operator=(const IWiFiStatusManager&) = delete; 
+        IWiFiStatusManager(IWiFiStatusManager&&) = delete;
 
         virtual WiFiState get_state() const = 0;  
         virtual ConnectionDetails get_details() const = 0;    
@@ -61,7 +71,12 @@ class IWiFiStatusManager {
 
 class IWiFiLifecycle {
     public:
+        IWiFiLifecycle() = default;
         virtual ~IWiFiLifecycle() = default;
+
+        IWiFiLifecycle(const IWiFiLifecycle&) = delete;            
+        IWiFiLifecycle& operator=(const IWiFiLifecycle&) = delete; 
+        IWiFiLifecycle(IWiFiLifecycle&&) = delete;
 
         virtual fic_error_t init() = 0;
         virtual fic_error_t deinit() = 0;
@@ -71,7 +86,12 @@ class IWiFiLifecycle {
 
 class IWiFiStation {
     public:
+        IWiFiStation() = default;
         virtual ~IWiFiStation() = default;
+
+        IWiFiStation(const IWiFiStation&) = delete;            
+        IWiFiStation& operator=(const IWiFiStation&) = delete; 
+        IWiFiStation(IWiFiStation&&) = delete;
 
         virtual fic_error_t sta_connect(const char* ssid, const char* password, uint16_t retries) = 0;
         virtual fic_error_t sta_disconnect() = 0;
@@ -79,7 +99,12 @@ class IWiFiStation {
 
 class IWiFiAccessPoint {
     public:
+        IWiFiAccessPoint() = default;
         virtual ~IWiFiAccessPoint() = default;
+
+        IWiFiAccessPoint(const IWiFiAccessPoint&) = delete;            
+        IWiFiAccessPoint& operator=(const IWiFiAccessPoint&) = delete; 
+        IWiFiAccessPoint(IWiFiAccessPoint&&) = delete;
 
         virtual fic_error_t start_ap(const char* ssid, const char* password, uint8_t channel, uint8_t max_connections) = 0;
         virtual fic_error_t stop_ap() = 0;

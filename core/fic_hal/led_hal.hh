@@ -10,7 +10,12 @@
 
 class ILEDLifecycle {
 public: 
+    ILEDLifecycle() = default;
     virtual ~ILEDLifecycle() = default;
+
+    ILEDLifecycle(const ILEDLifecycle&) = delete;            
+    ILEDLifecycle& operator=(const ILEDLifecycle&) = delete; 
+    ILEDLifecycle(ILEDLifecycle&&) = delete; 
 
     virtual fic_error_t init() = 0;
     virtual fic_error_t deinit() = 0;
@@ -18,7 +23,12 @@ public:
 
 class ILightable {
 public: 
+    ILightable() = default;
     virtual ~ILightable() = default;
+
+    ILightable(const ILightable&) = delete;            
+    ILightable& operator=(const ILightable&) = delete; 
+    ILightable(ILightable&&) = delete; 
 
     virtual fic_error_t off() = 0;
     virtual fic_error_t on() = 0;
@@ -36,7 +46,12 @@ struct Color {
 
 class IColorable : public ILightable {
 public: 
+    IColorable() = default;
     virtual ~IColorable() = default;
+
+    IColorable(const IColorable&) = delete;            
+    IColorable& operator=(const IColorable&) = delete; 
+    IColorable(IColorable&&) = delete; 
 
     virtual fic_error_t set_color(Color color) = 0;
 };

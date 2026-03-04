@@ -7,7 +7,12 @@
 
 class IOnewireBus {
     public:
+        IOnewireBus() = default;
         virtual ~IOnewireBus() = default;
+
+        IOnewireBus(const IOnewireBus&) = delete;            
+        IOnewireBus& operator=(const IOnewireBus&) = delete; 
+        IOnewireBus(IOnewireBus&&) = delete; 
 
         virtual fic_error_t init(uint32_t max_rx_bytes) = 0;
         virtual fic_error_t find_device(uint64_t address, uint64_t address_mask) = 0;
