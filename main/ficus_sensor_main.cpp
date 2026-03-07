@@ -6,13 +6,12 @@
 
 #include <stdio.h>
 #include "fic_log.hh"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 
 #include "nvs_flash.h"
 
 #include "sdkconfig.h"
 #include "fic_log.hh"
+#include "esp_fic_log.hh"
 
 #include "task_manager.hh"
 
@@ -31,14 +30,14 @@
 #include "led_strip_single.hh"
 #include "rgb_signalling.hh"
 
-#include "esp_fic_log.hh"
-#include "freertos_task.hh"
-
 #include "wifi_context.hh"
 #include "wifi_controller.hh"
 #include "wifi_station.hh"
 #include "wifi_access_point.hh"
 #include "wifi_scanner.hh"
+
+#include "freertos_task.hh"
+#include "freertos_queue.hh"
 
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
@@ -128,6 +127,8 @@ extern "C" void app_main(void) {
     size_t results_size = 16;
     WiFiScanItem results[results_size];
 
+    FreeRTOSQueue<size_t, 20> queue = FreeRTOSQueue<size_t, 20>();
+
     wifi.init();
     wifi_scanner.start_scan();
 
@@ -139,8 +140,17 @@ extern "C" void app_main(void) {
             uint16_t cycles = 4;
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
 
+            if (queue.size() > 10) {
+                while (!queue.empty()) {
+                    queue.pop(results_size, false, 0);
+                    FIC_LOGI(TAG, "GOT %d results", results_size);
+                }
+            }
+
         } else {
             wifi_scanner.get_scan_results(results, results_size);
+
+            queue.push(results_size);
 
             FIC_LOGI(TAG, "GOT %d results", results_size);
 

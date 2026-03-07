@@ -3,6 +3,7 @@ set(base_deps
     fic_time
     esp_fic_time
     task
+    queue
 )
 
 set(hardware_deps 

@@ -1,3 +1,3 @@
-idf_component_register(SRCS "freertos_queue.cpp"
-                       REQUIRES fic_hal
+idf_component_register(SRCS
+                       REQUIRES fic_hal fic_log
                        INCLUDE_DIRS ".")
