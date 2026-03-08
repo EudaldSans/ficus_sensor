@@ -46,6 +46,14 @@ public:
         return uxQueueMessagesWaiting( _queue ); 
     }
 
+    bool full() const override {
+        if (xPortInIsrContext()) {
+            return uxQueueMessagesWaitingFromISR(_queue) == N;
+        }
+
+        return uxQueueMessagesWaiting( _queue ) == N; 
+    }
+
     bool empty() const override { 
         if (xPortInIsrContext()) {
             return uxQueueMessagesWaitingFromISR(_queue) == 0;

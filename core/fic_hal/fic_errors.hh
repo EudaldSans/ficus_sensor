@@ -22,6 +22,8 @@ enum fic_error_t {
     FIC_ERR_NOT_FINISHED = 0x10c,
     FIC_ERR_NOT_ALLOWED = 0x10d,
 
+    FIC_ERR_FULL = 0x10e,
+
     FIC_ERR_NVS_BASE = 0x1100,
 
     FIC_ERR_ULP_BASE = 0x1200,

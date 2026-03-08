@@ -10,6 +10,7 @@ public:
     virtual bool pop(T& item, bool block, uint16_t timeout_ms) = 0;
 
     virtual size_t size() const = 0;
+    virtual bool full() const = 0;
     virtual bool empty() const = 0;
 };
 

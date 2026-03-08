@@ -14,7 +14,7 @@ struct Response {
     size_t payload_size;
 };
 
-class IHtpptListener {
+class IHTTPListener {
 public:
     /**
      * @brief Callback used when an HTTP request is completed to avoid blocking tasks.
@@ -38,11 +38,11 @@ class IHttpClient {
 public:
     virtual ~IHttpClient() = default;
 
-    virtual fic_error_t patch(std::string_view url, std::string_view payload, IHtpptListener& listener) = 0;
-    virtual fic_error_t post(std::string_view url, std::string_view payload, IHtpptListener& listener) = 0;
-    virtual fic_error_t get(std::string_view url, std::string_view payload, IHtpptListener& listener) = 0;
-    virtual fic_error_t del(std::string_view url, std::string_view payload, IHtpptListener& listener) = 0;
-    virtual fic_error_t put(std::string_view url, std::string_view payload, IHtpptListener& listener) = 0;
+    virtual fic_error_t patch(std::string_view url, std::string_view payload, IHTTPListener& listener) = 0;
+    virtual fic_error_t post(std::string_view url, std::string_view payload, IHTTPListener& listener) = 0;
+    virtual fic_error_t put(std::string_view url, std::string_view payload, IHTTPListener& listener) = 0;
+    virtual fic_error_t get(std::string_view url, IHTTPListener& listener) = 0;
+    virtual fic_error_t del(std::string_view url, IHTTPListener& listener) = 0;    
 };
 
 #endif
