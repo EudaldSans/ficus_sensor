@@ -12,6 +12,7 @@ set(hardware_deps
     leds
     wifi
     nvs_flash
+    http_client
 )
 
 set(sensor_logic 

@@ -36,6 +36,8 @@
 #include "wifi_access_point.hh"
 #include "wifi_scanner.hh"
 
+#include "http_client.hh"
+
 #include "freertos_task.hh"
 #include "freertos_queue.hh"
 
@@ -71,10 +73,25 @@ SensorEndpoint<float> h_endpoint(
 WiFiContext wifi_context;
 WiFiController wifi(wifi_context);
 WiFiStation wifi_station(wifi_context);
-WiFiScanner wifi_scanner(wifi_context);
-WiFiAccessPoint wifi_ap(wifi_context);
 
 static const char *TAG = "main";
+
+class DummyListener : public IHTTPListener {
+public:
+    DummyListener(RGBSignaler& signaler) : _signaler(signaler) {}
+    ~DummyListener() = default;
+
+    virtual void on_success(const Response& resp) override {
+        if (resp.status_code < 300) _signaler.set_solid(LED_GREEN);
+        else _signaler.set_solid(LED_YELLOW);
+    }
+    virtual void on_failure(fic_error_t error) override {
+        _signaler.set_solid(LED_RED);
+    }
+
+private:
+    RGBSignaler& _signaler;
+};
 
 extern "C" void app_main(void) {  
     fic_log_set_backend(esp32_backend);
@@ -122,46 +139,26 @@ extern "C" void app_main(void) {
     Router::link<float, int>(t_endpoint, t_sensor_config_name, consumer, t_consumer, conversions);
     Router::link<float, int>(h_endpoint, h_sensor_config_name, consumer, h_consumer, conversions);
 
+    HttpClient http_client = HttpClient();
+    DummyListener listener = DummyListener(rgb_signaler);
+
+    http_client.start();
+
     task_manager.start();
 
-    size_t results_size = 16;
-    WiFiScanItem results[results_size];
-
-    FreeRTOSQueue<size_t, 20> queue = FreeRTOSQueue<size_t, 20>();
-
     wifi.init();
-    wifi_scanner.start_scan();
+    wifi_station.sta_connect("XTA_47592", "Mh9gcxu5", 10);
 
     while (1) {
-        results_size = 16;
+        uint32_t blink_time = 500;
+        uint16_t cycles = 2;
 
-        if (wifi_scanner.is_scan_busy()) {
-            uint32_t blink_time = 225;
-            uint16_t cycles = 4;
+        if (wifi.get_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
-
-            if (queue.size() > 10) {
-                while (!queue.empty()) {
-                    queue.pop(results_size, false, 0);
-                    FIC_LOGI(TAG, "GOT %d results", results_size);
-                }
-            }
-
         } else {
-            wifi_scanner.get_scan_results(results, results_size);
-
-            queue.push(results_size);
-
-            FIC_LOGI(TAG, "GOT %d results", results_size);
-
-            for (int i = 0; i < results_size; i++) {
-                FIC_LOGI(TAG, "RSSI: %d\t\tChannel:%d\t\tSSID:%s", results[i].rssi, results[i].channel, results[i].ssid);
-            }
-
-            rgb_signaler.set_solid(LED_GREEN);
-            wifi_scanner.start_scan();
+            http_client.get("http://eu.httpbin.org/get", listener);
+            rgb_signaler.set_blink(LED_GREEN, blink_time, LED_OFF, blink_time, cycles);
         }
-
         vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }

@@ -7,9 +7,7 @@
 #include "fic_time.hh"
 
 
-HttpClient::HttpClient() {
-    _runner = FreeRTOS_TaskRunner("http client", 4096);
-}
+HttpClient::HttpClient() : _runner("http client", 8192){}
 
 HttpClient::~HttpClient() {
     stop();
@@ -23,7 +21,7 @@ void HttpClient::start() {
     if (_running) return;
     _running = true;
 
-    _runner->create_task(_http_task, this);
+    _runner.create_task(_http_task, this);
 }
 
 void HttpClient::stop() { 
@@ -50,14 +48,14 @@ fic_error_t HttpClient::del(std::string_view url, IHTTPListener& listener) {
     return _enqueue(url, "", HTTP_METHOD_DELETE, listener);
 }
 
-esp_err_t HttpClient::_enqueue(std::string_view url, std::string_view payload, esp_http_client_method_t method, IHTTPListener& listener) {
+fic_error_t HttpClient::_enqueue(std::string_view url, std::string_view payload, esp_http_client_method_t method, IHTTPListener& listener) {
     if (url.size() >= URL_MAX_LEN) return FIC_ERR_INVALID_ARG;
     if (payload.size() >= PAYLOAD_MAX_LEN) return FIC_ERR_INVALID_ARG;
     if (_job_queue.full()) return FIC_ERR_FULL;
     
     HttpJob job = {};
     job.method = method;
-    strlcpy(job.url, url, URL_MAX_LEN);
+    strlcpy(job.url, url.data(), URL_MAX_LEN);
 
     if (!payload.empty()) {
         strlcpy(job.payload, payload.data(), PAYLOAD_MAX_LEN);
@@ -68,8 +66,7 @@ esp_err_t HttpClient::_enqueue(std::string_view url, std::string_view payload, e
     return _job_queue.push(job) ? FIC_OK : FIC_ERR_FULL;
 }
 
-static esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
-    static int output_len;
+esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
 
     auto* self = static_cast<HttpClient*>(evt->user_data);
 
@@ -80,47 +77,51 @@ static esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
         case HTTP_EVENT_ERROR:
             FIC_LOGI(TAG, "HTTP_EVENT_ERROR");
             break;
+
         case HTTP_EVENT_ON_CONNECTED:
             FIC_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
             break;
+
         case HTTP_EVENT_HEADER_SENT:
             FIC_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
             break;
+
         case HTTP_EVENT_ON_HEADER:
             FIC_LOGI(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
             break;
+
         case HTTP_EVENT_ON_DATA:
             FIC_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
 
-            if (output_len == 0) {
-                self->_rx_len = 0;
-                self->_rx_buffer.fill(0);
-            }
+            self->_rx_len = 0;
+            self->_rx_buffer.fill(0);
 
             if (!esp_http_client_is_chunked_response(evt->client)) {
-                int copy_len = MIN(evt->data_len, (MAX_RESPONSE_PAYLOAD - output_len));
+                int copy_len = MIN(evt->data_len, MAX_RESPONSE_PAYLOAD);
                 if (copy_len) {
-                    memcpy(evt->user_data + output_len, evt->data, copy_len);
+                    memcpy(evt->user_data, evt->data, copy_len);
                 }
 
-                output_len += copy_len;
             } else {
                 FIC_LOGE(TAG, "chunked responses are not yet supported!");
             }
+            break;
+
         case HTTP_EVENT_ON_FINISH:
             FIC_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
-            output_len = 0;
             break;
-        case HTTP_EVENT_DISCONNECTED:
-            FIC_LOGW(TAG, "HTTP_EVENT_DISCONNECTED");
-            int mbedtls_err = 0;
-            esp_err_t err = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
-            if (err != 0) {
-                FIC_LOGI(TAG, "Last esp error code: 0x%x", err);
-                FIC_LOGI(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
+
+        case HTTP_EVENT_DISCONNECTED: {
+                FIC_LOGW(TAG, "HTTP_EVENT_DISCONNECTED");
+                // int mbedtls_err = 0;
+                // esp_err_t err = esp_tls_get_and_clear_last_error((esp_tls_error_handle_t)evt->data, &mbedtls_err, NULL);
+                // if (err != 0) {
+                //     FIC_LOGI(TAG, "Last esp error code: 0x%x", err);
+                //     FIC_LOGI(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
+                // }
+                break;
             }
-            output_len = 0;
-            break;
+
         case HTTP_EVENT_REDIRECT:
             FIC_LOGI(TAG, "HTTP_EVENT_REDIRECT");
             esp_http_client_set_redirection(evt->client);
@@ -130,7 +131,7 @@ static esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
-static void HttpClient::_http_task(void *instance) {
+void HttpClient::_http_task(void *instance) {
     auto* self = static_cast<HttpClient*>(instance);
     HttpJob job = {};
 
@@ -138,9 +139,9 @@ static void HttpClient::_http_task(void *instance) {
 
     while(self->_running) {
         if (self->_job_queue.pop(job, true, 0xFFFF)) {
-            FIC_LOG(TAG, "Requesting to %s with payload: %s", job.url, job.payload);
+            FIC_LOGI(TAG, "Requesting to %s with payload: %s", job.url, job.payload);
 
-            esp_http_client_config_t config = {}
+            esp_http_client_config_t config = {};
 
             config.event_handler = self->_event_handler;
             config.user_data = self;
@@ -159,7 +160,7 @@ static void HttpClient::_http_task(void *instance) {
             
             esp_err_t err = esp_http_client_perform(client);
             if (err == ESP_OK) {
-                ESP_LOGI(TAG, "HTTP Status = %d, content_length = %"PRId64,
+                FIC_LOGI(TAG, "HTTP Status = %d, content_length = %" PRId64,
                         esp_http_client_get_status_code(client),
                         esp_http_client_get_content_length(client));
                 
@@ -168,14 +169,14 @@ static void HttpClient::_http_task(void *instance) {
                 
                 job.listener->on_success(response);
             } else {
-                ESP_LOGE(TAG, "HTTP request failed: %s", esp_err_to_name(err));
+                FIC_LOGE(TAG, "HTTP request failed: %s", esp_err_to_name(err));
                 job.listener->on_failure(FIC_ERR_SDK_FAIL);
             }
 
-            esp_http_client_cleanup(client)
+            esp_http_client_cleanup(client);
         }
     }
 
-    self->_task_runner->delete_task();
+    self->_runner.delete_task();
     self->_active = false;
 }
