@@ -99,9 +99,9 @@ esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
             self->_rx_buffer.fill(0);
 
             if (!esp_http_client_is_chunked_response(evt->client)) {
-                int copy_len = MIN(evt->data_len, MAX_RESPONSE_PAYLOAD);
+                int copy_len = MIN(evt->data_len, self->_rx_buffer.size());
                 if (copy_len) {
-                    memcpy(evt->user_data, evt->data, copy_len);
+                    strlcpy(self->_rx_buffer.data(), (char*)evt->data, URL_MAX_LEN);
                 }
 
             } else {
@@ -163,6 +163,8 @@ void HttpClient::_http_task(void *instance) {
                 
                 Response response = {};
                 response.status_code = esp_http_client_get_status_code(client);
+                response.payload = self->_rx_buffer.data();
+                response.payload_size = strlen(self->_rx_buffer.data());
                 
                 job->listener->on_success(response);
             } else {

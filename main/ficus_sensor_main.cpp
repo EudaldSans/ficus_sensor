@@ -88,6 +88,9 @@ public:
     virtual void on_success(const Response& resp) override {
         if (resp.status_code < 300) _signaler.set_solid(LED_GREEN);
         else _signaler.set_solid(LED_YELLOW);
+
+        text.assign(resp.payload, resp.payload_size);
+        FIC_LOGI("FakeListener", "%s", text.c_str());
     }
     virtual void on_failure(fic_error_t error) override {
         _signaler.set_solid(LED_RED);
@@ -95,13 +98,18 @@ public:
 
 private:
     RGBSignaler& _signaler;
+
+    std::string text;
 };
 
 class FakeTLSProvider : public ICredentialsProvider {
 public: 
     std::string_view get_client_cert() const override {return "";}
     std::string_view get_client_key() const override {return "";}
-    std::string_view get_ca_cert() const override {return root_cert_pem_start;}
+    std::string_view get_ca_cert() const override {
+        size_t size_with_null = (root_cert_pem_end - root_cert_pem_start); 
+        return std::string_view(root_cert_pem_start, size_with_null);
+    }
 };
 
 extern "C" void app_main(void) {  
@@ -171,7 +179,7 @@ extern "C" void app_main(void) {
         if (wifi.get_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         } else {
-            http_client.get("https://www.howsmyssl.com", listener);
+            http_client.get("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", listener);
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
         }
         vTaskDelay(2000/portTICK_PERIOD_MS);
