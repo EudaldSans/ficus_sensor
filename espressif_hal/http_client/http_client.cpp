@@ -7,8 +7,6 @@
 #include "fic_time.hh"
 
 
-HttpClient::HttpClient() : _runner("http client", 8192){}
-
 HttpClient::~HttpClient() {
     stop();
 
@@ -145,6 +143,8 @@ void HttpClient::_http_task(void *instance) {
             config.url = job->url;
             config.method = job->method;
             config.max_redirection_count = 3;
+
+            self->_configure_client(config);
 
             esp_http_client_handle_t client = esp_http_client_init(&config);
 

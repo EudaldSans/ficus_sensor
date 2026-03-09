@@ -21,9 +21,11 @@
 #define MAX_QUEUED_REQUESTS 2
 #define MAX_RESPONSE_PAYLOAD 512
 
+#define RUNNER_STACK 8129
+
 class HttpClient : public IHttpClient {
 public:
-    HttpClient();
+    HttpClient() : _runner("http client", RUNNER_STACK) {}
     ~HttpClient();
 
     void start();
@@ -34,6 +36,9 @@ public:
     fic_error_t put(std::string_view url, std::string_view payload, IHTTPListener& listener) override;
     fic_error_t get(std::string_view url, IHTTPListener& listener) override;
     fic_error_t del(std::string_view url, IHTTPListener& listener) override;
+
+protected:
+    virtual void _configure_client(esp_http_client_config_t& config) = 0;
 
 private:
     struct HttpJob {

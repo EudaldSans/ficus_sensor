@@ -36,7 +36,8 @@
 #include "wifi_access_point.hh"
 #include "wifi_scanner.hh"
 
-#include "http_client.hh"
+#include "https_client.hh"
+#include "credentials_provider.hh"
 
 #include "freertos_task.hh"
 #include "freertos_queue.hh"
@@ -45,6 +46,9 @@
 #define LED_GPIO                8
 
 #define LED_STRIP_RMT_RES_HZ  (10 * 1000 * 1000)
+
+extern const char root_cert_pem_start[] asm("_binary_root_cert_pem_start");
+extern const char root_cert_pem_end[]   asm("_binary_root_cert_pem_end");
 
 LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
 RGBSignaler rgb_signaler(led_strip);
@@ -76,10 +80,10 @@ WiFiStation wifi_station(wifi_context);
 
 static const char *TAG = "main";
 
-class DummyListener : public IHTTPListener {
+class FakeListener : public IHTTPListener {
 public:
-    DummyListener(RGBSignaler& signaler) : _signaler(signaler) {}
-    ~DummyListener() = default;
+    FakeListener(RGBSignaler& signaler) : _signaler(signaler) {}
+    ~FakeListener() = default;
 
     virtual void on_success(const Response& resp) override {
         if (resp.status_code < 300) _signaler.set_solid(LED_GREEN);
@@ -91,6 +95,13 @@ public:
 
 private:
     RGBSignaler& _signaler;
+};
+
+class FakeTLSProvider : public ICredentialsProvider {
+public: 
+    std::string_view get_client_cert() const override {return "";}
+    std::string_view get_client_key() const override {return "";}
+    std::string_view get_ca_cert() const override {return root_cert_pem_start;}
 };
 
 extern "C" void app_main(void) {  
@@ -139,8 +150,9 @@ extern "C" void app_main(void) {
     Router::link<float, int>(t_endpoint, t_sensor_config_name, consumer, t_consumer, conversions);
     Router::link<float, int>(h_endpoint, h_sensor_config_name, consumer, h_consumer, conversions);
 
-    HttpClient http_client = HttpClient();
-    DummyListener listener = DummyListener(rgb_signaler);
+    FakeTLSProvider tls_provider = FakeTLSProvider();
+    HttpsClient http_client = HttpsClient(tls_provider);
+    FakeListener listener = FakeListener(rgb_signaler);
 
     http_client.start();
 
@@ -159,7 +171,7 @@ extern "C" void app_main(void) {
         if (wifi.get_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         } else {
-            http_client.get("http://eu.httpbin.org/get", listener);
+            http_client.get("https://www.howsmyssl.com", listener);
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
         }
         vTaskDelay(2000/portTICK_PERIOD_MS);
