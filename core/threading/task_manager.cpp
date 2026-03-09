@@ -9,7 +9,7 @@ TaskManager::TaskManager(const char* name, std::unique_ptr<ITaskRunner> task_run
 TaskManager::~TaskManager() {
     stop();
 
-    while(!_active) {
+    while(_active) {
         ITimeDelay::delay_ms(10);
     }
 }
