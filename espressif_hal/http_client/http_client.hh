@@ -10,6 +10,8 @@
 #include "freertos_queue.hh"
 #include "freertos_task.hh"
 
+#include "object_pool.hh"
+
 #include "esp_http_client.h"
 
 #include "http_hal.hh"
@@ -46,7 +48,8 @@ private:
 
     fic_error_t _enqueue(std::string_view url, std::string_view payload, esp_http_client_method_t method, IHTTPListener& listener);
     
-    FreeRTOSQueue<HttpJob, MAX_QUEUED_REQUESTS> _job_queue;
+    ObjectPool<HttpJob, MAX_QUEUED_REQUESTS> _job_pool;
+    FreeRTOSQueue<HttpJob*, MAX_QUEUED_REQUESTS> _job_queue;
     FreeRTOS_TaskRunner _runner;
 
     bool _initialized = false;

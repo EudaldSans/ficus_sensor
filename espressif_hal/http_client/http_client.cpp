@@ -53,15 +53,19 @@ fic_error_t HttpClient::_enqueue(std::string_view url, std::string_view payload,
     if (payload.size() >= PAYLOAD_MAX_LEN) return FIC_ERR_INVALID_ARG;
     if (_job_queue.full()) return FIC_ERR_FULL;
     
-    HttpJob job = {};
-    job.method = method;
-    strlcpy(job.url, url.data(), URL_MAX_LEN);
+    HttpJob* job = _job_pool.acquire();
+    if (!job) return FIC_ERR_FULL;
+
+    memset(job, 0, sizeof(HttpJob));
+
+    job->method = method;
+    strlcpy(job->url, url.data(), URL_MAX_LEN);
 
     if (!payload.empty()) {
-        strlcpy(job.payload, payload.data(), PAYLOAD_MAX_LEN);
+        strlcpy(job->payload, payload.data(), PAYLOAD_MAX_LEN);
     }
     
-    job.listener = &listener;
+    job->listener = &listener;
 
     return _job_queue.push(job) ? FIC_OK : FIC_ERR_FULL;
 }
@@ -133,29 +137,29 @@ esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
 
 void HttpClient::_http_task(void *instance) {
     auto* self = static_cast<HttpClient*>(instance);
-    HttpJob job = {};
+    HttpJob* job = nullptr;
 
     self->_active = true;
 
     while(self->_running) {
         if (self->_job_queue.pop(job, true, 0xFFFF)) {
-            FIC_LOGI(TAG, "Requesting to %s with payload: %s", job.url, job.payload);
+            FIC_LOGI(TAG, "Requesting to %s with payload: %s", job->url, job->payload);
 
             esp_http_client_config_t config = {};
 
             config.event_handler = self->_event_handler;
             config.user_data = self;
-            config.url = job.url;
-            config.method = job.method;
+            config.url = job->url;
+            config.method = job->method;
             config.max_redirection_count = 3;
 
             esp_http_client_handle_t client = esp_http_client_init(&config);
 
             esp_http_client_set_header(client, "User-Agent", "Plant-monitor_9000");
 
-            if (job.method == HTTP_METHOD_POST || job.method == HTTP_METHOD_PUT || job.method == HTTP_METHOD_PATCH) {
+            if (job->method == HTTP_METHOD_POST || job->method == HTTP_METHOD_PUT || job->method == HTTP_METHOD_PATCH) {
                 esp_http_client_set_header(client, "Content-Type", "application/json");
-                esp_http_client_set_post_field(client, job.payload, strlen(job.payload));
+                esp_http_client_set_post_field(client, job->payload, strlen(job->payload));
             }
             
             esp_err_t err = esp_http_client_perform(client);
@@ -167,13 +171,15 @@ void HttpClient::_http_task(void *instance) {
                 Response response = {};
                 response.status_code = esp_http_client_get_status_code(client);
                 
-                job.listener->on_success(response);
+                job->listener->on_success(response);
             } else {
                 FIC_LOGE(TAG, "HTTP request failed: %s", esp_err_to_name(err));
-                job.listener->on_failure(FIC_ERR_SDK_FAIL);
+                job->listener->on_failure(FIC_ERR_SDK_FAIL);
             }
 
             esp_http_client_cleanup(client);
+
+            _job_pool.release(job);
         }
     }
 
