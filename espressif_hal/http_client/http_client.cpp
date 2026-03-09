@@ -172,7 +172,7 @@ void HttpClient::_http_task(void *instance) {
 
             esp_http_client_cleanup(client);
 
-            _job_pool.release(job);
+            self->_job_pool.release(job);
         }
     }
 
