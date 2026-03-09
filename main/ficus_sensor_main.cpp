@@ -152,12 +152,15 @@ extern "C" void app_main(void) {
     while (1) {
         uint32_t blink_time = 500;
         uint16_t cycles = 2;
+        size_t free_mem = esp_get_free_heap_size();
+
+        FIC_LOGI(TAG, "free heap size %d", free_mem);
 
         if (wifi.get_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         } else {
             http_client.get("http://eu.httpbin.org/get", listener);
-            rgb_signaler.set_blink(LED_GREEN, blink_time, LED_OFF, blink_time, cycles);
+            rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
         }
         vTaskDelay(2000/portTICK_PERIOD_MS);
     }
