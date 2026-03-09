@@ -89,7 +89,12 @@ public:
         if (resp.status_code < 300) _signaler.set_solid(LED_GREEN);
         else _signaler.set_solid(LED_YELLOW);
 
-        text.assign(resp.payload, resp.payload_size);
+        if (resp.payload && resp.payload_size > 0) {
+            text.assign(resp.payload, resp.payload_size);            
+        } else {
+            text = "null";
+        }
+
         FIC_LOGI("FakeListener", "%s", text.c_str());
     }
     virtual void on_failure(fic_error_t error) override {
