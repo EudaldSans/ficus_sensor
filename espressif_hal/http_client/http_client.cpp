@@ -17,6 +17,9 @@ HttpClient::~HttpClient() {
     }
 }
 
+/**
+ * @brief Orders the http task end event handler to start 
+ */
 void HttpClient::start() {
     if (_running) return;
     _running = true;
@@ -24,30 +27,98 @@ void HttpClient::start() {
     _runner.create_task(_http_task, this);
 }
 
+/**
+ * @brief Orders the http task and event handler to stop 
+ */
 void HttpClient::stop() { 
     _running = false; 
 }
 
+/**
+ * @brief Enqueue a PATCH request
+ * 
+ * @param url The URL to send the request to
+ * @param payload The payload to send with the request
+ * @param listener Reference to the listener to handle the response
+ * @return 
+ *  - @c FIC_ERR_INVALID_ARG if the URL or payload are too long, 
+ *  - @c FIC_ERR_FULL if the queue is full, 
+ *  - @c FIC_OK if the request was enqueued successfully
+ */
 fic_error_t HttpClient::patch(std::string_view url, std::string_view payload, IHTTPListener& listener) {
     return _enqueue(url, payload, HTTP_METHOD_PATCH, listener);
 }
 
+/**
+ * @brief Enqueue a PUT request
+ * 
+ * @param url The URL to send the request to
+ * @param payload The payload to send with the request
+ * @param listener Reference to the listener to handle the response
+ * @return 
+ *  - @c FIC_ERR_INVALID_ARG if the URL or payload are too long, 
+ *  - @c FIC_ERR_FULL if the queue is full, 
+ *  - @c FIC_OK if the request was enqueued successfully
+ */
 fic_error_t HttpClient::put(std::string_view url, std::string_view payload, IHTTPListener& listener) {
     return _enqueue(url, payload, HTTP_METHOD_PUT, listener);
 }
 
+/**
+ * @brief Enqueue a POST request
+ * 
+ * @param url The URL to send the request to
+ * @param payload The payload to send with the request
+ * @param listener Reference to the listener to handle the response
+ * @return 
+ *  - @c FIC_ERR_INVALID_ARG if the URL or payload are too long, 
+ *  - @c FIC_ERR_FULL if the queue is full, 
+ *  - @c FIC_OK if the request was enqueued successfully
+ */
 fic_error_t HttpClient::post(std::string_view url, std::string_view payload, IHTTPListener& listener) {
     return _enqueue(url, payload, HTTP_METHOD_POST, listener);
 }
 
+/**
+ * @brief Enqueue a GET request
+ * 
+ * @param url The URL to send the request to
+ * @param listener Reference to the listener to handle the response
+ * @return 
+ *  - @c FIC_ERR_INVALID_ARG if the URL is too long, 
+ *  - @c FIC_ERR_FULL if the queue is full, 
+ *  - @c FIC_OK if the request was enqueued successfully
+ */
 fic_error_t HttpClient::get(std::string_view url, IHTTPListener& listener) {
     return _enqueue(url, "", HTTP_METHOD_GET, listener);
 }
 
+/**
+ * @brief Enqueue a DELETE request
+ * 
+ * @param url The URL to send the request to
+ * @param listener Reference to the listener to handle the response
+ * @return 
+ *  - @c FIC_ERR_INVALID_ARG if the URL is too long, 
+ *  - @c FIC_ERR_FULL if the queue is full, 
+ *  - @c FIC_OK if the request was enqueued successfully
+ */
 fic_error_t HttpClient::del(std::string_view url, IHTTPListener& listener) {
     return _enqueue(url, "", HTTP_METHOD_DELETE, listener);
 }
 
+/**
+ * @brief Enqueue an http request with the given parameters
+ * 
+ * @param url The URL to send the request to
+ * @param payload The payload to send with the request
+ * @param method The @c esp_http_client_method_t method to use for the request 
+ * @param listener Reference to the listener to handle the response
+ * @return 
+ *  - @c FIC_ERR_INVALID_ARG if the URL is too long, 
+ *  - @c FIC_ERR_FULL if the queue is full, 
+ *  - @c FIC_OK if the request was enqueued successfully
+ */
 fic_error_t HttpClient::_enqueue(std::string_view url, std::string_view payload, esp_http_client_method_t method, IHTTPListener& listener) {
     if (url.size() >= URL_MAX_LEN) return FIC_ERR_INVALID_ARG;
     if (payload.size() >= PAYLOAD_MAX_LEN) return FIC_ERR_INVALID_ARG;
@@ -70,6 +141,12 @@ fic_error_t HttpClient::_enqueue(std::string_view url, std::string_view payload,
     return _job_queue.push(job) ? FIC_OK : FIC_ERR_FULL;
 }
 
+/**
+ * @brief Espressif event handler. Handles all HTTP events. 
+ * 
+ * @param evt @c esp_http_client_event_t event received from the SDK
+ * @return @c esp_err_t with the result of the event handling, usually @c ESP_OK
+ */
 esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
 
     auto* self = static_cast<HttpClient*>(evt->user_data);
@@ -125,6 +202,11 @@ esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
+/**
+ * @brief Obtains @c HttpJob from the queue job and handles it.
+ * 
+ * @param instance Pointer to the @c HttpClient instance
+ */
 void HttpClient::_http_task(void *instance) {
     auto* self = static_cast<HttpClient*>(instance);
     HttpJob* job = nullptr;
@@ -178,3 +260,27 @@ void HttpClient::_http_task(void *instance) {
     self->_runner.delete_task();
     self->_active = false;
 }
+
+
+//                                                       ..,;;:::::...,,,,:,,,,,,,,
+//                                                     .,::,,::.1:.
+//              ,,..        ;;:;,:::,.                .:,:  ,,. ,..
+//         .1CCi:t;::,     ,1;::itttti:               ,,,. ,.
+//        :GCCf1i111ii;.   .   .::11ii;.              ..,.
+//       .CLffttffLLft1i. .   ,:::ii:,:.    ..... ..     .
+//       tC1LttffftLL1;::.   ,;1tii1ti;    i111,.,,:.    .:,           ..
+//      ,ti1t;iii::1fi;;::   :;;;;;ii;.    :;i:,::;;.     ;LCffftff1i1Lt.         .
+//    ,,;;,;::i111tttttfi:.  .itfftLL1:::. :i: :;:::.      18@@@@@@@0Gf.
+// itLft;;;;:;i11tfttt1ii, ,1CGGCCCLLCCLt. ,:. .,,:,      .GGG80LG8888:
+// 1t:,:if1;1;;i1i1i::,:;;L088CfLC0fi;1;  ,,.    .,.      ,LCtL00GG08@i
+// ;: ,1GC::;,:;i1tii11itGCCLtfLLCCf;,,:  ,,  .   .,      .ft;i;ifCCGG:
+// i:tG0GftLtf1:::i111fCGft1,.:tti,.         .     .    .:;1tftttttttti;;:;:.  ....
+// ;it;;:,.:;i;,ii.,1C0GCCi.   .,.                     ,t1...;111LLfftii;;t1i,tCGCf
+// 1;,        .;;iifGGCCCi    ..,,                .  .:,..       ....,,,.,.,ifLffi:
+// CCCL,:fLfi, :1L0GCLLf;      .,.                    ....,,,::,,,,,,,::1ttiitLfttt
+// 1ii:.C8008GiLGCCLfff;       .,.       ..    ......          ::i;::;:,iLLLLCLLLLf
+// ;11:1C0000GCCLLfftf;        .,.       ..,:,,,;;:;;;;;;;;iii1fLCLLCLt1it1ttttt1t1
+// :;;;iffGCCLffftttt;..        .      .. .,,.........,,,,,:itLttffttfttt1111111i;;
+//   .: :tLLfftttt1i, .         ,.    ...  ..,,........... ,i1fii1t1111111t1i11tt;t
+//      Me yelling at my code                       My code doing exactly
+//    for not doing what I want                   what I programmed it to do
