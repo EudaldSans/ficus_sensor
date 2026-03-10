@@ -74,9 +74,6 @@ esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
 
     auto* self = static_cast<HttpClient*>(evt->user_data);
 
-    self->_rx_len = 0;
-    self->_rx_buffer.fill(0);
-
     switch (evt->event_id) {
         case HTTP_EVENT_ERROR:
             FIC_LOGI(TAG, "HTTP_EVENT_ERROR");
@@ -101,9 +98,9 @@ esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
             self->_rx_buffer.fill(0);
 
             if (!esp_http_client_is_chunked_response(evt->client)) {
-                int copy_len = MIN(evt->data_len, MAX_RESPONSE_PAYLOAD);
-                if (copy_len) {
-                    memcpy(evt->user_data, evt->data, copy_len);
+                self->_rx_len = MIN(evt->data_len, MAX_RESPONSE_PAYLOAD);
+                if (self->_rx_len) {
+                    memcpy(self->_rx_buffer.data(), evt->data, self->_rx_len);
                 }
 
             } else {
@@ -163,6 +160,8 @@ void HttpClient::_http_task(void *instance) {
                 
                 Response response = {};
                 response.status_code = esp_http_client_get_status_code(client);
+                response.payload_size = self->_rx_len;
+                response.payload = self->_rx_buffer.data();
                 
                 job->listener->on_success(response);
             } else {
