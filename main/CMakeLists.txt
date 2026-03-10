@@ -10,8 +10,11 @@ set(hardware_deps
     adc 
     onewire
     leds
-    wifi
     nvs_flash
+)
+
+set(communications
+    wifi
     http_client
 )
 
@@ -36,8 +39,10 @@ idf_component_register(
     PRIV_REQUIRES 
         ${base_deps}
         ${hardware_deps}
+        ${communications}
         ${core_logic}
         ${sensor_logic}
         ${logging}
         ${timing}
+    EMBED_TXTFILES root_cert.pem
 )

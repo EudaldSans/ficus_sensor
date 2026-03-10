@@ -3,4 +3,6 @@ build
 managed_components
 .clangd
 
+**/**/*.pem
+
 sdkconfig
