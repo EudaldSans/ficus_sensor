@@ -9,6 +9,11 @@ public:
     HttpsClient(ICredentialsProvider& creds) : _cred_provider(creds) {}
 
 protected:
+    /**
+     * @brief Configures the HTTPS client with the provided credentials
+     * 
+     * @param config @c esp_http_client_config_t to complement client configuration
+     */
     void _configure_client(esp_http_client_config_t& config) override {          
         if (!_cred_provider.get_ca_cert().empty()) {
             config.cert_pem = _cred_provider.get_ca_cert().data();
