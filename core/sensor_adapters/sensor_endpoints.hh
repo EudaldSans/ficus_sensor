@@ -43,7 +43,7 @@ public:
         last_run_time_ms = now;
     }
     
-    uint32_t get_run_period_ms() override {
+    uint32_t get_run_period_ms() const override {
         return _measurement_period_ms;
     } 
 
@@ -79,7 +79,7 @@ public:
         last_run_time_ms = now;
     }
 
-    uint32_t get_run_period_ms() override {return _measurement_period_ms;}
+    uint32_t get_run_period_ms\(\) const override {return _measurement_period_ms;}
 
 private:
     OutputChannel<T>* _measurement_output;
