@@ -16,3 +16,4 @@ dependencies:
   #   public: true
   espressif/onewire_bus: ^1.0.4
   espressif/led_strip: ^2.5.3
+  bblanchon/arduinojson: ^7.4.3
