@@ -42,6 +42,8 @@
 #include "freertos_task.hh"
 #include "freertos_queue.hh"
 
+#include "firebase_encoder.hh"
+
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
 
@@ -137,6 +139,11 @@ extern "C" void app_main(void) {
     task_manager.add_task(&t_endpoint);
     task_manager.add_task(&h_endpoint);
     task_manager.add_task(&rgb_signaler);
+
+    FakeTLSProvider tls_provider = FakeTLSProvider();
+    HttpsClient http_client = HttpsClient(tls_provider);
+
+    FirebaseEncoder encoder = FirebaseEncoder("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", "id_test", http_client);
     
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
@@ -150,22 +157,20 @@ extern "C" void app_main(void) {
 
     FIC_LOGI(TAG, "Creating and linking channels");
     consumer.add_input_channel<int>(t_consumer, 
-        [](const int& temperature) {
+        [&encoder](const int& temperature) {
             FIC_LOGI(TAG, "t_consumer got %d", temperature);
+            encoder.update_data<int>(temperature, "temperature");
         }
     );
     consumer.add_input_channel<int>(h_consumer, 
-        [](const int& humidity) {
+        [&encoder](const int& humidity) {
             FIC_LOGI(TAG, "h_consumer got %d", humidity);
+            encoder.update_data<int>(humidity, "humidity");
         }
     );
 
     Router::link<float, int>(t_endpoint, t_sensor_config_name, consumer, t_consumer, conversions);
     Router::link<float, int>(h_endpoint, h_sensor_config_name, consumer, h_consumer, conversions);
-
-    FakeTLSProvider tls_provider = FakeTLSProvider();
-    HttpsClient http_client = HttpsClient(tls_provider);
-    FakeListener listener = FakeListener(rgb_signaler);
 
     http_client.start();
 
@@ -184,8 +189,10 @@ extern "C" void app_main(void) {
         if (wifi.get_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         } else {
-            http_client.get("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", listener);
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
+            vTaskDelay(60000/portTICK_PERIOD_MS);
+            encoder.send_accumulated();
+            rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         }
         vTaskDelay(2000/portTICK_PERIOD_MS);
     }

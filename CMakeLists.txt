@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
+list(APPEND EXTRA_COMPONENT_DIRS "firebase_stack")
 list(APPEND EXTRA_COMPONENT_DIRS "espressif_hal")
 list(APPEND EXTRA_COMPONENT_DIRS "freertos_hal")
 list(APPEND EXTRA_COMPONENT_DIRS "core")
