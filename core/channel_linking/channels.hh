@@ -7,9 +7,32 @@
 #ifndef CHANNEL_LINKING_CHANNELS_H
 #define CHANNEL_LINKING_CHANNELS_H
 
-struct ChannelBase {
+template <typename T>
+struct __attribute__((packed))  value_t {
+    T value;
+    bool is_valid : 1 = false;
+    bool is_new: 1 = true;
+};
+
+// THINK ABOUT: should I separate into inputs and outputs?
+template <typename T>
+class ChannelBase {
     ChannelBase() = default;
-    virtual ~ChannelBase() = default;        
+    virtual ~ChannelBase() = default;   
+
+    bool is_valid() const { return _value.is_valid; }
+    bool is_new() const { return _value.is_new; }
+
+    T get_value() const { return _value.value; }
+
+    bool set_value(T new_value, bool is_valid) {
+        _value.is_new = true;
+        _value.is_valid = is_valid;
+        _value.value = new_value;
+    }
+
+private:
+    value_t<T> _value;
 };
 
 template <typename T>
