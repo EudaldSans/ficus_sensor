@@ -52,6 +52,8 @@
 extern const char root_cert_pem_start[] asm("_binary_root_cert_pem_start");
 extern const char root_cert_pem_end[]   asm("_binary_root_cert_pem_end");
 
+const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json";
+
 LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
 RGBSignaler rgb_signaler(led_strip);
 
@@ -143,7 +145,7 @@ extern "C" void app_main(void) {
     FakeTLSProvider tls_provider = FakeTLSProvider();
     HttpsClient http_client = HttpsClient(tls_provider);
 
-    auto encoder = std::make_unique<FirebaseEncoder>("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", "id_test", http_client);
+    auto encoder = std::make_unique<FirebaseEncoder>(firebase_url, "id_test", http_client);
     
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
