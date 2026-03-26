@@ -143,7 +143,7 @@ extern "C" void app_main(void) {
     FakeTLSProvider tls_provider = FakeTLSProvider();
     HttpsClient http_client = HttpsClient(tls_provider);
 
-    FirebaseEncoder encoder = FirebaseEncoder("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", "id_test", http_client);
+    auto encoder = std::make_unique<FirebaseEncoder>("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", "id_test", http_client);
     
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
@@ -159,13 +159,13 @@ extern "C" void app_main(void) {
     consumer.add_input_channel<int>(t_consumer, 
         [&encoder](const int& temperature) {
             FIC_LOGI(TAG, "t_consumer got %d", temperature);
-            encoder.update_data<int>(temperature, "temperature");
+            encoder->update_data<int>(temperature, "temperature");
         }
     );
     consumer.add_input_channel<int>(h_consumer, 
         [&encoder](const int& humidity) {
             FIC_LOGI(TAG, "h_consumer got %d", humidity);
-            encoder.update_data<int>(humidity, "humidity");
+            encoder->update_data<int>(humidity, "humidity");
         }
     );
 
@@ -191,7 +191,7 @@ extern "C" void app_main(void) {
         } else {
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
             vTaskDelay(60000/portTICK_PERIOD_MS);
-            encoder.send_accumulated();
+            encoder->send_accumulated();
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         }
         vTaskDelay(2000/portTICK_PERIOD_MS);
