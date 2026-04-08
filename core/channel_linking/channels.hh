@@ -61,7 +61,7 @@ struct ILink {
  * @tparam From Type of incoming @c value_t
  * @tparam To Type of outgoing @c value_t
  */
-template <typename From, typename To>
+template <typename From, typename To, typename Converter = NoConv>
 struct ChannelLink : public ILink {
     value_t<From>& src;
     value_t<To>& dest;
@@ -72,7 +72,7 @@ struct ChannelLink : public ILink {
      * @brief Synchronizes the values of the channels
      */
     void sync() {
-        dest.update(src.peek());
+        dest.update(static_cast<To>(Converter::apply(src.peek())));
 
         if (src.is_valid()) {
             dest.validate();
