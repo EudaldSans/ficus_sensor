@@ -16,8 +16,8 @@ public:
 template <typename T> 
 class AsyncSensorEndpoint : public ISensorEndpointBase { 
 public: 
-    AsyncSensorEndpoint(const std::string& output_name, IAsyncSensor<T> &sensor, uint16_t measurement_period) 
-        : _sensor(sensor), _measurement_period_ms(measurement_period) 
+    AsyncSensorEndpoint(value_t<T>* measurement_output, IAsyncSensor<T> &sensor, uint16_t measurement_period) 
+        : _measurement_output(measurement_output), _sensor(sensor), _measurement_period_ms(measurement_period) 
         { }
     ~AsyncSensorEndpoint() = default; 
 
@@ -59,8 +59,8 @@ private:
 template <typename T> 
 class SensorEndpoint : public ISensorEndpointBase {
 public:
-    SensorEndpoint(const std::string& output_name, ISensor<T> &sensor, uint16_t measurement_period) 
-        : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) 
+    SensorEndpoint(value_t<T>* measurement_output, ISensor<T> &sensor, uint16_t measurement_period) 
+        : _measurement_output(measurement_output), _sensor(sensor), _measurement_period_ms(measurement_period) 
         {  } 
     ~SensorEndpoint() = default; 
 

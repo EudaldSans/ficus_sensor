@@ -62,9 +62,11 @@ struct ILink {
  * @tparam To Type of outgoing @c value_t
  */
 template <typename From, typename To>
-struct ChannelLink {
+struct ChannelLink : public ILink {
     value_t<From>& src;
     value_t<To>& dest;
+
+    ChannelLink(value_t<From>& s, value_t<To>& d) : src(s), dest(d) {}
 
     /**
      * @brief Synchronizes the values of the channels
