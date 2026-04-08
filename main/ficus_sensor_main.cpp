@@ -15,8 +15,6 @@
 
 #include "task_manager.hh"
 
-#include "router.hh"
-#include "endpoint.hh"
 #include "conversions.hh"
 
 #include "sensor_endpoints.hh"
@@ -42,6 +40,10 @@
 #include "freertos_task.hh"
 #include "freertos_queue.hh"
 
+#include "firebase_encoder.hh"
+
+#include "routing.hh"
+
 #define ONEWIRE_BUS_GPIO        18
 #define LED_GPIO                8
 
@@ -50,26 +52,26 @@
 extern const char root_cert_pem_start[] asm("_binary_root_cert_pem_start");
 extern const char root_cert_pem_end[]   asm("_binary_root_cert_pem_end");
 
+const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json";
+
 LEDStripSingle led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
 RGBSignaler rgb_signaler(led_strip);
 
 const uint16_t sensor_meas_period_ms = 30000;
 
-const std::string t_sensor_config_name = "ds18b20_0";
 OnewireBus onewire(ONEWIRE_BUS_GPIO);
 DS18B20 t_sensor = DS18B20(onewire, DS18B20::resolution_12B);
 AsyncSensorEndpoint<float> t_endpoint(
-    t_sensor_config_name,
+    t_sensor_output,
     t_sensor,
     sensor_meas_period_ms
 );
 
-const std::string h_sensor_config_name = "analog_humidity_0";
 const uint32_t h_sensor_max_mv = 3300;
 ADC adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
 AnalogHumiditySensor h_sensor = AnalogHumiditySensor(adc, h_sensor_max_mv);
 SensorEndpoint<float> h_endpoint(
-    h_sensor_config_name,
+    h_sensor_output,
     h_sensor,
     sensor_meas_period_ms
 );
@@ -137,38 +139,19 @@ extern "C" void app_main(void) {
     task_manager.add_task(&t_endpoint);
     task_manager.add_task(&h_endpoint);
     task_manager.add_task(&rgb_signaler);
+    task_manager.add_task(&router);
+
+    FakeTLSProvider tls_provider = FakeTLSProvider();
+    HttpsClient http_client = HttpsClient(tls_provider);
+
+    auto encoder = std::make_unique<FirebaseEncoder>(firebase_url, "id_test", http_client);
     
     std::vector<std::shared_ptr<IConversion<float>>> conversions;
     // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
 
     FIC_LOGI(TAG, "Size of conversions: %d", conversions.size());
 
-    auto consumer = ChannelEndpoint();
-
-    std::string t_consumer = "temperature_consumer"; 
-    std::string h_consumer = "humidity_consumer";
-
-    FIC_LOGI(TAG, "Creating and linking channels");
-    consumer.add_input_channel<int>(t_consumer, 
-        [](const int& temperature) {
-            FIC_LOGI(TAG, "t_consumer got %d", temperature);
-        }
-    );
-    consumer.add_input_channel<int>(h_consumer, 
-        [](const int& humidity) {
-            FIC_LOGI(TAG, "h_consumer got %d", humidity);
-        }
-    );
-
-    Router::link<float, int>(t_endpoint, t_sensor_config_name, consumer, t_consumer, conversions);
-    Router::link<float, int>(h_endpoint, h_sensor_config_name, consumer, h_consumer, conversions);
-
-    FakeTLSProvider tls_provider = FakeTLSProvider();
-    HttpsClient http_client = HttpsClient(tls_provider);
-    FakeListener listener = FakeListener(rgb_signaler);
-
     http_client.start();
-
     task_manager.start();
 
     wifi.init();
@@ -184,9 +167,19 @@ extern "C" void app_main(void) {
         if (wifi.get_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         } else {
-            http_client.get("https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json", listener);
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
         }
+
+        if (firebase_h_input.is_new()) {
+            int humidity = firebase_h_input.consume();
+            FIC_LOGI(TAG, "h_consumer got %d", humidity);
+        }
+
+        if (firebase_t_input.is_new()) {
+            int temperature = firebase_t_input.consume();
+            FIC_LOGI(TAG, "t_consumer got %d", temperature);
+        }
+
         vTaskDelay(2000/portTICK_PERIOD_MS);
     }
 }

@@ -38,7 +38,7 @@ class IIntervalTask : public ITask {
     public:
         virtual ~IIntervalTask() = default;
 
-        virtual uint32_t get_run_period_ms() = 0; // Return interval in milliseconds
+        virtual uint32_t get_run_period_ms() const = 0; // Return interval in milliseconds
         bool should_run(uint64_t now) override { return (now - last_run_time_ms) >= get_run_period_ms(); }
     
 

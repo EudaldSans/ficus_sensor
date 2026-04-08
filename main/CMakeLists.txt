@@ -6,6 +6,10 @@ set(base_deps
     queue
 )
 
+set(stacks
+    firebase_stack
+)
+
 set(hardware_deps 
     adc 
     onewire
@@ -38,6 +42,7 @@ idf_component_register(
     INCLUDE_DIRS "."
     PRIV_REQUIRES 
         ${base_deps}
+        ${stacks}
         ${hardware_deps}
         ${communications}
         ${core_logic}
