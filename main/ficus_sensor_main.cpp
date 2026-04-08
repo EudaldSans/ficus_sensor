@@ -60,11 +60,6 @@ extern "C" void app_main(void) {
 
     add_tasks();
     
-    std::vector<std::shared_ptr<IConversion<float>>> conversions;
-    // conversions.push_back(std::make_shared<ToFahrenheitConversion<float>>());
-
-    FIC_LOGI(TAG, "Size of conversions: %d", conversions.size());
-
     http_client.start();
     task_manager.start();
 
