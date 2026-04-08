@@ -1,89 +1,51 @@
+#ifndef CHANNEL_LINKING_CHANNELS_H
+#define CHANNEL_LINKING_CHANNELS_H
+
 #include "fic_log.hh"
 
 #include <vector>
 
-#include "conversions.hh"
-
-#ifndef CHANNEL_LINKING_CHANNELS_H
-#define CHANNEL_LINKING_CHANNELS_H
-
 template <typename T>
-struct __attribute__((packed))  value_t {
+struct __attribute__((aligned(4),packed))  value_t {
+private:
     T value;
-    bool is_valid : 1 = false;
-    bool is_new: 1 = true;
-};
+    uint8_t flags = 0x01;
 
-// THINK ABOUT: should I separate into inputs and outputs?
-template <typename T>
-class ChannelBase {
-    ChannelBase() = default;
-    virtual ~ChannelBase() = default;   
+public:
 
-    bool is_valid() const { return _value.is_valid; }
-    bool is_new() const { return _value.is_new; }
+    static constexpr uint8_t MASK_VALID = 0x01;
+    static constexpr uint8_t MASK_NEW   = 0x02;
 
-    T get_value() const { return _value.value; }
-
-    bool set_value(T new_value, bool is_valid) {
-        _value.is_new = true;
-        _value.is_valid = is_valid;
-        _value.value = new_value;
+    inline void update(T val) {
+        value = val;
+        flags |= MASK_NEW; 
     }
 
-private:
-    value_t<T> _value;
+    inline void validate() { flags |= MASK_VALID; }
+    inline void invalidate() { flags &= ~MASK_VALID; }
+
+    bool is_valid() const { return flags & 0x01; }
+    bool is_new() const { return flags & 0x02; }
+    inline T peek() const { return value; }
+
+    inline T consume() {
+        flags &= ~MASK_NEW;
+        return value;
+    }
 };
 
-template <typename T>
-class InputChannel : public ChannelBase {
-    using Callback = std::function<void(const T&)>;
+template <typename From, typename To>
+struct ChannelLink {
+    value_t<From>& src;
+    value_t<To>& dest;
 
-    public:
-        InputChannel(Callback cb) : ChannelBase(), callback(cb) {}
-        ~InputChannel() override = default;
-
-        void receive(const T& value) {
-            value_ = value;
-            if (callback) {
-                callback(value_);
-            }
+    void sync() {
+        if (src.is_new) {
+            dest.value = static_cast<To>(src.value);
+            dest.is_valid = src.is_valid;
+            dest.is_new = true;
         }
-
-        T get_value() const {
-            return value_;
-        }
-
-    private:
-        T value_;
-        
-        Callback callback;
+    }
 };
-
-
-template <typename T>
-class OutputChannel : public ChannelBase {
-    public:
-        OutputChannel() : ChannelBase() {}
-        ~OutputChannel() override = default;
-
-        void connect(std::function<void(const T&)> listener) {
-            _listeners.push_back(listener);
-        }
-
-        void emit(const T& value) {
-            _value = value;
-
-            for (const auto& listener : _listeners) {
-                listener(_value);
-            }
-        }
-
-    private:
-        T _value;
-        std::vector<std::function<void(const T&)>> _listeners;
-};
-
-
 
 #endif
