@@ -1,14 +1,14 @@
 
 #include <string.h>
 
-#include "endpoint.hh"
+#include "channels.hh"
 #include "sensor.hh"
 #include "task.hh"
 
 #ifndef SENSOR_ENDPOINTS_H
 #define SENSOR_ENDPOINTS_H
 
-class ISensorEndpointBase : public IIntervalTask, public ChannelEndpoint {
+class ISensorEndpointBase : public IIntervalTask {
 public:
     virtual ~ISensorEndpointBase() = default;
 };
@@ -16,9 +16,9 @@ public:
 template <typename T> 
 class AsyncSensorEndpoint : public ISensorEndpointBase { 
 public: 
-    AsyncSensorEndpoint(const std::string& output_name, IAsyncSensor<T> &sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) {
-        _measurement_output = add_output_channel<T>(_output_name);
-    }
+    AsyncSensorEndpoint(const std::string& output_name, IAsyncSensor<T> &sensor, uint16_t measurement_period) 
+        : _sensor(sensor), _measurement_period_ms(measurement_period) 
+        { }
     ~AsyncSensorEndpoint() = default; 
 
     void setup() override { 
@@ -37,7 +37,7 @@ public:
         if (!_sensor.is_ready()) { FIC_LOGW(TAG, "Measurement not ready yet"); return;}
         FIC_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), FIC_LOGE(TAG, "Failed to get sensor value"));
         
-        _measurement_output->emit(value);
+        _measurement_output->update(value);
         _sensor.trigger_measurement(measurement_delay_ms); 
 
         last_run_time_ms = now;
@@ -48,9 +48,8 @@ public:
     } 
 
 private: 
-    OutputChannel<T>* _measurement_output; 
+    value_t<T>* _measurement_output; 
     
-    const std::string _output_name; 
     IAsyncSensor<T> &_sensor; 
     const uint16_t _measurement_period_ms;
     
@@ -60,9 +59,9 @@ private:
 template <typename T> 
 class SensorEndpoint : public ISensorEndpointBase {
 public:
-    SensorEndpoint(const std::string& output_name, ISensor<T> &sensor, uint16_t measurement_period) : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) { 
-        _measurement_output = add_output_channel<T>(_output_name); 
-    } 
+    SensorEndpoint(const std::string& output_name, ISensor<T> &sensor, uint16_t measurement_period) 
+        : _output_name(output_name), _sensor(sensor), _measurement_period_ms(measurement_period) 
+        {  } 
     ~SensorEndpoint() = default; 
 
     void setup() override {
@@ -74,7 +73,7 @@ public:
 
         FIC_RETURN_VOID_ON_ERROR(_sensor.measure(value), FIC_LOGE(TAG, "Failed to measure sensor value"));
 
-        _measurement_output->emit(value);
+        _measurement_output->update(value);
 
         last_run_time_ms = now;
     }
@@ -82,9 +81,8 @@ public:
     uint32_t get_run_period_ms() const override {return _measurement_period_ms;}
 
 private:
-    OutputChannel<T>* _measurement_output;
+    value_t<T>* _measurement_output; 
 
-    const std::string _output_name;
     ISensor<T> &_sensor;
     const uint16_t _measurement_period_ms;
 
