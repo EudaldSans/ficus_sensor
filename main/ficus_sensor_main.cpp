@@ -23,8 +23,12 @@
 #include "freertos_queue.hh"
 
 #include "routing.hh"
-#include "hardware.hh"
+#include "hardware.hh"  
 #include "endpoints.hh"
+
+#include "version.hh"
+
+static constexpr Version product_version = Version(0, 0, 1, 0);
 
 static const char *TAG = "main";
 
@@ -55,6 +59,8 @@ void start_hardware() {
 extern "C" void app_main(void) {  
     // Always start logging backend first, so other components can print logs
     fic_log_set_backend(esp32_backend);
+
+    FIC_LOGI(TAG, "Starting Ficus Sensor, version %s", product_version.c_str());
 
     start_hardware();
 
