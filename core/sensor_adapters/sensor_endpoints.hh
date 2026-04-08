@@ -35,8 +35,13 @@ public:
         uint16_t measurement_delay_ms;
 
         if (!_sensor.is_ready()) { FIC_LOGW(TAG, "Measurement not ready yet"); return;}
-        FIC_RETURN_VOID_ON_ERROR(_sensor.get_measurement(value), FIC_LOGE(TAG, "Failed to get sensor value"));
+        if (_sensor.get_measurement(value) != FIC_OK) {
+            _measurement_output.invalidate();
+            FIC_LOGE(TAG, "Failed to get sensor value");
+            return;
+        }
         
+        _measurement_output.validate();
         _measurement_output.update(value);
         _sensor.trigger_measurement(measurement_delay_ms); 
 
@@ -73,6 +78,7 @@ public:
 
         FIC_RETURN_VOID_ON_ERROR(_sensor.measure(value), FIC_LOGE(TAG, "Failed to measure sensor value"));
 
+        _measurement_output.validate();
         _measurement_output.update(value);
 
         last_run_time_ms = now;
