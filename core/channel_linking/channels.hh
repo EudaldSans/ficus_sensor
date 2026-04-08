@@ -72,10 +72,12 @@ struct ChannelLink : public ILink {
      * @brief Synchronizes the values of the channels
      */
     void sync() {
-        if (src.is_new) {
-            dest.value = static_cast<To>(src.value);
-            dest.is_valid = src.is_valid;
-            dest.is_new = true;
+        dest.update(src.peek());
+
+        if (src.is_valid()) {
+            dest.validate();
+        } else {
+            dest.invalidate();
         }
     }
 };

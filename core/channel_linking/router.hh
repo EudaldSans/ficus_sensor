@@ -14,13 +14,15 @@ public:
     void setup() override {}
 
     void update(uint64_t now) override {
-        std::apply([](auto&... link_items) {
-            (link_items.sync(), ...); 
-        }, _links);
+        for (size_t i = 0; i < _count; ++i) {
+            if (_links[i]) {
+                _links[i]->sync();
+            }
+        }
     }
 
 private:
-    ILink* const* _links; // A pointer to a constant array of pointers
+    ILink* const* _links;
     const size_t _count;
 };
 

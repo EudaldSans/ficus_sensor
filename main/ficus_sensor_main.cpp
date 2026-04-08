@@ -15,8 +15,6 @@
 
 #include "task_manager.hh"
 
-#include "router.hh"
-#include "endpoint.hh"
 #include "conversions.hh"
 
 #include "sensor_endpoints.hh"
