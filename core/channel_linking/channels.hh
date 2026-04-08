@@ -14,7 +14,7 @@ template <typename T>
 struct __attribute__((aligned(4),packed))  value_t {
 private:
     T value;
-    uint8_t flags = 0x01;
+    uint8_t flags = 0x00;
 
 public:
 
@@ -34,8 +34,8 @@ public:
     inline void validate() { flags |= MASK_VALID; }
     inline void invalidate() { flags &= ~MASK_VALID; }
 
-    bool is_valid() const { return flags & 0x01; }
-    bool is_new() const { return flags & 0x02; }
+    bool is_valid() const { return flags & MASK_VALID; }
+    bool is_new() const { return flags & MASK_NEW; }
     inline T peek() const { return value; }
 
     /**
