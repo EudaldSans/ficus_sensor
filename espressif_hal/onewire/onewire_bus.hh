@@ -28,6 +28,8 @@ class OnewireBus : public IOnewireBus {
         onewire_bus_handle_t bus = nullptr; 
         int bus_gpio_num;
 
+        bool _initialized = false;
+
         std::vector<uint64_t> device_list;
 
         constexpr static char const *TAG = "ONE WIRE";
