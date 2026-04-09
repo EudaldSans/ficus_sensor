@@ -1,0 +1,122 @@
+#include "composition.hh"
+
+// ── Hardware includes ──
+#include "onewire_bus.hh"
+#include "adc.hh"
+#include "ds18b20.hh"
+#include "analog_humidity_sensor.hh"
+#include "led_strip_single.hh"
+
+// ── WiFi includes ──
+#include "wifi_context.hh"
+#include "wifi_controller.hh"
+#include "wifi_station.hh"
+
+// ── Routing includes ──
+#include "router.hh"
+#include "conversions.hh"
+
+// ── Endpoint includes ──
+#include "sensor_endpoints.hh"
+#include "firebase_encoder.hh"
+#include "https_client.hh"
+#include "credentials_provider.hh"
+
+// ── Platform includes ──
+#include "esp_time.hh"
+#include "nvs_flash.h"
+
+#include "task_manager.hh"
+
+#include "fic_log.hh"
+
+// ── Constants ──
+static constexpr uint8_t  ONEWIRE_BUS_GPIO     = 18;
+static constexpr uint8_t  LED_GPIO              = 8;
+static constexpr uint32_t LED_STRIP_RMT_RES_HZ  = 10 * 1000 * 1000;
+static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 30000;
+
+static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json";
+
+// ── Embedded certificate ──
+extern const char root_cert_pem_start[] asm("_binary_root_cert_pem_start");
+extern const char root_cert_pem_end[]   asm("_binary_root_cert_pem_end");
+
+// ── TLS Provider ──
+class FakeTLSProvider : public ICredentialsProvider {
+public:
+    std::string_view get_client_cert() const override { return ""; }
+    std::string_view get_client_key() const override { return ""; }
+    std::string_view get_ca_cert() const override {
+        size_t size_with_null = (root_cert_pem_end - root_cert_pem_start);
+        return std::string_view(root_cert_pem_start, size_with_null);
+    }
+};
+
+// ── Channels ──
+static value_t<float> t_sensor_output;
+static value_t<float> h_sensor_output;
+static value_t<int>   firebase_t_input_impl;
+static value_t<int>   firebase_h_input_impl;
+
+// ── Hardware ──
+static LEDStripSingle         led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
+static RGBSignaler            rgb_signaler_impl(led_strip);
+
+static OnewireBus             onewire(ONEWIRE_BUS_GPIO);
+static DS18B20                t_sensor(onewire, DS18B20::resolution_12B);
+
+static ADC                    adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
+static AnalogHumiditySensor   h_sensor(adc, 3300);
+
+// ── WiFi ──
+static WiFiContext            wifi_context;
+static WiFiController         wifi_controller(wifi_context);
+static WiFiStation            wifi_station(wifi_context);
+
+// ── Routing ──
+static ChannelLink<float, int> temperature_link{t_sensor_output, firebase_t_input_impl};
+static ChannelLink<float, int> humidity_link{h_sensor_output, firebase_h_input_impl};
+
+static ILink* master_link_list[] = {
+    &temperature_link,
+    &humidity_link,
+};
+
+static Router router(master_link_list, sizeof(master_link_list) / sizeof(ILink*));
+
+// ── Endpoints ──
+static AsyncSensorEndpoint<float> t_endpoint(t_sensor_output, t_sensor, SENSOR_MEAS_PERIOD_MS);
+static SensorEndpoint<float>      h_endpoint(h_sensor_output, h_sensor, SENSOR_MEAS_PERIOD_MS);
+
+static FakeTLSProvider    tls_provider;
+static HttpsClient        http_client(tls_provider);
+static FirebaseEncoder    encoder(firebase_url, "id_test", http_client);
+
+// ── Extern references for main ──
+RGBSignaler&  rgb_signaler     = rgb_signaler_impl;
+value_t<int>& firebase_t_input = firebase_t_input_impl;
+value_t<int>& firebase_h_input = firebase_h_input_impl;
+
+WiFiState composition_get_wifi_state() {
+    return wifi_controller.get_state();
+}
+
+void composition_init_hardware() {
+    ITimeSource::set_instance(&EspTimeSource::instance());
+    ITimeDelay::set_instance(&EspTimeDelay::instance());
+
+    led_strip.init();
+    nvs_flash_init();
+}
+
+void composition_add_tasks(TaskManager& tm) {
+    tm.add_task(&t_endpoint);
+    tm.add_task(&h_endpoint);
+    tm.add_task(&rgb_signaler_impl);
+    tm.add_task(&router);
+}
+
+void composition_start_comms() {
+    http_client.start();
+}

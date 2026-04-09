@@ -5,56 +5,27 @@
  */
 
 #include <stdio.h>
-#include "fic_log.hh"
 
-#include "nvs_flash.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
-#include "sdkconfig.h"
 #include "fic_log.hh"
 #include "esp_fic_log.hh"
 
 #include "task_manager.hh"
-
-#include "conversions.hh"
-
-#include "esp_time.hh"
-
 #include "freertos_task.hh"
-#include "freertos_queue.hh"
-
-#include "routing.hh"
-#include "hardware.hh"  
-#include "endpoints.hh"
 
 #include "version.hh"
+#include "composition.hh"
 
 static constexpr Version product_version = Version(0, 0, 1, 0);
 
 static const char *TAG = "main";
 
-TaskManager task_manager = TaskManager(
+static TaskManager task_manager(
     "main_task_manager", 
     std::make_unique<FreeRTOS_TaskRunner>("main_task_manager", 4096, tskNO_AFFINITY)
 );
-
-void add_tasks() {
-    FIC_LOGI(TAG, "Setting up task manager");
-
-    task_manager.add_task(&t_endpoint);
-    task_manager.add_task(&h_endpoint);
-    task_manager.add_task(&rgb_signaler);
-    task_manager.add_task(&router);
-}
-
-void start_hardware() {
-    FIC_LOGI(TAG, "Initializing hardware");
-    ITimeSource::set_instance(&EspTimeSource::instance());
-    ITimeDelay::set_instance(&EspTimeDelay::instance());
-
-    led_strip.init();
-
-    nvs_flash_init();
-}
 
 extern "C" void app_main(void) {  
     // Always start logging backend first, so other components can print logs
@@ -62,24 +33,17 @@ extern "C" void app_main(void) {
 
     FIC_LOGI(TAG, "Starting Ficus Sensor, version %s", product_version.c_str());
 
-    start_hardware();
+    composition_init_hardware();
+    composition_add_tasks(task_manager);
+    composition_start_comms();
 
-    add_tasks();
-    
-    http_client.start();
     task_manager.start();
-
-    // wifi.init();
-    // wifi_station.sta_connect("XTA_47592", "Mh9gcxu5", 10);
 
     while (1) {
         uint32_t blink_time = 500;
         uint16_t cycles = 2;
-        size_t free_mem = esp_get_free_heap_size();
 
-        FIC_LOGI(TAG, "free heap size %d", free_mem);
-
-        if (wifi.get_state() != WiFiState::STA_CONNECTED) {
+        if (composition_get_wifi_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
         } else {
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
@@ -92,7 +56,6 @@ extern "C" void app_main(void) {
             } else {
                 FIC_LOGI(TAG, "humidity is not valid");
             }
-            
         }
 
         if (firebase_t_input.is_new()) {
@@ -104,6 +67,6 @@ extern "C" void app_main(void) {
             }
         }
 
-        vTaskDelay(2000/portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
