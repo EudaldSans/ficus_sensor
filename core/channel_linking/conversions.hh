@@ -8,14 +8,16 @@ struct NoConv {
     static T apply(T v) { return v; }
 };
 
+/***  Temperature Conversions  ***/
 struct ToFahrenheit {
-    template<typename T>
-    static T apply(T c) { return (c * 1.8f) + 32.0f; }
+    static float apply(float c) { return (c * 1.8f) + 32.0f; }
 };
 
 struct FromFahrenheit {
     static float apply(float f) { return (f - 32.0f) / 1.8f; }
 };
+
+/***  Mathematical Conversions  ***/
 
 template<float operand>
 struct Addition {
@@ -31,6 +33,47 @@ template<float operand>
 struct Division {
     static float apply(float v) { return v / operand; }
 };
+
+/***  Bitwise Conversions  ***/
+
+template<typename T, int shift>
+struct BitShiftLeft {
+    static T apply(T v) { return v << shift; }
+};
+
+template<typename T, int shift>
+struct BitShiftRight {
+    static T apply(T v) { return v >> shift; }
+};
+
+template<typename T, int mask>
+struct BitMask {
+    static T apply(T v) { return v & mask; }
+};
+
+/*** Logical Conversions  ***/
+
+template<typename T, T value>
+struct EqualTo {
+    static bool apply(T v) { return v == value; }
+};
+
+template<typename T, T value>
+struct NotEqualTo {
+    static bool apply(T v) { return v != value; }
+};
+
+template<typename T, T threshold>
+struct GreaterThan {
+    static bool apply(T v) { return v > threshold; }
+};
+
+template<typename T, T threshold>
+struct LessThan {
+    static bool apply(T v) { return v < threshold; }
+};
+
+/***  Converter Chains  ***/
 
 template<typename... Steps>
 struct MathChain {
