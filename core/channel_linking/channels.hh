@@ -44,12 +44,12 @@ public:
     /**
      * @brief Checks if the valid flag is set
      */
-    bool is_valid() const { return flags & MASK_VALID; }
+    inline bool is_valid() const { return flags & MASK_VALID; }
 
     /**
      * @brief Checks if the new flag is set
      */
-    bool is_new() const { return flags & MASK_NEW; }
+    inline bool is_new() const { return flags & MASK_NEW; }
 
     /**
      * @brief Allows to peek the value without clearing the new flag
