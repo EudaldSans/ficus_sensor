@@ -28,7 +28,7 @@ fic_error_t DS18B20::init() {
     const uint64_t ds18b20_mask = 0xFF;
     const uint32_t max_rx_bytes = 10;
 
-    if (!_bus.is_initialized()) {
+    if (!_initialized) {
         FIC_RETURN_ON_ERROR(_bus.init(max_rx_bytes), FIC_LOGE(TAG, "Failed to initialize bus"));
     }
 
