@@ -7,6 +7,8 @@
 #include "led_hal.hh"
 #include "timer.hh"
 
+#include "base_signalling.hh"
+
 #ifndef RGB_SIGNALLING_HH
 #define RGB_SIGNALLING_HH
 
