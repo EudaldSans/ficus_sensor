@@ -1,5 +1,6 @@
 #include <mutex>
 #include <atomic>
+#include <array>
 
 #include "fic_errors.hh"
 #include "task.hh"

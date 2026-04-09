@@ -3,6 +3,9 @@
 
 #include "fic_log.hh"
 
+#include "conversions.hh"
+
+#include <inttypes.h>
 #include <vector>
 
 /**
