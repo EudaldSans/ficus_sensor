@@ -35,6 +35,7 @@ set(core_logic
 set(logging 
     fic_log 
     esp_fic_log
+    versioning
 )
 
 idf_component_register(

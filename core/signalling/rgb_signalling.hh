@@ -7,6 +7,8 @@
 #include "led_hal.hh"
 #include "timer.hh"
 
+#include "base_signalling.hh"
+
 #ifndef RGB_SIGNALLING_HH
 #define RGB_SIGNALLING_HH
 
@@ -22,39 +24,30 @@ struct RGB_action_t {
     uint32_t duration_ms;
 };
 
-class RGBSignaler : public IContinuousTask {
+class RGBSignaler : public SignalerBase<RGB_action_t, 24> {
 public:
-    RGBSignaler(IColorable &led) : _rgb_led(led) {};
-    ~RGBSignaler() = default;
+    RGBSignaler(IColorable& led) : _led(led) {}
 
-    fic_error_t set_solid(Color color);
-    fic_error_t set_blink(Color color_1, uint32_t color_1_time_ms, Color color_2, uint32_t color_2_time_ms, int32_t cycles);
-    fic_error_t set_custom_signal(const std::vector<RGB_action_t> pattern_composition, int32_t cycles);   
-    
-private: 
-    struct signal_request_t {
-        uint16_t steps = 0;
-        int32_t cycles = 0;
-        std::array<RGB_action_t, MAX_STEPS_IN_RGB_SIGNAL> pattern;
-    };
+    fic_error_t set_solid(Color color) {
+        bool on = (color.red || color.green || color.blue);
+        return submit_signal({{on, color, 0xFFFFFFFF}}, INFINITE_CYCLES);
+    }
 
-    void setup() override;
-    void update(uint64_t now) override;
-    void perform_action(RGB_action_t action, uint64_t now);
+    fic_error_t set_blink(Color c1, uint32_t t1, Color c2, uint32_t t2, int32_t cycles) {
+        auto is_on = [](Color c){ return c.red || c.green || c.blue; };
+        return submit_signal({{is_on(c1), c1, t1}, {is_on(c2), c2, t2}}, cycles);
+    }
 
-    IColorable &_rgb_led;
+protected:
+    void perform_action(const RGB_action_t& action, uint64_t now) override {
+        _step_timer.update_duration(action.duration_ms);
+        _step_timer.reset(now);
+        action.on ? _led.set_color(action.color) : _led.off();
+    }
+    void turn_off() override { _led.off(); }
 
-    std::array<RGB_action_t, MAX_STEPS_IN_RGB_SIGNAL> _pattern;
-
-    uint16_t _current_step = 0;
-    uint16_t _active_steps = 0;
-    int32_t _remaining_cycles = 0;
-
-    Timer _step_timer;
-    std::atomic<bool> _new_request{false};
-    signal_request_t _new_signal;
-
-    std::mutex _mutex;
+private:
+    IColorable& _led;
 };
 
 #endif

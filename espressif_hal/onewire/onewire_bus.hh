@@ -18,15 +18,17 @@ class OnewireBus : public IOnewireBus {
 
         fic_error_t reset() override;
         fic_error_t read_bytes(std::vector<uint8_t> &rx_buf) override;
-        fic_error_t write_bytes(std::vector<uint8_t> tx_data) override;
+        fic_error_t write_bytes(std::vector<uint8_t> &tx_data) override;
 
-        fic_error_t write_to_all(std::vector<uint8_t> tx_data) override;
-        fic_error_t write_to(uint64_t address, std::vector<uint8_t> tx_data) override;
+        fic_error_t write_to_all(std::vector<uint8_t> &tx_data) override;
+        fic_error_t write_to(uint64_t address, std::vector<uint8_t> &tx_data) override;
         
     protected:
     private:
         onewire_bus_handle_t bus = nullptr; 
         int bus_gpio_num;
+
+        bool _initialized = false;
 
         std::vector<uint64_t> device_list;
 
