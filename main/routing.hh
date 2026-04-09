@@ -9,8 +9,6 @@ value_t<float> h_sensor_output;
 value_t<int> firebase_t_input;
 value_t<int> firebase_h_input;
 
-using TemperaturePipe = MathChain<ToFahrenheit, Multiplication<10.0f>>;
-
 static ChannelLink<float, int> temperature_link{t_sensor_output, firebase_t_input};
 static ChannelLink<float, int> humidity_link{h_sensor_output, firebase_h_input};
 

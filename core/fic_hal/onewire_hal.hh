@@ -18,9 +18,9 @@ class IOnewireBus {
         virtual fic_error_t find_device(uint64_t address, uint64_t address_mask) = 0;
         virtual fic_error_t reset() = 0;
         virtual fic_error_t read_bytes(std::vector<uint8_t> &rx_buf) = 0;
-        virtual fic_error_t write_bytes(std::vector<uint8_t> tx_data) = 0;
-        virtual fic_error_t write_to_all(std::vector<uint8_t> tx_data) = 0;
-        virtual fic_error_t write_to(uint64_t address, std::vector<uint8_t> tx_data) = 0;
+        virtual fic_error_t write_bytes(std::vector<uint8_t> &tx_data) = 0;
+        virtual fic_error_t write_to_all(std::vector<uint8_t> &tx_data) = 0;
+        virtual fic_error_t write_to(uint64_t address, std::vector<uint8_t> &tx_data) = 0;
 };
 
 #endif
