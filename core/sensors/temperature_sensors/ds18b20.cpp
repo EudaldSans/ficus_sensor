@@ -23,12 +23,17 @@ DS18B20::DS18B20(IOnewireBus &bus, ds18b20_resolution_t resolution) : IAsyncSens
 
 DS18B20::~DS18B20() {}
 
+/**
+ * @brief Initializes the underlying onewire bus and configures the sensor resolution.
+ * 
+ * @return fic_error_t @c FIC_OK on success, error code otherwise
+ */
 fic_error_t DS18B20::init() {
     const uint64_t ds18b20_address = 0x28;
     const uint64_t ds18b20_mask = 0xFF;
     const uint32_t max_rx_bytes = 10;
 
-    if (!_initialized) {
+    if (!_bus.init(max_rx_bytes)) {
         FIC_RETURN_ON_ERROR(_bus.init(max_rx_bytes), FIC_LOGE(TAG, "Failed to initialize bus"));
     }
 
@@ -39,6 +44,15 @@ fic_error_t DS18B20::init() {
     return FIC_OK;
 }
 
+/**
+ * @brief Triggers a measurement
+ * 
+ * @warning This function relies on ITimeSource to set the measurement finish time, creating a hidden dependency. 
+ * So far this has been considered an acceptable DIP violation, since it allows to keep the sensor interface simple.
+ * 
+ * @param measurement_delay_ms [out] the delay after which the measurement will be ready, in milliseconds
+ * @return fic_error_t @c FIC_OK on success, error code otherwise
+ */
 fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     constexpr uint32_t resolution_delays_ms[4] = {100, 200, 400, 800};
     std::vector<uint8_t> tx_buffer = {cmd_convert_temp};
@@ -47,11 +61,20 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
     FIC_RETURN_ON_ERROR(_bus.write_to_all(tx_buffer), FIC_LOGE(TAG, "Write data failed to trigger measurement"));
 
     measurement_delay_ms = resolution_delays_ms[_resolution];
+
     _measure_finish_time_ms = ITimeSource::get_time_ms() + measurement_delay_ms;
 
     return FIC_OK;
 }
 
+/**
+ * @brief Checks whether the last measurement is ready.
+ * 
+ * @warning This function relies on ITimeSource to check if the measurement is ready, creating a hidden dependency. 
+ * So far this has been considered an acceptable DIP violation, since it allows to keep the sensor interface simple.
+ * 
+ * @return true if the measurement is ready, false otherwise
+ */
 bool DS18B20::is_ready() { 
     return ITimeSource::get_time_ms() >= _measure_finish_time_ms; 
 }
@@ -70,6 +93,12 @@ fic_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
     return FIC_OK;
 }
 
+/**
+ * @brief Obtains a measurement if it is ready
+ * 
+ * @param value [out] the measured temperature in Celsius
+ * @return fic_error_t @c FIC_OK on success, error code otherwise
+ */
 fic_error_t DS18B20::get_measurement(float &value) {
     ds18b20_scratchpad_t scratchpad = {};
     std::vector<uint8_t> tx_buffer = {cmd_read_scratchpad};
