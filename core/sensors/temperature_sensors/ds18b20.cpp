@@ -33,13 +33,15 @@ fic_error_t DS18B20::init() {
     const uint64_t ds18b20_mask = 0xFF;
     const uint32_t max_rx_bytes = 10;
 
-    if (!_bus.init(max_rx_bytes)) {
-        FIC_RETURN_ON_ERROR(_bus.init(max_rx_bytes), FIC_LOGE(TAG, "Failed to initialize bus"));
-    }
+    FIC_LOGI(TAG, "Initializing DS18B20");
+
+    FIC_RETURN_ON_ERROR(_bus.init(max_rx_bytes), FIC_LOGE(TAG, "Failed to initialize bus"));
 
     FIC_RETURN_ON_ERROR(_bus.find_device(ds18b20_address, ds18b20_mask), FIC_LOGE(TAG, "Failed to find device"));
 
     set_resolution(DS18B20::resolution_12B);
+
+    FIC_LOGI(TAG, "Initialized DS18B20");
 
     return FIC_OK;
 }
