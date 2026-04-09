@@ -75,6 +75,11 @@ struct LessThan {
 
 /***  Converter Chains  ***/
 
+/**
+ * @brief Casts a value to float and applies a chain of conversion steps, then casts it again to the original value in the end. 
+ * 
+ * @tparam Steps all the conversions to apply, in the order they should be applied.
+ */
 template<typename... Steps>
 struct MathChain {
     template <typename T>
@@ -85,6 +90,11 @@ struct MathChain {
     }
 };
 
+/**
+ * @brief Applies a chain of conversions to a value, in the order they are specified.
+ * 
+ * @tparam Steps all the conversions to apply, in the order they should be applied.
+ */
 template <typename... Steps>
 struct ConverterChain {
     template <typename T>
