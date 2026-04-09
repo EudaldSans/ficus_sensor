@@ -17,8 +17,9 @@ template <typename T>
 class AsyncSensorEndpoint : public ISensorEndpointBase { 
 public: 
     AsyncSensorEndpoint(value_t<T>& measurement_output, IAsyncSensor<T> &sensor, uint16_t measurement_period) 
-        : _measurement_output(measurement_output), _sensor(sensor), _measurement_period_ms(measurement_period) 
-        { }
+        : _measurement_output(measurement_output), _sensor(sensor), _measurement_period_ms(measurement_period) { 
+        _measurement_output.invalidate();     
+    } 
     ~AsyncSensorEndpoint() = default; 
 
     void setup() override { 
@@ -65,8 +66,9 @@ template <typename T>
 class SensorEndpoint : public ISensorEndpointBase {
 public:
     SensorEndpoint(value_t<T>& measurement_output, ISensor<T> &sensor, uint16_t measurement_period) 
-        : _measurement_output(measurement_output), _sensor(sensor), _measurement_period_ms(measurement_period) 
-        {  } 
+        : _measurement_output(measurement_output), _sensor(sensor), _measurement_period_ms(measurement_period) { 
+        _measurement_output.invalidate();     
+    } 
     ~SensorEndpoint() = default; 
 
     void setup() override {

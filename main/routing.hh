@@ -14,7 +14,7 @@ static ChannelLink<float, int> humidity_link{h_sensor_output, firebase_h_input};
 
 static ILink* master_link_list[] = {
     &temperature_link,
-    &humidity_link
+    &humidity_link,
 };
 
 Router router(master_link_list, sizeof(master_link_list) / sizeof(ILink*));

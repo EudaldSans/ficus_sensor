@@ -118,8 +118,8 @@ fic_error_t HttpClient::del(std::string_view url, IHTTPListener& listener) {
  *  - @c FIC_OK if the request was enqueued successfully
  */
 fic_error_t HttpClient::_enqueue(std::string_view url, std::string_view payload, esp_http_client_method_t method, IHTTPListener& listener) {
-    if (url.size() >= URL_MAX_LEN) return FIC_ERR_INVALID_ARG;
-    if (payload.size() >= PAYLOAD_MAX_LEN) return FIC_ERR_INVALID_ARG;
+    if (url.size() >= _k_url_max_len) return FIC_ERR_INVALID_ARG;
+    if (payload.size() >= _k_payload_max_len) return FIC_ERR_INVALID_ARG;
     if (_job_queue.full()) return FIC_ERR_FULL;
     
     HttpJob* job = _job_pool.acquire();
@@ -128,10 +128,10 @@ fic_error_t HttpClient::_enqueue(std::string_view url, std::string_view payload,
     memset(job, 0, sizeof(HttpJob));
 
     job->method = method;
-    strlcpy(job->url, url.data(), URL_MAX_LEN);
+    strlcpy(job->url, url.data(), _k_url_max_len);
 
     if (!payload.empty()) {
-        strlcpy(job->payload, payload.data(), PAYLOAD_MAX_LEN);
+        strlcpy(job->payload, payload.data(), _k_payload_max_len);
     }
     
     job->listener = &listener;
@@ -173,7 +173,7 @@ esp_err_t HttpClient::_event_handler(esp_http_client_event_t *evt) {
             self->_rx_buffer.fill(0);
 
             if (!esp_http_client_is_chunked_response(evt->client)) {
-                self->_rx_len = MIN(evt->data_len, MAX_RESPONSE_PAYLOAD);
+                self->_rx_len = MIN(evt->data_len, _k_max_response_payload);
                 if (self->_rx_len) {
                     memcpy(self->_rx_buffer.data(), evt->data, self->_rx_len);
                 }

@@ -14,8 +14,6 @@
 #ifndef TASK_MANAGER_H
 #define TASK_MANAGER_H
 
-#define MAX_TASKS 32
-
 class TaskManager {
     public: 
         TaskManager(const char* name, std::unique_ptr<ITaskRunner> task_runner);
@@ -27,15 +25,18 @@ class TaskManager {
         void add_task(ITask* task);
 
     private: 
+        static constexpr uint16_t _k_max_tasks = 32;
+        std::array<ITask*, _k_max_tasks> _tasks;
+
+        std::unique_ptr<ITaskRunner> _task_runner;
         static void run(void* instance);
-        std::array<ITask*, MAX_TASKS> _tasks;
+        
         size_t _task_count = 0;
 
         std::atomic_bool _running = false;
         std::atomic_bool _active = false;
 
         const char* _name;
-        std::unique_ptr<ITaskRunner> _task_runner;
 
         constexpr static char const *TAG = "TaskManager";
 };

@@ -77,7 +77,7 @@ fic_error_t OnewireBus::find_device(uint64_t address, uint64_t address_mask) {
     return FIC_OK;
 }
 
-fic_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
+fic_error_t OnewireBus::write_to_all(std::vector<uint8_t> &tx_data) {
     std::vector<uint8_t> tx_buffer;
     
     tx_buffer.push_back(ONEWIRE_CMD_SKIP_ROM);
@@ -85,7 +85,7 @@ fic_error_t OnewireBus::write_to_all(std::vector<uint8_t> tx_data) {
     return write_bytes(tx_buffer);
 }
 
-fic_error_t OnewireBus::write_to(uint64_t address, std::vector<uint8_t> tx_data) {
+fic_error_t OnewireBus::write_to(uint64_t address, std::vector<uint8_t> &tx_data) {
     std::vector<uint8_t> tx_buffer;
     
     tx_buffer.push_back(ONEWIRE_CMD_MATCH_ROM);
@@ -106,7 +106,7 @@ fic_error_t OnewireBus::read_bytes(std::vector<uint8_t> &rx_buf) {
     return (onewire_bus_read_bytes(bus, rx_buf.data(), rx_buf.size()) == ESP_OK) ? FIC_OK : FIC_ERR_SDK_FAIL;
 }
 
-fic_error_t OnewireBus::write_bytes(std::vector<uint8_t> tx_data) {
+fic_error_t OnewireBus::write_bytes(std::vector<uint8_t> &tx_data) {
     return (onewire_bus_write_bytes(bus, tx_data.data(), tx_data.size()) == ESP_OK) ? FIC_OK : FIC_ERR_SDK_FAIL;
 }
 

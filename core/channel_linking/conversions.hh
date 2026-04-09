@@ -3,47 +3,52 @@
 #ifndef CHANNEL_LINKING_CONVERSIONS_H
 #define CHANNEL_LINKING_CONVERSIONS_H
 
-template <typename T>
-class IConversion {
-    public:
-        virtual ~IConversion() = default; 
-        
-        T convert(T value) {
-            T converted_value = perform_conversion(value);
-
-            return converted_value;
-        }
-
-    protected:
-        virtual T perform_conversion(T value) {return value;}
+struct NoConv {
+    template <typename T>
+    static T apply(T v) { return v; }
 };
 
-template <typename T>
-class AdditionConversion : public IConversion<T> {
-    public:
-        AdditionConversion(T operand) : _operand(operand) {}
-    
-    protected:
-        T perform_conversion(T value) override {return value + _operand;}
-    
-    private:
-        T _operand;
+struct ToFahrenheit {
+    template<typename T>
+    static T apply(T c) { return (c * 1.8f) + 32.0f; }
 };
 
-template <typename T>
-class ToFahrenheitConversion : public IConversion<T> {   
-    protected:
-        T perform_conversion(T value) override {
-            return (value * 1.8) + 32;
-        }
+struct FromFahrenheit {
+    static float apply(float f) { return (f - 32.0f) / 1.8f; }
 };
 
-template <typename T>
-class ToCelsiusConversion : public IConversion<T> {
-    protected:
-        T perform_conversion(T value) override {
-            return (value - 32) / 1.8;
-        }
+template<float operand>
+struct Addition {
+    static float apply(float v) { return v + operand; }
+};
+
+template<float operand>
+struct Multiplication {
+    static float apply(float v) { return v * operand; }
+};
+
+template<float operand>
+struct Division {
+    static float apply(float v) { return v / operand; }
+};
+
+template<typename... Steps>
+struct MathChain {
+    template <typename T>
+    static constexpr T apply(T v) {
+        float value = static_cast<float>(v);
+        ((value = Steps::apply(value)), ...);
+        return static_cast<T>(value);
+    }
+};
+
+template <typename... Steps>
+struct ConverterChain {
+    template <typename T>
+    static constexpr T apply(T v) {
+        ((v = Steps::apply(v)), ...);
+        return v;
+    }
 };
 
 #endif
