@@ -56,14 +56,6 @@ public:
     }
 };
 
-// ── Channels ──
-static value_t<float> t_sensor_output;
-static value_t<float> h_sensor_output;
-static firebase_channel<int>        firebase_tempertaure("temperature");
-static firebase_channel<float>      firebase_tempertaure_2("temperature_2");
-static firebase_channel<int>        firebase_humidity("humidity");
-static firebase_channel<float>      firebase_humidity_2("humidity_2");
-
 // ── Hardware ──
 static LEDStripSingle         led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
 static RGBSignaler            rgb_signaler_impl(led_strip);
@@ -78,6 +70,14 @@ static AnalogHumiditySensor   h_sensor(adc, 3300);
 static WiFiContext            wifi_context;
 static WiFiController         wifi_controller(wifi_context);
 static WiFiStation            wifi_station(wifi_context);
+
+// ── Channels ──
+static value_t<float> t_sensor_output;
+static value_t<float> h_sensor_output;
+static firebase_channel<int>        firebase_tempertaure("temperature");
+static firebase_channel<float>      firebase_tempertaure_2("temperature_2");
+static firebase_channel<int>        firebase_humidity("humidity");
+static firebase_channel<float>      firebase_humidity_2("humidity_2");
 
 // ── Firebase channels ──
 static FirebaseChannelPtr firebase_channel_list[] = {
