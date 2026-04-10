@@ -14,7 +14,7 @@
 class FirebaseEndpoint : public IContinuousTask {
 public:
     template<size_t N>
-    FirebaseEndpoint(AnyChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager) 
+    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager) 
         : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager) {}
 
     ~FirebaseEndpoint() override;
@@ -23,7 +23,7 @@ public:
     void update(uint64_t now) override;
 
 private:
-    AnyChannelPtr* _channels;
+    FirebaseChannelPtr* _channels;
     size_t _num_channels;
 
     IWiFiStatusManager& _wifi_manager;

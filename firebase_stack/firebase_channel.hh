@@ -15,6 +15,6 @@ struct firebase_channel {
     firebase_channel(std::string_view n) : name(n), unit("") {}
 };
 
-using AnyChannelPtr = std::variant<firebase_channel<int>*, firebase_channel<float>*, firebase_channel<bool>*>;
+using FirebaseChannelPtr = std::variant<firebase_channel<int>*, firebase_channel<float>*, firebase_channel<bool>*>;
 
 #endif

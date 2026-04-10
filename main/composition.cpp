@@ -80,7 +80,7 @@ static WiFiController         wifi_controller(wifi_context);
 static WiFiStation            wifi_station(wifi_context);
 
 // ── Firebase channels ──
-static AnyChannelPtr firebase_channel_list[] = {
+static FirebaseChannelPtr firebase_channel_list[] = {
     &firebase_tempertaure, 
     &firebase_humidity,
     &firebase_tempertaure_2,
