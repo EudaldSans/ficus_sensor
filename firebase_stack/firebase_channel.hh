@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "channel_linking/channels.hh"
+#include "channels.hh"
 
 template<typename T>
 struct firebase_channel {
@@ -11,8 +11,10 @@ struct firebase_channel {
     const std::string_view name;
     const std::string_view unit;
 
-    firebase_channel(const std::string_view& n, const std::string_view& u) : name(n), unit(u) {}
-    firebase_channel(const std::string_view& n) : name(n), unit("") {}
+    firebase_channel(std::string_view n, std::string_view u) : name(n), unit(u) {}
+    firebase_channel(std::string_view n) : name(n), unit("") {}
 };
+
+using AnyChannelPtr = std::variant<firebase_channel<int>*, firebase_channel<float>*, firebase_channel<bool>*>;
 
 #endif
