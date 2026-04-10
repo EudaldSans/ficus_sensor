@@ -59,10 +59,10 @@ public:
 // ── Channels ──
 static value_t<float> t_sensor_output;
 static value_t<float> h_sensor_output;
-static firebase_channel<int>   firebase_tempertaure("temperature");
-static firebase_channel<int>   firebase_tempertaure_2("temperature_2");
-static firebase_channel<int>   firebase_humidity("humidity");
-static firebase_channel<int>   firebase_humidity_2("humidity_2");
+static firebase_channel<int>        firebase_tempertaure("temperature");
+static firebase_channel<float>      firebase_tempertaure_2("temperature_2");
+static firebase_channel<int>        firebase_humidity("humidity");
+static firebase_channel<float>      firebase_humidity_2("humidity_2");
 
 // ── Hardware ──
 static LEDStripSingle         led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
@@ -79,19 +79,7 @@ static WiFiContext            wifi_context;
 static WiFiController         wifi_controller(wifi_context);
 static WiFiStation            wifi_station(wifi_context);
 
-// ── Routing ──
-static ChannelLink<float, int> temperature_link{t_sensor_output, firebase_tempertaure.value};
-static ChannelLink<float, int> humidity_link{h_sensor_output, firebase_humidity.value};
-static ChannelLink<float, int> temperature_link_2{t_sensor_output, firebase_tempertaure_2.value};
-static ChannelLink<float, int> humidity_link_2{h_sensor_output, firebase_humidity_2.value};
-
-static ILink* master_link_list[] = {
-    &temperature_link,
-    &humidity_link,
-    &temperature_link_2,
-    &humidity_link_2
-};
-
+// ── Firebase channels ──
 static AnyChannelPtr firebase_channel_list[] = {
     &firebase_tempertaure, 
     &firebase_humidity,
@@ -99,7 +87,13 @@ static AnyChannelPtr firebase_channel_list[] = {
     &firebase_humidity_2
 };
 
-static Router router(master_link_list);
+// ── Routing ──
+static Router router{
+    ChannelLink<float, int>     {t_sensor_output, firebase_tempertaure.value},
+    ChannelLink<float, int>     {h_sensor_output, firebase_humidity.value},
+    ChannelLink<float, float>   {t_sensor_output, firebase_tempertaure_2.value},
+    ChannelLink<float, float>   {h_sensor_output, firebase_humidity_2.value}
+};
 
 // ── Endpoints ──
 static AsyncSensorEndpoint<float> t_endpoint(t_sensor_output, t_sensor, SENSOR_MEAS_PERIOD_MS);

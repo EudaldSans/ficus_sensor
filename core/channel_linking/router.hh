@@ -1,30 +1,34 @@
 #ifndef CHANNEL_LINKING_ROUTER_HH
 #define CHANNEL_LINKING_ROUTER_HH
 
+#include <tuple>
+
 #include "fic_log.hh"
 
 #include "channels.hh"
 
 #include "task.hh"
 
+template <typename... Links>
 class Router : public IContinuousTask {
 public:
-    template<size_t N>
-    Router(ILink* (&links)[N]) : _links(links), _count(N) {}
+    constexpr Router(Links... l) : _links(l...) {}
 
     void setup() override {}
 
+    /**
+     * @brief Unfolds the list of links at compile time and syncs them all one by one
+     * 
+     * @param now The time of update execution
+     */
     void update(uint64_t now) override {
-        for (size_t i = 0; i < _count; ++i) {
-            if (_links[i]) {
-                _links[i]->sync();
-            }
-        }
+        std::apply([](auto&... link) {
+            (link.sync(), ...);
+        }, _links);
     }
 
 private:
-    ILink* const* _links;
-    const size_t _count;
+    std::tuple<Links...> _links;
 };
 
 #endif

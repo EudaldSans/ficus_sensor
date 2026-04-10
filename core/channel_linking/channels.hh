@@ -82,29 +82,20 @@ public:
 };
 
 /**
- * @brief Tiny contract so the router can hold an single array of ILinks, 
- * useful if a channel requires a custom link
- */
-struct ILink {
-    virtual void sync() = 0;
-};
-
-/**
  * @brief Basic link structure
  * 
  * @tparam From Type of incoming @c value_t
  * @tparam To Type of outgoing @c value_t
  */
 template <typename From, typename To, typename Converter = NoConv>
-struct ChannelLink : public ILink {
+struct ChannelLink {
 private:
     uint8_t _last_seen_version = 0;
-
-public:
     value_t<From>& src;
     value_t<To>& dest;
 
-    ChannelLink(value_t<From>& s, value_t<To>& d) : src(s), dest(d) {}
+public:
+    constexpr ChannelLink(value_t<From>& s, value_t<To>& d) : src(s), dest(d) {}
 
     /**
      * @brief Synchronizes the values of the channels
