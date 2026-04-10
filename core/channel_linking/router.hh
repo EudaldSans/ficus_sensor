@@ -9,7 +9,8 @@
 
 class Router : public IContinuousTask {
 public:
-    Router(ILink* const* links, size_t count) : _links(links), _count(count) {}
+    template<size_t N>
+    Router(ILink* (&links)[N]) : _links(links), _count(N) {}
 
     void setup() override {}
 

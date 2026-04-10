@@ -18,6 +18,7 @@ struct __attribute__((aligned(4),packed))  value_t {
 private:
     T value;
     uint8_t flags = 0x00;
+    uint8_t version = 0;
 
 public:
 
@@ -31,7 +32,7 @@ public:
      */
     inline void update(T val) {
         value = val;
-        flags |= MASK_NEW; 
+        version++;
     }
 
     /**
@@ -55,6 +56,11 @@ public:
     inline bool is_new() const { return flags & MASK_NEW; }
 
     /**
+     * @brief Sets the new flag to @c true
+     */
+    inline void make_new() { flags |= MASK_NEW; }
+
+    /**
      * @brief Allows to peek the value without clearing the new flag
      */
     inline T peek() const { return value; }
@@ -66,6 +72,13 @@ public:
         flags &= ~MASK_NEW;
         return value;
     }
+
+    /**
+     * @brief Geter for value version
+     * 
+     * @return uint8_t The version
+     */
+    uint8_t get_version() const { return version; }
 };
 
 /**
@@ -84,6 +97,10 @@ struct ILink {
  */
 template <typename From, typename To, typename Converter = NoConv>
 struct ChannelLink : public ILink {
+private:
+    uint8_t _last_seen_version = 0;
+
+public:
     value_t<From>& src;
     value_t<To>& dest;
 
@@ -93,7 +110,11 @@ struct ChannelLink : public ILink {
      * @brief Synchronizes the values of the channels
      */
     void sync() {
+        if (static_cast<uint8_t>(src.get_version() - _last_seen_version) == 0) {return;}
+        _last_seen_version = src.get_version();
+
         dest.update(static_cast<To>(Converter::apply(src.peek())));
+        dest.make_new();
 
         if (src.is_valid()) {
             dest.validate();

@@ -49,24 +49,6 @@ extern "C" void app_main(void) {
             rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
         }
 
-        if (firebase_h_input.is_new()) {
-            if (firebase_h_input.is_valid()) {
-                int humidity = firebase_h_input.consume();
-                FIC_LOGI(TAG, "humidity is %d", humidity);
-            } else {
-                FIC_LOGI(TAG, "humidity is not valid");
-            }
-        }
-
-        if (firebase_t_input.is_new()) {
-            if (firebase_t_input.is_valid()) {
-                int temperature = firebase_t_input.consume();
-                FIC_LOGI(TAG, "temperature is %d", temperature);
-            } else {
-                FIC_LOGI(TAG, "temperature is not valid");
-            }
-        }
-
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }

@@ -16,9 +16,12 @@
 #include "router.hh"
 #include "conversions.hh"
 
-// ── Endpoint includes ──
+// ── Sensor includes ──
 #include "sensor_endpoints.hh"
+
+// ── Firebase includes ──
 #include "firebase_encoder.hh"
+#include "firebase_endpoint.hh"
 #include "https_client.hh"
 #include "credentials_provider.hh"
 
@@ -34,7 +37,7 @@
 static constexpr uint8_t  ONEWIRE_BUS_GPIO     = 18;
 static constexpr uint8_t  LED_GPIO              = 8;
 static constexpr uint32_t LED_STRIP_RMT_RES_HZ  = 10 * 1000 * 1000;
-static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 30000;
+static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 3000;
 
 static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json";
 
@@ -56,8 +59,10 @@ public:
 // ── Channels ──
 static value_t<float> t_sensor_output;
 static value_t<float> h_sensor_output;
-static value_t<int>   firebase_t_input_impl;
-static value_t<int>   firebase_h_input_impl;
+static firebase_channel<int>   firebase_tempertaure("temperature");
+static firebase_channel<int>   firebase_tempertaure_2("temperature_2");
+static firebase_channel<int>   firebase_humidity("humidity");
+static firebase_channel<int>   firebase_humidity_2("humidity_2");
 
 // ── Hardware ──
 static LEDStripSingle         led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RMT_RES_HZ);
@@ -75,15 +80,26 @@ static WiFiController         wifi_controller(wifi_context);
 static WiFiStation            wifi_station(wifi_context);
 
 // ── Routing ──
-static ChannelLink<float, int> temperature_link{t_sensor_output, firebase_t_input_impl};
-static ChannelLink<float, int> humidity_link{h_sensor_output, firebase_h_input_impl};
+static ChannelLink<float, int> temperature_link{t_sensor_output, firebase_tempertaure.value};
+static ChannelLink<float, int> humidity_link{h_sensor_output, firebase_humidity.value};
+static ChannelLink<float, int> temperature_link_2{t_sensor_output, firebase_tempertaure_2.value};
+static ChannelLink<float, int> humidity_link_2{h_sensor_output, firebase_humidity_2.value};
 
 static ILink* master_link_list[] = {
     &temperature_link,
     &humidity_link,
+    &temperature_link_2,
+    &humidity_link_2
 };
 
-static Router router(master_link_list, sizeof(master_link_list) / sizeof(ILink*));
+static AnyChannelPtr firebase_channel_list[] = {
+    &firebase_tempertaure, 
+    &firebase_humidity,
+    &firebase_tempertaure_2,
+    &firebase_humidity_2
+};
+
+static Router router(master_link_list);
 
 // ── Endpoints ──
 static AsyncSensorEndpoint<float> t_endpoint(t_sensor_output, t_sensor, SENSOR_MEAS_PERIOD_MS);
@@ -93,10 +109,10 @@ static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
 static FirebaseEncoder    encoder(firebase_url, "id_test", http_client);
 
+static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller);
+
 // ── Extern references for main ──
 RGBSignaler&  rgb_signaler     = rgb_signaler_impl;
-value_t<int>& firebase_t_input = firebase_t_input_impl;
-value_t<int>& firebase_h_input = firebase_h_input_impl;
 
 WiFiState composition_get_wifi_state() {
     return wifi_controller.get_state();
@@ -115,8 +131,12 @@ void composition_add_tasks(TaskManager& tm) {
     tm.add_task(&h_endpoint);
     tm.add_task(&rgb_signaler_impl);
     tm.add_task(&router);
+    tm.add_task(&firebase_endpoint);
 }
 
 void composition_start_comms() {
+    wifi_controller.init();
+    wifi_station.sta_connect("XTA_47592", "Mh9gcxu5", 10);
+    
     http_client.start();
 }

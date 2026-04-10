@@ -8,8 +8,6 @@
 class TaskManager;
 
 extern RGBSignaler&    rgb_signaler;
-extern value_t<int>&   firebase_t_input;
-extern value_t<int>&   firebase_h_input;
 
 WiFiState composition_get_wifi_state();
 
