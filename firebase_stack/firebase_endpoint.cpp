@@ -1,5 +1,7 @@
 #include "firebase_endpoint.hh"
 
+#include <sys/time.h>
+
 
 FirebaseEndpoint::~FirebaseEndpoint() {}
 
@@ -9,6 +11,7 @@ void FirebaseEndpoint::setup() {
 
 void FirebaseEndpoint::update(uint64_t now) {
     if (_wifi_manager.get_state() != WiFiState::STA_CONNECTED) { return; }
+    if (!_sntp_client.is_synced()) { return; }
     
     for (size_t i = 0; i < _num_channels; i++) {
         std::visit([this](auto& channel) {
@@ -19,11 +22,9 @@ void FirebaseEndpoint::update(uint64_t now) {
 
             if constexpr (std::is_same_v<T, float>) {
                 FIC_LOGI(TAG, "Evaluated channel %.*s to %f", (int)channel->name.size(), channel->name.data(), value);
-            } 
-            else if constexpr (std::is_same_v<T, bool>) {
+            } else if constexpr (std::is_same_v<T, bool>) {
                 FIC_LOGI(TAG, "Evaluated channel %.*s to %s", (int)channel->name.size(), channel->name.data(), value ? "true" : "false");
-            }
-            else if constexpr (std::is_same_v<T, int>) {
+            } else if constexpr (std::is_same_v<T, int>) {
                 FIC_LOGI(TAG, "Evaluated channel %.*s to %d", (int)channel->name.size(), channel->name.data(), value);
             } else {
                 FIC_LOGI(TAG, "FML");

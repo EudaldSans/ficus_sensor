@@ -71,6 +71,8 @@ static WiFiContext            wifi_context;
 static WiFiController         wifi_controller(wifi_context);
 static WiFiStation            wifi_station(wifi_context);
 
+EspSntpClient sntp_client_impl = EspSntpClient(wifi_controller);
+
 // ── Channels ──
 static value_t<float> t_sensor_output;
 static value_t<float> h_sensor_output;
@@ -103,11 +105,11 @@ static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
 static FirebaseEncoder    encoder(firebase_url, "id_test", http_client);
 
-static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller);
+static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller, sntp_client);
 
 // ── Extern references for main ──
-RGBSignaler&  rgb_signaler     = rgb_signaler_impl;
-WiFiController& wifi_controller_ref = wifi_controller;
+RGBSignaler& rgb_signaler       = rgb_signaler_impl;
+EspSntpClient& sntp_client      = sntp_client_impl;
 
 WiFiState composition_get_wifi_state() {
     return wifi_controller.get_state();
@@ -134,4 +136,6 @@ void composition_start_comms() {
     wifi_station.sta_connect("XTA_47592", "Mh9gcxu5", 10);
     
     http_client.start();
+
+    sntp_client_impl.add_server("pool.ntp.org");
 }

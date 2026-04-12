@@ -18,7 +18,7 @@
 #include "version.hh"
 #include "composition.hh"
 
-#include "sntp_client.hh"
+#include <sys/time.h>
 
 static constexpr Version product_version = Version(0, 0, 1, 0);
 
@@ -40,9 +40,6 @@ extern "C" void app_main(void) {
     composition_start_comms();
 
     task_manager.start();
-
-    EspSntpClient sntp_client = EspSntpClient(wifi_controller_ref);
-    sntp_client.add_server("pool.ntp.org");
 
     uint32_t blink_time = 500;
     uint16_t cycles = 2;

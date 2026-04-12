@@ -6,6 +6,8 @@
 #include "task.hh"
 
 #include "wifi_hal.hh"
+#include "sntp_hal.hh"
+
 #include "fic_log.hh"
 #include "fic_errors.hh"
 
@@ -14,8 +16,8 @@
 class FirebaseEndpoint : public IContinuousTask {
 public:
     template<size_t N>
-    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager) 
-        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager) {}
+    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client) 
+        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client) {}
 
     ~FirebaseEndpoint() override;
 
@@ -27,6 +29,7 @@ private:
     size_t _num_channels;
 
     IWiFiStatusManager& _wifi_manager;
+    ISntpClient& _sntp_client;
 
     constexpr static char const *TAG = "FIREBASE ENDPOINT";
 };
