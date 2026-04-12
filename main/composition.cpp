@@ -37,7 +37,7 @@
 static constexpr uint8_t  ONEWIRE_BUS_GPIO     = 18;
 static constexpr uint8_t  LED_GPIO              = 8;
 static constexpr uint32_t LED_STRIP_RMT_RES_HZ  = 10 * 1000 * 1000;
-static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 3000;
+static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 30000;
 
 static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json";
 
@@ -107,6 +107,7 @@ static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller
 
 // ── Extern references for main ──
 RGBSignaler&  rgb_signaler     = rgb_signaler_impl;
+WiFiController& wifi_controller_ref = wifi_controller;
 
 WiFiState composition_get_wifi_state() {
     return wifi_controller.get_state();

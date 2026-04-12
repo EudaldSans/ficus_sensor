@@ -5,9 +5,12 @@
 #include "rgb_signalling.hh"
 #include "wifi_hal.hh"
 
+#include "wifi_controller.hh"
+
 class TaskManager;
 
 extern RGBSignaler&    rgb_signaler;
+extern WiFiController& wifi_controller_ref;
 
 WiFiState composition_get_wifi_state();
 

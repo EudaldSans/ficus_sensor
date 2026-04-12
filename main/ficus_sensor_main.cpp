@@ -18,6 +18,8 @@
 #include "version.hh"
 #include "composition.hh"
 
+#include "sntp_client.hh"
+
 static constexpr Version product_version = Version(0, 0, 1, 0);
 
 static const char *TAG = "main";
@@ -39,9 +41,19 @@ extern "C" void app_main(void) {
 
     task_manager.start();
 
+    EspSntpClient sntp_client = EspSntpClient(wifi_controller_ref);
+    sntp_client.add_server("pool.ntp.org");
+
+    uint32_t blink_time = 500;
+    uint16_t cycles = 2;
+
     while (1) {
-        uint32_t blink_time = 500;
-        uint16_t cycles = 2;
+        if (!sntp_client.is_syncing() && !sntp_client.is_synced()) {
+            if (composition_get_wifi_state() == WiFiState::STA_CONNECTED) {
+                FIC_LOGI(TAG, "Starting time sync");
+                sntp_client.sync_system_time();
+            }
+        }
 
         if (composition_get_wifi_state() != WiFiState::STA_CONNECTED) {
             rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);

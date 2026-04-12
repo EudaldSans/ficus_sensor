@@ -5,20 +5,19 @@
 
 #include "fic_errors.hh"
 
-class ISNTPLifetime {
+#include "wifi_hal.hh"
+
+class ISntpClient {
 public:
-    virtual ~ISNTPLifetime() = default;
+    virtual ~ISntpClient() = default;
 
-    virtual fic_error_t init() = 0;
-    virtual fic_error_t deinit() = 0;
-};
+    virtual fic_error_t sync_system_time() = 0;
 
-class ISNTPClient {
-public:
-    virtual ~ISNTPClient() = default;
+    virtual fic_error_t add_server(std::string_view server_name) = 0;
+    virtual fic_error_t clear_servers() = 0;
 
-    virtual fic_error_t obtain_time() = 0;
-    virtual fic_error_t set_server(std::string_view server_name) = 0;
+    virtual bool is_synced() const = 0;
+    virtual bool is_syncing() const = 0;
 };
 
 

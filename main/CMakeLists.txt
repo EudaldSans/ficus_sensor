@@ -20,6 +20,7 @@ set(hardware_deps
 set(communications
     wifi
     http_client
+    sntp
 )
 
 set(sensor_logic 
