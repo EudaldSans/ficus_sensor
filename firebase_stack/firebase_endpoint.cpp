@@ -27,7 +27,7 @@ void FirebaseEndpoint::update(uint64_t now) {
             } else if constexpr (std::is_same_v<T, int>) {
                 FIC_LOGI(TAG, "Evaluated channel %.*s to %d", (int)channel->name.size(), channel->name.data(), value);
             } else {
-                FIC_LOGI(TAG, "FML");
+                FIC_LOGE(TAG, "Firebase channel is unknown type");
             }
         }, _channels[i]);
     }
