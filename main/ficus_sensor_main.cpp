@@ -18,8 +18,6 @@
 #include "version.hh"
 #include "composition.hh"
 
-#include <sys/time.h>
-
 static constexpr Version product_version = Version(0, 0, 1, 0);
 
 static const char *TAG = "main";

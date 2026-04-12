@@ -12,12 +12,13 @@
 #include "fic_errors.hh"
 
 #include "firebase_channel.hh"
+#include "firebase_encoder.hh"
 
 class FirebaseEndpoint : public IContinuousTask {
 public:
     template<size_t N>
-    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client) 
-        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client) {}
+    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client, FirebaseEncoder& firebase_encoder) 
+        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client), _firebase_encoder(firebase_encoder) {}
 
     ~FirebaseEndpoint() override;
 
@@ -30,6 +31,7 @@ private:
 
     IWiFiStatusManager& _wifi_manager;
     ISntpClient& _sntp_client;
+    FirebaseEncoder& _firebase_encoder;
 
     constexpr static char const *TAG = "FIREBASE ENDPOINT";
 };

@@ -105,7 +105,7 @@ static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
 static FirebaseEncoder    encoder(firebase_url, "id_test", http_client);
 
-static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller, sntp_client);
+static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller, sntp_client, encoder);
 
 // ── Extern references for main ──
 RGBSignaler& rgb_signaler       = rgb_signaler_impl;
