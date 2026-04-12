@@ -46,7 +46,7 @@ public:
 
         size_t output_len = serializeJson(final_document, _output_buffer);
 
-        FIC_LOGI(TAG, "Sending payload %d", output_len);
+        FIC_LOGI(TAG, "Sending payload (%d), %.*s", output_len, output_len, _output_buffer);
 
         return _http_client.post(_url, _output_buffer, *this);
     }
