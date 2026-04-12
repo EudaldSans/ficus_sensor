@@ -10,7 +10,7 @@ void FirebaseEndpoint::setup() {
 }
 
 void FirebaseEndpoint::update(uint64_t now) {
-    static bool sent_data = false;
+    static bool sent_data = true;
 
     if (_wifi_manager.get_state() != WiFiState::STA_CONNECTED) { return; }
     if (!_sntp_client.is_synced()) { return; }
@@ -34,6 +34,8 @@ void FirebaseEndpoint::update(uint64_t now) {
             } else {
                 FIC_LOGE(TAG, "Firebase channel is unknown type");
             }
+
+            sent_data = false;
         }, _channels[i]);
     }
 

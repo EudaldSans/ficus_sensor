@@ -44,9 +44,9 @@ public:
 
         final_document[_device_id][tv.tv_sec] = _doc;
 
-        serializeJson(_doc, _output_buffer);
+        size_t output_len = serializeJson(final_document, _output_buffer);
 
-        FIC_LOGI(TAG, "Sending payload");
+        FIC_LOGI(TAG, "Sending payload %d", output_len);
 
         return _http_client.post(_url, _output_buffer, *this);
     }
