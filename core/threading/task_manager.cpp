@@ -10,7 +10,7 @@ TaskManager::~TaskManager() {
     stop();
 
     while(_active) {
-        ITimeDelay::delay_ms(10);
+        TimeDelay::delay_ms(10);
     }
 }
 
@@ -23,7 +23,7 @@ void TaskManager::run(void* instance) {
 
     FIC_LOGI(TAG, "Manager %s tasks start", self->_name);
     while (self->_running) {
-        uint64_t now = ITimeSource::get_time_ms();
+        uint64_t now = TimeSource::get_time_ms();
 
         for (size_t i = 0; i < self->_task_count; i++) {
             ITask* task = self->_tasks[i];
@@ -32,7 +32,7 @@ void TaskManager::run(void* instance) {
             task->update(now);
         }
         
-        ITimeDelay::delay_ms(1);
+        TimeDelay::delay_ms(1);
     }
 
     self->_task_runner->delete_task();

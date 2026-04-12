@@ -5,32 +5,38 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-class EspTimeSource : public ITimeSource {
+class EspTimeSource : public TimeSource {
 public:
     static EspTimeSource& instance() {
         static EspTimeSource inst;  // Thread-safe in C++11+
         return inst;
     }
 
-    uint64_t _get_time_ms() override {
-        return pdTICKS_TO_MS(xTaskGetTickCount());
-    }
-
     // Delete copy/move to enforce singleton
     EspTimeSource(const EspTimeSource&) = delete;
     EspTimeSource& operator=(const EspTimeSource&) = delete;
+
+protected:
+    uint64_t _get_time_ms() override {
+        return pdTICKS_TO_MS(xTaskGetTickCount());
+    }
 
 private:
     EspTimeSource() = default;
 };
 
-class EspTimeDelay : public ITimeDelay {
+class EspTimeDelay : public TimeDelay {
 public:
     static EspTimeDelay& instance() {
         static EspTimeDelay inst;  // Thread-safe in C++11+
         return inst;
     }
 
+    // Delete copy/move to enforce singleton
+    EspTimeDelay(const EspTimeDelay&) = delete;
+    EspTimeDelay& operator=(const EspTimeDelay&) = delete;
+
+protected:
     void _delay_ms(uint32_t ms) override {
         BaseType_t ticks_to_delay = pdMS_TO_TICKS(ms);
 
@@ -40,10 +46,6 @@ public:
             vTaskDelay(ticks_to_delay);
         }
     }
-
-    // Delete copy/move to enforce singleton
-    EspTimeDelay(const EspTimeDelay&) = delete;
-    EspTimeDelay& operator=(const EspTimeDelay&) = delete;
     
 private:
     EspTimeDelay() = default;

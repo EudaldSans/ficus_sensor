@@ -3,12 +3,12 @@
 
 #include <inttypes.h>
 
-class ITimeSource {
+class TimeSource {
 public:
-    virtual ~ITimeSource() = default;
+    virtual ~TimeSource() = default;
     
-    static ITimeSource& instance() { return *_instance; }
-    static void set_instance(ITimeSource* src) { _instance = src; }
+    static TimeSource& instance() { return *_instance; }
+    static void set_instance(TimeSource* src) { _instance = src; }
 
     static uint64_t get_time_ms() { 
         if (_instance != nullptr) return _instance->_get_time_ms(); 
@@ -19,16 +19,16 @@ protected:
     virtual uint64_t _get_time_ms() = 0;
 
 private:
-    static ITimeSource* _instance;
+    static TimeSource* _instance;
 };
 
 
-class ITimeDelay {
+class TimeDelay {
 public:
-    virtual ~ITimeDelay() = default;
+    virtual ~TimeDelay() = default;
 
-    static ITimeDelay& instance() { return *_instance; }
-    static void set_instance(ITimeDelay* delay) { _instance = delay; }
+    static TimeDelay& instance() { return *_instance; }
+    static void set_instance(TimeDelay* delay) { _instance = delay; }
 
     static void delay_ms(uint32_t ms) { 
         if (_instance != nullptr) _instance->_delay_ms(ms); 
@@ -37,7 +37,7 @@ public:
 protected: 
     virtual void _delay_ms(uint32_t ms) = 0;
 private:
-    static ITimeDelay* _instance;
+    static TimeDelay* _instance;
 };
 
 

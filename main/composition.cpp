@@ -114,8 +114,8 @@ WiFiState composition_get_wifi_state() {
 }
 
 void composition_init_hardware() {
-    ITimeSource::set_instance(&EspTimeSource::instance());
-    ITimeDelay::set_instance(&EspTimeDelay::instance());
+    TimeSource::set_instance(&EspTimeSource::instance());
+    TimeDelay::set_instance(&EspTimeDelay::instance());
 
     led_strip.init();
     nvs_flash_init();

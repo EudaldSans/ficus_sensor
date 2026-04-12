@@ -49,7 +49,7 @@ fic_error_t DS18B20::init() {
 /**
  * @brief Triggers a measurement
  * 
- * @warning This function relies on ITimeSource to set the measurement finish time, creating a hidden dependency. 
+ * @warning This function relies on TimeSource to set the measurement finish time, creating a hidden dependency. 
  * So far this has been considered an acceptable DIP violation, since it allows to keep the sensor interface simple.
  * 
  * @param measurement_delay_ms [out] the delay after which the measurement will be ready, in milliseconds
@@ -64,7 +64,7 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
 
     measurement_delay_ms = resolution_delays_ms[_resolution];
 
-    _measure_finish_time_ms = ITimeSource::get_time_ms() + measurement_delay_ms;
+    _measure_finish_time_ms = TimeSource::get_time_ms() + measurement_delay_ms;
 
     return FIC_OK;
 }
@@ -72,13 +72,13 @@ fic_error_t DS18B20::trigger_measurement(uint16_t &measurement_delay_ms) {
 /**
  * @brief Checks whether the last measurement is ready.
  * 
- * @warning This function relies on ITimeSource to check if the measurement is ready, creating a hidden dependency. 
+ * @warning This function relies on TimeSource to check if the measurement is ready, creating a hidden dependency. 
  * So far this has been considered an acceptable DIP violation, since it allows to keep the sensor interface simple.
  * 
  * @return true if the measurement is ready, false otherwise
  */
 bool DS18B20::is_ready() { 
-    return ITimeSource::get_time_ms() >= _measure_finish_time_ms; 
+    return TimeSource::get_time_ms() >= _measure_finish_time_ms; 
 }
 
 fic_error_t DS18B20::set_resolution(ds18b20_resolution_t resolution) {
