@@ -37,14 +37,13 @@ public:
     } 
     
     fic_error_t send_accumulated() {
-        JsonDocument final_document;
         struct timeval tv;
         
         gettimeofday(&tv, NULL);
 
-        final_document[_device_id][tv.tv_sec] = _doc;
+        _doc["timestamp"] = tv.tv_sec;
 
-        size_t output_len = serializeJson(final_document, _output_buffer);
+        size_t output_len = serializeJson(_doc, _output_buffer);
 
         FIC_LOGI(TAG, "Sending payload (%d), %.*s", output_len, output_len, _output_buffer);
 
@@ -77,7 +76,6 @@ private:
 
     void reset_doc() {
         _doc.clear();
-        _doc[_device_id] = JsonObject();
     }
 
     constexpr static char const *TAG = "FIREBASE ENCODER";
