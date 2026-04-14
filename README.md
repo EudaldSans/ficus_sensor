@@ -66,14 +66,10 @@ The firmware follows a strict four-layer architecture. Each layer depends only o
 ```mermaid
 block-beta
   columns 1
-  block:core["core/ — Pure C++ domain logic\nInterfaces, templates, zero SDK deps"]:1
-  end
-  block:hal["espressif_hal/ + freertos_hal/\nConcrete SDK implementations"]:1
-  end
-  block:stack["firebase_stack/\nCloud integration layer"]:1
-  end
-  block:main["main/ — Composition root\nWires everything together"]:1
-  end
+  core["core/ — Pure C++ domain logic\nInterfaces, templates, zero SDK deps"]
+  hal["espressif_hal/ + freertos_hal/\nConcrete SDK implementations"]
+  stack["firebase_stack/\nCloud integration layer"]
+  main["main/ — Composition root\nWires everything together"]
 
   style core fill:#4a9eff,color:#fff,stroke:#2a6ecf
   style hal fill:#f5a623,color:#fff,stroke:#c7851a
