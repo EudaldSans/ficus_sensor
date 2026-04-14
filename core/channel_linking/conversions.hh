@@ -73,6 +73,21 @@ struct LessThan {
     static bool apply(T v) { return v < threshold; }
 };
 
+template<typename T, typename... Conditions>
+struct LogicAnd {
+    static bool apply(T v) {
+        return (Conditions::apply(v) && ...);
+    }
+};
+
+template<typename T, typename... Conditions>
+struct LogicOr {
+    static bool apply(T v) {
+        return (Conditions::apply(v) || ...);
+    }
+};
+
+
 /***  Converter Chains  ***/
 
 /**
