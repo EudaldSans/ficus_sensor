@@ -23,7 +23,7 @@ public:
     ~FirebaseEndpoint() override;
 
     void setup() override;
-    void update(uint64_t now) override;
+    void update(uint32_t now) override;
 
 private:
     FirebaseChannelPtr* _channels;

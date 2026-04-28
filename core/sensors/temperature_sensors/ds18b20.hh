@@ -38,7 +38,7 @@ class DS18B20 : public IAsyncSensor<float> {
 
         IOnewireBus &_bus;
         ds18b20_resolution_t _resolution;
-        uint64_t _measure_finish_time_ms = 0xFFFFFFFFFFFFFFFF;
+        uint32_t _measure_finish_time_ms = 0xFFFFFFFF;
 
         constexpr static char const *TAG = "DS18B20";
 };

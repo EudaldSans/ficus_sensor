@@ -23,7 +23,7 @@ void TaskManager::run(void* instance) {
 
     FIC_LOGI(TAG, "Manager %s tasks start", self->_name);
     while (self->_running) {
-        uint64_t now = TimeSource::get_time_ms();
+        uint32_t now = TimeSource::get_time_ms();
 
         for (size_t i = 0; i < self->_task_count; i++) {
             ITask* task = self->_tasks[i];

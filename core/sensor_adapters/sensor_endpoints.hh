@@ -31,7 +31,7 @@ public:
         _sensor.trigger_measurement(measurement_delay_ms); 
     }
 
-    void update(uint64_t now) override { 
+    void update(uint32_t now) override { 
         T value;
         uint16_t measurement_delay_ms;
 
@@ -75,7 +75,7 @@ public:
         _sensor.init();
     }
     
-    void update(uint64_t now) override {
+    void update(uint32_t now) override {
         T value;
 
         FIC_RETURN_VOID_ON_ERROR(_sensor.measure(value), FIC_LOGE(TAG, "Failed to measure sensor value"));

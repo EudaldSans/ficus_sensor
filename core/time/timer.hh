@@ -6,7 +6,7 @@
 #include "time_source.hh"
 
 struct Timer {
-    uint64_t _activation_time_ms = 0;
+    uint32_t _activation_time_ms = 0;
     uint32_t _duration_ms = 0;
     bool _active = false;
     bool _periodic = true;
@@ -18,7 +18,7 @@ struct Timer {
      * @param now The current time in ms
      * @param periodic Whether the timer is periodic
      */
-    void start(uint32_t duration_ms, uint64_t now, bool periodic = true) {
+    void start(uint32_t duration_ms, uint32_t now, bool periodic = true) {
         _duration_ms = duration_ms;
         _activation_time_ms = now;
         _active = true;
@@ -38,7 +38,7 @@ struct Timer {
     /**
      * @brief Resets the timer 
      */
-    void reset(uint64_t now) { 
+    void reset(uint32_t now) { 
         _activation_time_ms = now; 
         _active = true;
     }
@@ -59,7 +59,7 @@ struct Timer {
      * @param now Current time
      * @return @c true if timer has expired
      */
-    bool has_expired(uint64_t now) {   
+    bool has_expired(uint32_t now) {   
         if (!_active) return false;   
 
         if (now - _activation_time_ms >= _duration_ms) {

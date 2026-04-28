@@ -36,7 +36,7 @@ public:
     }
 
 protected:
-    void perform_action(const LED_action_t& action, uint64_t now) override {
+    void perform_action(const LED_action_t& action, uint32_t now) override {
         _step_timer.update_duration(action.duration_ms);
         _step_timer.reset(now);
         action.on ? _led.on() : _led.off();

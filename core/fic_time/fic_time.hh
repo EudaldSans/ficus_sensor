@@ -10,13 +10,13 @@ public:
     static TimeSource& instance() { return *_instance; }
     static void set_instance(TimeSource* src) { _instance = src; }
 
-    static uint64_t get_time_ms() { 
+    static uint32_t get_time_ms() { 
         if (_instance != nullptr) return _instance->_get_time_ms(); 
         return 0; 
     }
 
 protected:
-    virtual uint64_t _get_time_ms() = 0;
+    virtual uint32_t _get_time_ms() = 0;
 
 private:
     static TimeSource* _instance;
