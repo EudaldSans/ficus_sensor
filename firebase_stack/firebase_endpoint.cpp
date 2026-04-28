@@ -9,7 +9,7 @@ void FirebaseEndpoint::setup() {
     return;
 }
 
-void FirebaseEndpoint::update(uint64_t now) {
+void FirebaseEndpoint::update(uint32_t now) {
     static bool sent_data = true;
 
     if (_wifi_manager.get_state() != WiFiState::STA_CONNECTED) { return; }
