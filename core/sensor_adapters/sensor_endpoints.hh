@@ -8,7 +8,7 @@
 #ifndef SENSOR_ENDPOINTS_H
 #define SENSOR_ENDPOINTS_H
 
-class ISensorEndpointBase : public IIntervalTask {
+class ISensorEndpointBase : public IntervalTask {
 public:
     virtual ~ISensorEndpointBase() = default;
 };

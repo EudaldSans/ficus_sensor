@@ -11,7 +11,7 @@
 #include "timer.hh"
 
 template <typename ActionT, size_t MaxSteps>
-class SignalerBase : public IContinuousTask {
+class SignalerBase : public ContinuousTask {
 public:
     fic_error_t set_custom_signal(const std::vector<ActionT> pattern_composition, int32_t cycles) {
         std::lock_guard<std::mutex> lock(_mutex);

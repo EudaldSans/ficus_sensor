@@ -10,7 +10,7 @@
 #include "task.hh"
 
 template <typename... Links>
-class Router : public IContinuousTask {
+class Router : public ContinuousTask {
 public:
     constexpr Router(Links... l) : _links(l...) {}
 

@@ -49,7 +49,7 @@ ficus_sensor/
 ├── firebase_stack/         Firebase RTDB integration
 │   ├── firebase_channel.hh   Typed channel wrapper with name/unit metadata
 │   ├── firebase_encoder.hh   JSON encoder + HTTP sender (ArduinoJson)
-│   ├── firebase_endpoint.*   IContinuousTask: consumes channels → sends to RTDB
+│   ├── firebase_endpoint.*   ContinuousTask: consumes channels → sends to RTDB
 │   └── firebase_stack_version.hh
 │
 └── main/                   Application entry point & composition root
@@ -103,9 +103,9 @@ A cooperative task loop runs inside a FreeRTOS task. `TaskManager` polls all reg
 ```mermaid
 graph TD
   TM["TaskManager\n(FreeRTOS task, polls each ms)"]
-  TM --> CT["IContinuousTask\n<i>always runs</i>"]
-  TM --> IT["IIntervalTask\n<i>period-based</i>"]
-  TM --> OT["IOneShotTask\n<i>run once</i>"]
+  TM --> CT["ContinuousTask\n<i>always runs</i>"]
+  TM --> IT["IntervalTask\n<i>period-based</i>"]
+  TM --> OT["OneShotTask\n<i>run once</i>"]
 
   CT --> R[Router]
   CT --> RGB[RGBSignaler]
@@ -126,9 +126,9 @@ graph TD
   style ASE fill:#50e3c2,color:#1a1a2e,stroke:#2eb89e
 ```
 
-- **IContinuousTask** — `should_run()` always true. Used by Router, Signalers, FirebaseEndpoint.
-- **IIntervalTask** — runs when `(now - last_run) ≥ period`. Used by sensor endpoints.
-- **IOneShotTask** — runs until `is_finished()`, optionally resettable.
+- **ContinuousTask** — `should_run()` always true. Used by Router, Signalers, FirebaseEndpoint.
+- **IntervalTask** — runs when `(now - last_run) ≥ period`. Used by sensor endpoints.
+- **OneShotTask** — runs until `is_finished()`, optionally resettable.
 
 ### Composition Root
 
@@ -155,7 +155,7 @@ Ficus Sensor's **typed, compile-time data routing system**. It connects producer
 
 **`ChannelLink<From, To, Converter>`** — Typed pipe between two channels. On `sync()`, compares source version to detect changes, applies the converter, and propagates value + validity to the destination.
 
-**`Router<Links...>`** — Variadic template holding all links in a `std::tuple`. Syncs them via `std::apply` + fold expression. As an `IContinuousTask`, it runs every TaskManager tick.
+**`Router<Links...>`** — Variadic template holding all links in a `std::tuple`. Syncs them via `std::apply` + fold expression. As an `ContinuousTask`, it runs every TaskManager tick.
 
 ### Data Flow Example
 
@@ -193,7 +193,7 @@ The Firebase integration adds three components on top of the channel system:
 
 **`firebase_channel<T>`** — Wraps a `value_t<T>` with metadata (`name`, `unit`). Acts as the destination channel for data routed towards the cloud.
 
-**`FirebaseEndpoint`** — An `IContinuousTask` that iterates a list of `firebase_channel` pointers (via `std::variant` + `std::visit`), consumes new values, feeds them to the encoder, and triggers a send when data is ready. Guards on WiFi connectivity and SNTP time sync before transmitting.
+**`FirebaseEndpoint`** — An `ContinuousTask` that iterates a list of `firebase_channel` pointers (via `std::variant` + `std::visit`), consumes new values, feeds them to the encoder, and triggers a send when data is ready. Guards on WiFi connectivity and SNTP time sync before transmitting.
 
 **`FirebaseEncoder`** — Accumulates key-value pairs into an ArduinoJson document, then serializes under `{device_id: {unix_timestamp: {data...}}}` and POSTs to Firebase RTDB.
 

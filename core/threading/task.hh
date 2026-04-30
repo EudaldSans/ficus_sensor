@@ -18,15 +18,15 @@ class ITask {
         virtual bool should_run(uint32_t now) = 0;
 };
 
-class IContinuousTask : public ITask {
+class ContinuousTask : public ITask {
     public:
-        virtual ~IContinuousTask() = default;
+        virtual ~ContinuousTask() = default;
         bool should_run(uint32_t now) override { return true; }
 };
 
-class IOneShotTask : public ITask {
+class OneShotTask : public ITask {
     public:
-        virtual ~IOneShotTask() = default;
+        virtual ~OneShotTask() = default;
         virtual bool is_finished() = 0;
         virtual bool reset() = 0; // Resets the task to be run again
 
@@ -34,9 +34,9 @@ class IOneShotTask : public ITask {
 };
 
 
-class IIntervalTask : public ITask {
+class IntervalTask : public ITask {
     public:
-        virtual ~IIntervalTask() = default;
+        virtual ~IntervalTask() = default;
 
         virtual uint32_t get_run_period_ms() const = 0; // Return interval in milliseconds
         bool should_run(uint32_t now) override { return (now - last_run_time_ms) >= get_run_period_ms(); }

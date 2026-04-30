@@ -14,7 +14,7 @@
 #include "firebase_channel.hh"
 #include "firebase_encoder.hh"
 
-class FirebaseEndpoint : public IContinuousTask {
+class FirebaseEndpoint : public ContinuousTask {
 public:
     template<size_t N>
     FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client, FirebaseEncoder& firebase_encoder) 
