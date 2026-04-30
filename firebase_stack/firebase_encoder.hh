@@ -15,7 +15,7 @@
 
 #include <sys/time.h>
 
-#define MAX_FIREBASE_PAYLOAD_SIZE 512
+#define MAX_FIREBASE_PAYLOAD_SIZE 256
 
 class FirebaseEncoder : public IHTTPListener {
 public:    
