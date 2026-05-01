@@ -11,7 +11,7 @@ HttpClient::~HttpClient() {
     stop();
 
     while(_active) {
-        ITimeDelay::delay_ms(10);
+        TimeDelay::delay_ms(10);
     }
 }
 

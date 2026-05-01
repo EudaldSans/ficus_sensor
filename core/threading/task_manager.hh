@@ -28,6 +28,8 @@ class TaskManager {
         static constexpr uint16_t _k_max_tasks = 32;
         std::array<ITask*, _k_max_tasks> _tasks;
 
+        const char* _name;
+
         std::unique_ptr<ITaskRunner> _task_runner;
         static void run(void* instance);
         
@@ -35,8 +37,6 @@ class TaskManager {
 
         std::atomic_bool _running = false;
         std::atomic_bool _active = false;
-
-        const char* _name;
 
         constexpr static char const *TAG = "TaskManager";
 };

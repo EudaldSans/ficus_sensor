@@ -8,14 +8,16 @@ struct NoConv {
     static T apply(T v) { return v; }
 };
 
+/***  Temperature Conversions  ***/
 struct ToFahrenheit {
-    template<typename T>
-    static T apply(T c) { return (c * 1.8f) + 32.0f; }
+    static float apply(float c) { return (c * 1.8f) + 32.0f; }
 };
 
 struct FromFahrenheit {
     static float apply(float f) { return (f - 32.0f) / 1.8f; }
 };
+
+/***  Mathematical Conversions  ***/
 
 template<float operand>
 struct Addition {
@@ -32,6 +34,67 @@ struct Division {
     static float apply(float v) { return v / operand; }
 };
 
+/***  Bitwise Conversions  ***/
+
+template<typename T, int shift>
+struct BitShiftLeft {
+    static T apply(T v) { return v << shift; }
+};
+
+template<typename T, int shift>
+struct BitShiftRight {
+    static T apply(T v) { return v >> shift; }
+};
+
+template<typename T, int mask>
+struct BitMask {
+    static T apply(T v) { return v & mask; }
+};
+
+/*** Logical Conversions  ***/
+
+template<typename T, T value>
+struct EqualTo {
+    static bool apply(T v) { return v == value; }
+};
+
+template<typename T, T value>
+struct NotEqualTo {
+    static bool apply(T v) { return v != value; }
+};
+
+template<typename T, T threshold>
+struct GreaterThan {
+    static bool apply(T v) { return v > threshold; }
+};
+
+template<typename T, T threshold>
+struct LessThan {
+    static bool apply(T v) { return v < threshold; }
+};
+
+template<typename T, typename... Conditions>
+struct LogicAnd {
+    static bool apply(T v) {
+        return (Conditions::apply(v) && ...);
+    }
+};
+
+template<typename T, typename... Conditions>
+struct LogicOr {
+    static bool apply(T v) {
+        return (Conditions::apply(v) || ...);
+    }
+};
+
+
+/***  Converter Chains  ***/
+
+/**
+ * @brief Casts a value to float and applies a chain of conversion steps, then casts it again to the original value in the end. 
+ * 
+ * @tparam Steps all the conversions to apply, in the order they should be applied.
+ */
 template<typename... Steps>
 struct MathChain {
     template <typename T>
@@ -42,6 +105,11 @@ struct MathChain {
     }
 };
 
+/**
+ * @brief Applies a chain of conversions to a value, in the order they are specified.
+ * 
+ * @tparam Steps all the conversions to apply, in the order they should be applied.
+ */
 template <typename... Steps>
 struct ConverterChain {
     template <typename T>

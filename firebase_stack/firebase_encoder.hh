@@ -13,7 +13,9 @@
 
 #include "fic_log.hh"
 
-#define MAX_FIREBASE_PAYLOAD_SIZE 512
+#include <sys/time.h>
+
+#define MAX_FIREBASE_PAYLOAD_SIZE 256
 
 class FirebaseEncoder : public IHTTPListener {
 public:    
@@ -29,15 +31,22 @@ public:
             return FIC_ERR_NO_MEM;
         }
 
-        _doc[_device_id][name] = data;
+        _doc[name] = data;
         FIC_LOGI(TAG, "Added %s to JSON doc", name);
         return FIC_OK;
     } 
     
     fic_error_t send_accumulated() {
-        serializeJson(_doc, _output_buffer);
+        struct timeval tv;
+        
+        gettimeofday(&tv, NULL);
 
-        FIC_LOGI(TAG, "Sending payload");
+        _doc["timestamp"] = tv.tv_sec;
+        _doc["device_id"] = _device_id;
+
+        size_t output_len = serializeJson(_doc, _output_buffer);
+
+        FIC_LOGI(TAG, "Sending payload (%d), %.*s", output_len, output_len, _output_buffer);
 
         return _http_client.post(_url, _output_buffer, *this);
     }
@@ -68,7 +77,6 @@ private:
 
     void reset_doc() {
         _doc.clear();
-        _doc[_device_id] = JsonObject();
     }
 
     constexpr static char const *TAG = "FIREBASE ENCODER";

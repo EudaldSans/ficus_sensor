@@ -14,6 +14,11 @@ enum log_level_t {
     FIC_ERROR
 };
 
+/**
+ * @brief Having the back end as a pointer serves to decouple logging calls from actual implementation, 
+ * while allowing for C++ and C code to call logging functions. If needed, a wraper function could be used 
+ * to allow for multiple backend calls at the same time (e.g.: a composite backend with multiple pointers)
+ */
 typedef void (*fic_log_backend_t)(log_level_t level, const char* tag, const char* format, va_list args);
 
 void fic_log_set_backend(fic_log_backend_t backend);

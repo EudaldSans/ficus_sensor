@@ -1,5 +1,6 @@
 #include <mutex>
 #include <atomic>
+#include <array>
 
 #include "fic_errors.hh"
 #include "task.hh"
@@ -39,7 +40,7 @@ public:
     }
 
 protected:
-    void perform_action(const RGB_action_t& action, uint64_t now) override {
+    void perform_action(const RGB_action_t& action, uint32_t now) override {
         _step_timer.update_duration(action.duration_ms);
         _step_timer.reset(now);
         action.on ? _led.set_color(action.color) : _led.off();

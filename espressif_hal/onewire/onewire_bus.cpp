@@ -19,7 +19,7 @@ OnewireBus::~OnewireBus() {
 fic_error_t OnewireBus::init(uint32_t max_rx_bytes) {
     if (_initialized) {
         FIC_LOGW(TAG, "Tried to initialize an already initialized bus!");
-        return FIC_ERR_NOT_ALLOWED;
+        return FIC_OK;
     }
 
     onewire_bus_config_t bus_config = {};
@@ -33,6 +33,8 @@ fic_error_t OnewireBus::init(uint32_t max_rx_bytes) {
         FIC_LOGE(TAG, "Unable to create new onewire unit"); 
         return FIC_ERR_SDK_FAIL;
     }
+
+    FIC_LOGI(TAG, "Initialized onewire bus");
 
     _initialized = true;
 

@@ -20,6 +20,7 @@ set(hardware_deps
 set(communications
     wifi
     http_client
+    sntp
 )
 
 set(sensor_logic 
@@ -39,7 +40,7 @@ set(logging
 )
 
 idf_component_register(
-    SRCS "ficus_sensor_main.cpp"
+    SRCS "ficus_sensor_main.cpp" "composition.cpp"
     INCLUDE_DIRS "."
     PRIV_REQUIRES 
         ${base_deps}

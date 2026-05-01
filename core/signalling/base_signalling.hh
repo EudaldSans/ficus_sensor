@@ -11,7 +11,7 @@
 #include "timer.hh"
 
 template <typename ActionT, size_t MaxSteps>
-class SignalerBase : public IContinuousTask {
+class SignalerBase : public ContinuousTask {
 public:
     fic_error_t set_custom_signal(const std::vector<ActionT> pattern_composition, int32_t cycles) {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -27,7 +27,7 @@ public:
     }
 
 protected:
-    virtual void perform_action(const ActionT& action, uint64_t now) = 0;
+    virtual void perform_action(const ActionT& action, uint32_t now) = 0;
     virtual void turn_off() = 0;
 
     /**
@@ -57,7 +57,7 @@ private:
 
     void setup() override { turn_off(); }
 
-    void update(uint64_t now) override {
+    void update(uint32_t now) override {
         if (_new_request) {
             std::lock_guard<std::mutex> lock(_mutex);
             _current_step = 0;
