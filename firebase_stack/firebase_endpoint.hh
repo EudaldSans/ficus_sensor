@@ -14,11 +14,15 @@
 #include "firebase_channel.hh"
 #include "firebase_encoder.hh"
 
+#include "timer.hh"
+
 class FirebaseEndpoint : public ContinuousTask {
 public:
     template<size_t N>
-    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client, FirebaseEncoder& firebase_encoder) 
-        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client), _firebase_encoder(firebase_encoder) {}
+    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client, FirebaseEncoder& firebase_encoder, uint32_t emit_time_ms) 
+        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client), _firebase_encoder(firebase_encoder) {
+            _emit_timeout.start(emit_time_ms);
+        }
 
     ~FirebaseEndpoint() override;
 
@@ -32,6 +36,8 @@ private:
     IWiFiStatusManager& _wifi_manager;
     ISntpClient& _sntp_client;
     FirebaseEncoder& _firebase_encoder;
+
+    Timer _emit_timeout;
 
     constexpr static char const *TAG = "FIREBASE ENDPOINT";
 };

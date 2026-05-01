@@ -14,6 +14,7 @@ void FirebaseEndpoint::update(uint32_t now) {
 
     if (_wifi_manager.get_state() != WiFiState::STA_CONNECTED) { return; }
     if (!_sntp_client.is_synced()) { return; }
+    if (!_emit_timeout.has_expired()) { return; }
     
     for (size_t i = 0; i < _num_channels; i++) {
         std::visit([this](auto& channel) {
