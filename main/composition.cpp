@@ -113,7 +113,7 @@ static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
 static FirebaseEncoder    encoder(firebase_url, device_id.c_str(), http_client);
 
-static uint32_t firebase_emit_period_ms = 2000;
+static uint32_t firebase_emit_period_ms = 3600 * 1000;
 static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller, sntp_client, encoder, firebase_emit_period_ms);
 
 // ── Extern references for main ──
