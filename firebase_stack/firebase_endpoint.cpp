@@ -10,11 +10,13 @@ void FirebaseEndpoint::setup() {
 }
 
 void FirebaseEndpoint::update(uint32_t now) {
-    static bool sent_data = true;
+    static bool send_data = false;
 
     if (_wifi_manager.get_state() != WiFiState::STA_CONNECTED) { return; }
     if (!_sntp_client.is_synced()) { return; }
     if (!_emit_timeout.has_expired()) { return; }
+
+    send_data = false;
     
     for (size_t i = 0; i < _num_channels; i++) {
         std::visit([this](auto& channel) {
@@ -36,14 +38,12 @@ void FirebaseEndpoint::update(uint32_t now) {
                 FIC_LOGE(TAG, "Firebase channel is unknown type");
             }
 
-            sent_data = false;
+            send_data = true;
+
         }, _channels[i]);
     }
 
-    if(!sent_data) {
-        _firebase_encoder.send_accumulated();
-        sent_data = true;
-    }
+    if (send_data) _firebase_encoder.send_accumulated();
 }
 
 

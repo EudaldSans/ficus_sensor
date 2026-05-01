@@ -1,5 +1,7 @@
 #include "composition.hh"
 
+#include <cstdio>
+
 // ── Hardware includes ──
 #include "onewire_bus.hh"
 #include "adc.hh"
@@ -27,11 +29,14 @@
 
 // ── Platform includes ──
 #include "esp_time.hh"
+#include "esp_mac.h"
 #include "nvs_flash.h"
 
 #include "task_manager.hh"
 
 #include "fic_log.hh"
+
+static std::string get_device_id();
 
 // ── Constants ──
 static constexpr uint8_t  ONEWIRE_BUS_GPIO     = 18;
@@ -97,13 +102,16 @@ static Router router{
     ChannelLink<float, float>   {h_sensor_output, firebase_humidity_2.value}
 };
 
+// -- Identity --
+static const std::string device_id = get_device_id();
+
 // ── Endpoints ──
 static AsyncSensorEndpoint<float> t_endpoint(t_sensor_output, t_sensor, SENSOR_MEAS_PERIOD_MS);
 static SensorEndpoint<float>      h_endpoint(h_sensor_output, h_sensor, SENSOR_MEAS_PERIOD_MS);
 
 static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
-static FirebaseEncoder    encoder(firebase_url, "id_test", http_client);
+static FirebaseEncoder    encoder(firebase_url, device_id.c_str(), http_client);
 
 static uint32_t firebase_emit_period_ms = 2000;
 static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller, sntp_client, encoder, firebase_emit_period_ms);
@@ -139,4 +147,15 @@ void composition_start_comms() {
     http_client.start();
 
     sntp_client_impl.add_server("pool.ntp.org");
+}
+
+static std::string get_device_id() {
+    uint8_t mac[6];
+    esp_read_mac(mac, ESP_MAC_WIFI_STA);
+
+    char mac_cstr[13];
+    snprintf(mac_cstr, sizeof(mac_cstr), "%02X%02X%02X%02X%02X%02X",
+             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    return std::string(mac_cstr);
 }

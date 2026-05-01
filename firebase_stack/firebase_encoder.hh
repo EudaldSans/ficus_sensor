@@ -42,6 +42,7 @@ public:
         gettimeofday(&tv, NULL);
 
         _doc["timestamp"] = tv.tv_sec;
+        _doc["device_id"] = _device_id;
 
         size_t output_len = serializeJson(_doc, _output_buffer);
 

@@ -18,6 +18,8 @@
 #include "version.hh"
 #include "composition.hh"
 
+#include "timer.hh"
+
 static constexpr Version product_version = Version(0, 0, 1, 0);
 
 static const char *TAG = "main";
@@ -42,7 +44,30 @@ extern "C" void app_main(void) {
     uint32_t blink_time = 500;
     uint16_t cycles = 2;
 
+    Timer main_timer;
+    Timer color_timer;
+
+    Color color = LED_BLUE;
+
+    color_timer.start(5000, true);
+    main_timer.start(2000, true);
+
     while (1) {
+        if (!main_timer.has_expired()) {
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+            continue;
+        }
+
+        if (color_timer.has_expired()) {
+            if (color.blue) {
+                color = LED_RED;
+            } else if (color.red) {
+                color = LED_GREEN;
+            } else if (color.green) {
+                color = LED_BLUE;
+            }
+        }
+
         if (!sntp_client.is_syncing() && !sntp_client.is_synced()) {
             if (composition_get_wifi_state() == WiFiState::STA_CONNECTED) {
                 FIC_LOGI(TAG, "Starting time sync");
@@ -51,11 +76,9 @@ extern "C" void app_main(void) {
         }
 
         if (composition_get_wifi_state() != WiFiState::STA_CONNECTED) {
-            rgb_signaler.set_blink(LED_BLUE, blink_time, LED_OFF, blink_time, cycles);
+            rgb_signaler.set_blink(color, blink_time, LED_OFF, blink_time, cycles);
         } else {
-            rgb_signaler.set_blink(LED_BLUE, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
+            rgb_signaler.set_blink(color, blink_time / 5, LED_OFF, blink_time / 5, cycles * 5);
         }
-
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 }
