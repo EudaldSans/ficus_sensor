@@ -17,7 +17,7 @@ public:
     EspTimeSource& operator=(const EspTimeSource&) = delete;
 
 protected:
-    uint632_t _get_time_ms() override {
+    uint32_t _get_time_ms() override {
         return pdTICKS_TO_MS(xTaskGetTickCount());
     }
 

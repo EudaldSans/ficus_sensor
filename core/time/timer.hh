@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include "time_source.hh"
+#include "fic_time.hh"
 
 struct Timer {
     uint32_t _activation_time_ms = 0;
