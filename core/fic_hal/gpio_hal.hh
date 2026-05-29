@@ -1,45 +1,21 @@
 #ifndef GPIO_HAL_HH
 #define GPIO_HAL_HH
 
-#include "fic_errors.hh"
-
 #include <inttypes.h>
+#include <concepts>
 
 typedef void (*gpio_callback) (uint32_t activation_time_ms);
 
-struct GPIOConfig;
-
-class GPIOLifecycle {
-public:
-    GPIOLifecycle(const GPIOConfig& config) : _config(config) {};
-    ~GPIOLifecycle() = default;
-
-    fic_error_t init();
-    fic_error_t deinit();
-private:
-    const GPIOConfig& _config;
+template <typename T>
+concept GPIOInputConcept = requires(T a, gpio_callback cb) {
+    { a.get_status() } -> std::same_as<bool>;
+    { a.set_callback(cb) } -> std::same_as<void>;
 };
 
-class GPIOInput {
-public:
-    GPIOInput(gpio_callback cb = nullptr) : _cb(cb) {};
-    ~GPIOInput() = default;
-
-    bool get_status();
-
-    void set_callback(gpio_callback cb) {_cb = cb;}
-private:
-    gpio_callback _cb;
+template <typename T>
+concept GPIOOutput = requires(T a) {
+    { a.on() } -> std::same_as<void>;
+    { a.off() } -> std::same_as<void>;
 };
-
-class GPIOOutput {
-public:
-    GPIOOutput() = default;
-    ~GPIOOutput() = default;
-
-    void on();
-    void off();
-};
-
 
 #endif
