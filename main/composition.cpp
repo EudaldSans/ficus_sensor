@@ -44,7 +44,8 @@ static constexpr uint8_t  LED_GPIO              = 8;
 static constexpr uint32_t LED_STRIP_RMT_RES_HZ  = 10 * 1000 * 1000;
 static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 30000;
 
-static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/test_node.json";
+static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/";
+static const char firebase_root[] = "plant_data";
 
 // ── Embedded certificate ──
 extern const char root_cert_pem_start[] asm("_binary_root_cert_pem_start");
@@ -111,7 +112,7 @@ static SensorEndpoint<float>      h_endpoint(h_sensor_output, h_sensor, SENSOR_M
 
 static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
-static FirebaseEncoder    encoder(firebase_url, device_id.c_str(), http_client);
+static FirebaseEncoder    encoder(firebase_url, device_id.c_str(), firebase_root, http_client);
 
 static uint32_t firebase_emit_period_ms = 3600 * 1000;
 static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller, sntp_client, encoder, firebase_emit_period_ms);

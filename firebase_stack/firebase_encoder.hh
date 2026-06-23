@@ -16,10 +16,11 @@
 #include <sys/time.h>
 
 #define MAX_FIREBASE_PAYLOAD_SIZE 256
+#define MAX_FIREBASE_URL_SIZE 256
 
 class FirebaseEncoder : public IHTTPListener {
 public:    
-    FirebaseEncoder(const char* url, const char* device_id, IHttpClient& http_client) : _url(url), _device_id(device_id), _http_client(http_client), _doc() {
+    FirebaseEncoder(const char* url, const char* device_id, const char* firebase_root, IHttpClient& http_client) : _url(url), _device_id(device_id), _firebase_root(firebase_root), _http_client(http_client), _doc() {
         reset_doc();
     }
     ~FirebaseEncoder() = default;
@@ -40,15 +41,16 @@ public:
         struct timeval tv;
         
         gettimeofday(&tv, NULL);
-
-        _doc["timestamp"] = tv.tv_sec;
-        _doc["device_id"] = _device_id;
+        long long timestamp = tv.tv_sec;
 
         size_t output_len = serializeJson(_doc, _output_buffer);
 
+        char target_url[MAX_FIREBASE_URL_SIZE];
+        snprintf(target_url, sizeof(target_url), "%s/%s/%s/%lld.json", _base_url, _firebase_root, _device_id, timestamp);
+
         FIC_LOGI(TAG, "Sending payload (%d), %.*s", output_len, output_len, _output_buffer);
 
-        return _http_client.post(_url, _output_buffer, *this);
+        return _http_client.put(target_url, _output_buffer, *this);
     }
 
     void on_success(const Response& resp) {
