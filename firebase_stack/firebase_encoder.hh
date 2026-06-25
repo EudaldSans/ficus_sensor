@@ -46,7 +46,7 @@ public:
         size_t output_len = serializeJson(_doc, _output_buffer);
 
         char target_url[MAX_FIREBASE_URL_SIZE];
-        snprintf(target_url, sizeof(target_url), "%s/%s/%s/%lld.json", _base_url, _firebase_root, _device_id, timestamp);
+        snprintf(target_url, sizeof(target_url), "%s/%s/%s/%lld.json", _url, _firebase_root, _device_id, timestamp);
 
         FIC_LOGI(TAG, "Sending payload (%d), %.*s", output_len, output_len, _output_buffer);
 
@@ -71,6 +71,7 @@ private:
 
     const char* _url;
     const char* _device_id;
+    const char* _firebase_root;
 
     char _output_buffer[MAX_FIREBASE_PAYLOAD_SIZE];
 
