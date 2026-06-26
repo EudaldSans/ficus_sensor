@@ -44,7 +44,7 @@ static constexpr uint8_t  LED_GPIO              = 8;
 static constexpr uint32_t LED_STRIP_RMT_RES_HZ  = 10 * 1000 * 1000;
 static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 30000;
 
-static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app/";
+static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app";
 static const char firebase_root[] = "plant_data";
 
 // ── Embedded certificate ──
@@ -82,25 +82,19 @@ EspSntpClient sntp_client_impl = EspSntpClient(wifi_controller);
 // ── Channels ──
 static value_t<float> t_sensor_output;
 static value_t<float> h_sensor_output;
-static firebase_channel<int>        firebase_tempertaure("temperature");
-static firebase_channel<float>      firebase_tempertaure_2("temperature_2");
-static firebase_channel<int>        firebase_humidity("humidity");
-static firebase_channel<float>      firebase_humidity_2("humidity_2");
+static firebase_channel<float>        firebase_tempertaure("temperature");
+static firebase_channel<float>        firebase_humidity("humidity");
 
 // ── Firebase channels ──
 static FirebaseChannelPtr firebase_channel_list[] = {
     &firebase_tempertaure, 
     &firebase_humidity,
-    &firebase_tempertaure_2,
-    &firebase_humidity_2
 };
 
 // ── Routing ──
 static Router router{
-    ChannelLink<float, int>     {t_sensor_output, firebase_tempertaure.value},
-    ChannelLink<float, int>     {h_sensor_output, firebase_humidity.value},
-    ChannelLink<float, float>   {t_sensor_output, firebase_tempertaure_2.value},
-    ChannelLink<float, float>   {h_sensor_output, firebase_humidity_2.value}
+    ChannelLink<float, float>     {t_sensor_output, firebase_tempertaure.value},
+    ChannelLink<float, float>     {h_sensor_output, firebase_humidity.value},
 };
 
 // -- Identity --
