@@ -19,10 +19,8 @@
 class FirebaseEndpoint : public ContinuousTask {
 public:
     template<size_t N>
-    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client, FirebaseEncoder& firebase_encoder, uint32_t emit_time_ms) 
-        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client), _firebase_encoder(firebase_encoder) {
-            _emit_timeout.start(emit_time_ms);
-        }
+    FirebaseEndpoint(FirebaseChannelPtr (&channels)[N], IWiFiStatusManager& wifi_manager, ISntpClient& sntp_client, FirebaseEncoder& firebase_encoder, uint32_t emit_period_ms) 
+        : _channels(channels), _num_channels(N), _wifi_manager(wifi_manager), _sntp_client(sntp_client), _firebase_encoder(firebase_encoder), _emit_period_ms(emit_period_ms) { }
 
     ~FirebaseEndpoint() override;
 
@@ -30,6 +28,12 @@ public:
     void update(uint32_t now) override;
 
 private:
+    enum time_sync_phase {
+        no_sync,
+        first_sync,
+        full_sync
+    };
+
     FirebaseChannelPtr* _channels;
     size_t _num_channels;
 
@@ -38,6 +42,9 @@ private:
     FirebaseEncoder& _firebase_encoder;
 
     Timer _emit_timeout;
+
+    uint32_t _emit_period_ms;
+    time_sync_phase _sync_state = no_sync;
 
     constexpr static char const *TAG = "FIREBASE ENDPOINT";
 };
