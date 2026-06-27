@@ -6,10 +6,19 @@
 #include "fic_time.hh"
 
 struct Timer {
+private:
     uint32_t _activation_time_ms = 0;
     uint32_t _duration_ms = 0;
     bool _active = false;
     bool _periodic = true;
+
+public:
+    /**
+     * @brief Check if timer is active
+     * 
+     * @return @c true if timer is active
+     */
+    bool is_active() const {return _active;}
 
     /**
      * @brief Starts the timer with an externally provided time
