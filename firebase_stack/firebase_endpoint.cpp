@@ -29,6 +29,7 @@ void FirebaseEndpoint::update(uint32_t now) {
 
         FIC_LOGI(TAG, "Syncing report time: Time since sync %d, time to sync %d", time_since_synchronization, time_to_next_synchronization);
 
+        // Using update here yields perfect synchronization
         _emit_timeout.update_duration(time_to_next_synchronization);
         _sync_state = first_sync;
 
@@ -36,7 +37,10 @@ void FirebaseEndpoint::update(uint32_t now) {
 
     } else if (_sync_state == first_sync) {
         FIC_LOGI(TAG, "First sync completed");
-        _emit_timeout.update_duration(_emit_period_ms);
+        bool periodic = true;  
+
+        // Using update here would shift syncronization by 1 second
+        _emit_timeout.start(_emit_period_ms, now, periodic);
         _sync_state = full_sync;
     }
 
