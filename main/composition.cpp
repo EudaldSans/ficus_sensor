@@ -45,7 +45,10 @@ static constexpr uint32_t LED_STRIP_RMT_RES_HZ  = 10 * 1000 * 1000;
 static constexpr uint16_t SENSOR_MEAS_PERIOD_MS = 30000;
 
 static const char firebase_url[] = "https://ficus-base-default-rtdb.europe-west1.firebasedatabase.app";
-static const char firebase_root[] = "plant_data";
+static const char firebase_root[] = "plants";
+
+static const char temperature_key[] = "t";
+static const char soil_moisture_key[] = "sm";
 
 // ── Embedded certificate ──
 extern const char root_cert_pem_start[] asm("_binary_root_cert_pem_start");
@@ -67,10 +70,10 @@ static LEDStripSingle         led_strip(LED_GPIO, LED_MODEL_WS2812, LED_STRIP_RM
 static RGBSignaler            rgb_signaler_impl(led_strip);
 
 static OnewireBus             onewire(ONEWIRE_BUS_GPIO);
-static DS18B20                t_sensor(onewire, DS18B20::resolution_12B);
+static DS18B20                temperature_sensor(onewire, DS18B20::resolution_12B);
 
 static ADC                    adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
-static AnalogHumiditySensor   h_sensor(adc, 3300);
+static AnalogHumiditySensor   soil_moisture_sensor(adc, 3300);
 
 // ── WiFi ──
 static WiFiContext            wifi_context;
@@ -80,29 +83,29 @@ static WiFiStation            wifi_station(wifi_context);
 EspSntpClient sntp_client_impl = EspSntpClient(wifi_controller);
 
 // ── Channels ──
-static value_t<float> t_sensor_output;
-static value_t<float> h_sensor_output;
-static firebase_channel<float>        firebase_tempertaure("temperature");
-static firebase_channel<float>        firebase_humidity("humidity");
+static value_t<float> temperature_sensor_output;
+static value_t<float> soil_moisture_sensor_output;
+static firebase_channel<float>        firebase_tempertaure(temperature_key);
+static firebase_channel<float>        firebase_soil_moisture(soil_moisture_key);
 
 // ── Firebase channels ──
 static FirebaseChannelPtr firebase_channel_list[] = {
     &firebase_tempertaure, 
-    &firebase_humidity,
+    &firebase_soil_moisture,
 };
 
 // ── Routing ──
 static Router router{
-    ChannelLink<float, float>     {t_sensor_output, firebase_tempertaure.value},
-    ChannelLink<float, float>     {h_sensor_output, firebase_humidity.value},
+    ChannelLink<float, float>     {temperature_sensor_output, firebase_tempertaure.value},
+    ChannelLink<float, float>     {soil_moisture_sensor_output, firebase_soil_moisture.value},
 };
 
 // -- Identity --
 static const std::string device_id = get_device_id();
 
 // ── Endpoints ──
-static AsyncSensorEndpoint<float> t_endpoint(t_sensor_output, t_sensor, SENSOR_MEAS_PERIOD_MS);
-static SensorEndpoint<float>      h_endpoint(h_sensor_output, h_sensor, SENSOR_MEAS_PERIOD_MS);
+static AsyncSensorEndpoint<float> temperature_endpoint(temperature_sensor_output, temperature_sensor, SENSOR_MEAS_PERIOD_MS);
+static SensorEndpoint<float>      soil_moisture_endpoint(soil_moisture_sensor_output, soil_moisture_sensor, SENSOR_MEAS_PERIOD_MS);
 
 static FakeTLSProvider    tls_provider;
 static HttpsClient        http_client(tls_provider);
@@ -128,8 +131,8 @@ void composition_init_hardware() {
 }
 
 void composition_add_tasks(TaskManager& tm) {
-    tm.add_task(&t_endpoint);
-    tm.add_task(&h_endpoint);
+    tm.add_task(&temperature_endpoint);
+    tm.add_task(&soil_moisture_endpoint);
     tm.add_task(&rgb_signaler_impl);
     tm.add_task(&router);
     tm.add_task(&firebase_endpoint);
