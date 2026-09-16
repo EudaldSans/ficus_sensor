@@ -1,0 +1,49 @@
+#ifndef ESP_GPIO_HH
+#define ESP_GPIO_HH
+
+#include "driver/gpio.h"
+#include "gpio_hal.hh"
+
+enum pull_mode_t {
+    PULL_DISABLED,
+    PULL_UP,
+    PULL_DOWN
+};
+
+template<gpio_num_t pin, gpio_mode_t mode, pull_mode_t pull_mode>
+class EspGPIO {
+public:
+    explicit EspGPIO() {
+        gpio_pullup_t pull_up_mode = GPIO_PULLUP_DISABLE;
+        gpio_pulldown_t pull_down_mode = GPIO_PULLDOWN_DISABLE;
+        
+        if constexpr (pull_mode == PULL_DOWN) pull_down_mode = GPIO_PULLDOWN_ENABLE;
+        if constexpr (pull_mode == PULL_UP) pull_up_mode = GPIO_PULLUP_ENABLE;
+
+        gpio_config_t io_conf = {
+            .pin_bit_mask = (1ULL << pin),
+            .mode = mode,
+            .pull_up_en = pull_up_mode,
+            .pull_down_en = pull_down_mode,
+            .intr_type = GPIO_INTR_DISABLE,
+        };
+        gpio_config(&io_conf);
+    }
+
+    void set() {
+        gpio_set_level(pin, 1);
+    }
+
+    void reset() {
+        gpio_set_level(pin, 0);
+    }
+
+    bool get_state() const {
+        return static_cast<bool>(gpio_get_level(pin));
+    }
+};
+
+// Validate class satisfies GPIO concept
+static_assert(GPIO<EspGPIO<GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT, PULL_DISABLED>>);
+
+#endif
