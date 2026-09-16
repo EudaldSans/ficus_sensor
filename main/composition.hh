@@ -10,15 +10,12 @@
 #include "button.hh"
 #include "esp_gpio.hh"
 
-using BootPinGpio = EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, PULL_DISABLED>;
-using BootButton = Button<BootPinGpio>;
-
 class TaskManager;
 
 extern RGBSignaler&     rgb_signaler;
 extern EspSntpClient&   sntp_client;
 
-extern BootButton& boot_button;
+extern ButtonBase& boot_button;
 
 WiFiState composition_get_wifi_state();
 

@@ -77,8 +77,10 @@ static DS18B20                temperature_sensor(onewire, DS18B20::resolution_12
 static ADC                    adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
 static AnalogHumiditySensor   soil_moisture_sensor(adc, 3300);
 
-static EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, PULL_DISABLED>      button_gpio{};
-static BootButton                                               boot_button_impl{button_gpio};
+using BootPinGpio = EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, PULL_DISABLED>;
+using BootButton = Button<BootPinGpio>;
+static BootPinGpio              button_gpio{};
+static BootButton               boot_button_impl{button_gpio};
 
 // ── WiFi ──
 static WiFiContext            wifi_context;
@@ -123,7 +125,7 @@ static FirebaseEndpoint firebase_endpoint(firebase_channel_list, wifi_controller
 RGBSignaler& rgb_signaler       = rgb_signaler_impl;
 EspSntpClient& sntp_client      = sntp_client_impl;
 
-BootButton& boot_button         = boot_button_impl;
+ButtonBase& boot_button         = boot_button_impl;
 
 WiFiState composition_get_wifi_state() {
     return wifi_controller.get_state();
