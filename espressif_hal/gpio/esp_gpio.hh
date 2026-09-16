@@ -26,12 +26,6 @@ public:
     
 protected:
     EspGPIOBase(gpio_num_t pin, gpio_mode_t mode, gpio_pullup_t pull_up_mode, gpio_pulldown_t pull_down_mode) : pin(pin) {
-        gpio_pullup_t pull_up_mode = GPIO_PULLUP_DISABLE;
-        gpio_pulldown_t pull_down_mode = GPIO_PULLDOWN_DISABLE;
-        
-        if constexpr (pull_mode == PULL_DOWN) pull_down_mode = GPIO_PULLDOWN_ENABLE;
-        if constexpr (pull_mode == PULL_UP) pull_up_mode = GPIO_PULLUP_ENABLE;
-
         gpio_config_t io_conf = {
             .pin_bit_mask = (1ULL << pin),
             .mode = mode,

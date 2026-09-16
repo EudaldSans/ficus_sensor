@@ -7,18 +7,8 @@ class ButtonBase {
 public:
     // Returns true if the button is currently pressed
     bool is_pressed() const {
-        bool raw_state = pin_.get_state();
-        if constexpr (ActiveLow) {
-            return !raw_state;
-        } else {
-            return raw_state;
-        }
-    }
-
-    // Returns true if the button is currently pressed
-    bool is_pressed() const {
-        bool raw_state = pin_.get_state();
-        if constexpr (ActiveLow) {
+        bool raw_state = _pin.get_state();
+        if constexpr (_active_low) {
             return !raw_state;
         } else {
             return raw_state;
@@ -26,17 +16,17 @@ public:
     }
 
 protected:
-    ButtonBase(GpioPin& pin) : pin_(pin) {}
+    ButtonBase(GpioPin& pin, bool active_low) : _pin(pin), _active_low(active_low) {}
 
 private:
-    GpioPin& pin_;
+    GpioPin& _pin;
+    bool _active_low;
 };
 
-// Active low by default (internal/external pull-up, pressed = LOW/0)
-template <GPIO GpioPin, bool ActiveLow = true>
+template <GPIO GpioPin, bool active_low>
 class Button : public ButtonBase {
 public:
-    explicit Button(GpioPin& pin) : ButtonBase(pin) {}
+    explicit Button(GpioPin& pin) : ButtonBase(pin, active_low) {}
 };
 
 #endif // BUTTON_HH
