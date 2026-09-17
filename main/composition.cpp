@@ -77,8 +77,8 @@ static DS18B20                temperature_sensor(onewire, DS18B20::resolution_12
 static ADC                    adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
 static AnalogHumiditySensor   soil_moisture_sensor(adc, 3300);
 
-using BootPinGpio = EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, PULL_DISABLED>;
-using BootButton = Button<BootPinGpio>;
+using BootPinGpio = EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, GPIO_PULLUP_DISABLE, GPIO_PULLDOWN_DISABLE>;
+using BootButton = Button<>;
 static BootPinGpio              button_gpio{};
 static BootButton               boot_button_impl{button_gpio};
 

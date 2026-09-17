@@ -8,7 +8,7 @@ public:
     // Returns true if the button is currently pressed
     bool is_pressed() const {
         bool raw_state = pin_.get_state();
-        if constexpr (active_low) {
+        if (_active_low) {
             return !raw_state;
         } else {
             return raw_state;
