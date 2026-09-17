@@ -12,20 +12,20 @@ enum pull_mode_t {
 
 class EspGPIOBase : public IGPIO {
 public: 
-    void set() override {
+    void set() inline override {
         gpio_set_level(_pin, 1);
     }
 
-    void reset() override {
+    void reset() inline override {
         gpio_set_level(_pin, 0);
     }
 
-    bool get_state() const override {
+    bool get_state() const inline override {
         return static_cast<bool>(gpio_get_level(_pin));
     }
     
 protected:
-    EspGPIOBase(gpio_num_t pin, gpio_mode_t mode, gpio_pullup_t pull_up_mode, gpio_pulldown_t pull_down_mode) : _pin(pin) {
+    EspGPIOBase(gpio_num_t pin, gpio_mode_t mode, gpio_pullup_t pull_up_mode, gpio_pulldown_t pull_down_mode) : IGPIO(), _pin(pin) {
         gpio_config_t io_conf = {
             .pin_bit_mask = (1ULL << _pin),
             .mode = mode,
