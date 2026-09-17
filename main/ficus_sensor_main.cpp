@@ -29,6 +29,11 @@ static TaskManager task_manager(
     std::make_unique<FreeRTOS_TaskRunner>("main_task_manager", 4096, tskNO_AFFINITY)
 );
 
+static TaskManager hw_task_manager(
+    "hw_task_manager",
+    std::make_unique<FreeRTOS_TaskRunner>("hw_task_manager", 4096, tskNO_AFFINITY)
+);
+
 extern "C" void app_main(void) {  
     // Always start logging backend first, so other components can print logs
     fic_log_set_backend(esp32_backend);
@@ -37,9 +42,11 @@ extern "C" void app_main(void) {
 
     composition_init_hardware();
     composition_add_tasks(task_manager);
+    composition_add_hw_tasks(hw_task_manager);
     composition_start_comms();
 
     task_manager.start();
+    hw_task_manager.start();
 
     uint32_t blink_time = 500;
     uint16_t cycles = 2;
@@ -54,10 +61,6 @@ extern "C" void app_main(void) {
         if (!main_timer.has_expired()) {
             vTaskDelay(200 / portTICK_PERIOD_MS);
             continue;
-        }
-
-        if (boot_button.is_pressed()) {
-            FIC_LOGI(TAG, "Button pressed!");
         }
 
         continue;

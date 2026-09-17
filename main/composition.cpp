@@ -77,10 +77,9 @@ static DS18B20                temperature_sensor(onewire, DS18B20::resolution_12
 static ADC                    adc(ADC_CHANNEL_2, ADC_UNIT_1, ADC_ATTEN_DB_12, ADC_BITWIDTH_DEFAULT);
 static AnalogHumiditySensor   soil_moisture_sensor(adc, 3300);
 
-using BootPinGpio = EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, GPIO_PULLUP_DISABLE, GPIO_PULLDOWN_DISABLE>;
-using BootButton = Button<>;
-static BootPinGpio              button_gpio{};
-static BootButton               boot_button_impl{button_gpio};
+constexpr uint32_t button_poll_period_ms = 100;
+static EspGPIO<GPIO_NUM_9, GPIO_MODE_INPUT, GPIO_PULLUP_DISABLE, GPIO_PULLDOWN_DISABLE>              button_gpio{};
+static Button<button_poll_period_ms>               boot_button_impl{button_gpio};
 
 // ── WiFi ──
 static WiFiContext            wifi_context;
@@ -142,9 +141,13 @@ void composition_init_hardware() {
 void composition_add_tasks(TaskManager& tm) {
     tm.add_task(&temperature_endpoint);
     tm.add_task(&soil_moisture_endpoint);
-    tm.add_task(&rgb_signaler_impl);
     tm.add_task(&router);
     tm.add_task(&firebase_endpoint);
+}
+
+void composition_add_hw_tasks(TaskManager&tm) {
+    tm.add_task(&boot_button);
+    tm.add_task(&rgb_signaler_impl);
 }
 
 void composition_start_comms() {
