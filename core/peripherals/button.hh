@@ -7,29 +7,7 @@
 class ButtonBase : public ITask {
 public:
     void setup() override {}
-    void update(uint32_t now) override {
-        bool raw_state = pin_.get_state();
-        bool is_pressed = false;
-        
-        if (_active_low) {
-            is_pressed = !raw_state;
-        } else {
-            is_pressed = raw_state;
-        }
-
-        if (is_pressed && _active) {
-            uint32_t activation_time = now - _press_time;
-            if (activation_time % _button_event_period_ms < 10) {
-                FIC_LOGI(TAG, "Button long press %d", activation_time);
-            }
-        } else if (is_pressed) {
-            FIC_LOGI(TAG, "Button short press");
-            _active = true;
-            _press_time = now;
-        } else {
-            _active = false;
-        }
-    }
+    void update(uint32_t now) override ;
 
 protected:
     ButtonBase(IGPIO& pin, bool active_low) : pin_(pin), _active_low(active_low) {}
@@ -50,7 +28,7 @@ template <uint32_t poll_interval_ms, bool ActiveLow = true>
 class Button : public ButtonBase {
 public:
     explicit Button(IGPIO& pin) : ButtonBase(pin, ActiveLow) {}
-    bool should_run(uint32_t now) override {
+    inline bool should_run(uint32_t now) override {
         return now % poll_interval_ms == 0;
     }
 };
