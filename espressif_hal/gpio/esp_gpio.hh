@@ -10,17 +10,17 @@ enum pull_mode_t {
     PULL_DOWN
 };
 
-class EspGPIOBase {
+class EspGPIOBase : public IGPIO {
 public: 
-    void set() {
+    void set() override {
         gpio_set_level(pin, 1);
     }
 
-    void reset() {
+    void reset() override {
         gpio_set_level(pin, 0);
     }
 
-    bool get_state() const {
+    bool get_state() const override {
         return static_cast<bool>(gpio_get_level(pin));
     }
     
@@ -52,8 +52,5 @@ class EspGPIO : public EspGPIOBase{
 public:
     explicit EspGPIO() : EspGPIOBase(pin, mode, pull_up_mode, pull_down_mode) {
 };
-
-// Validate class satisfies GPIO concept
-static_assert(GPIO<EspGPIO<GPIO_NUM_2, GPIO_MODE_INPUT_OUTPUT, PULL_DISABLED>>);
 
 #endif
