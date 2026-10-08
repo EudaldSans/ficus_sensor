@@ -4,6 +4,7 @@
 #include "fic_log.hh"
 
 #include "conversions.hh"
+#include "filters.hh"
 
 #include <inttypes.h>
 #include <vector>
@@ -86,13 +87,17 @@ public:
  * 
  * @tparam From Type of incoming @c value_t
  * @tparam To Type of outgoing @c value_t
+ * @tparam Converter Conversion chain for the value, defaults to no-op
+ * @tparam Filter Filter chain for the value, defaults to no-op
  */
-template <typename From, typename To, typename Converter = NoConv>
+template <typename From, typename To, typename Converter = NoConv, typename Filter = PassAll>
 struct ChannelLink {
 private:
     uint8_t _last_seen_version = 0;
     value_t<From>& src;
     value_t<To>& dest;
+
+    Filter _filter_state{};
 
 public:
     constexpr ChannelLink(value_t<From>& s, value_t<To>& d) : src(s), dest(d) {}
@@ -100,11 +105,17 @@ public:
     /**
      * @brief Synchronizes the values of the channels
      */
-    void sync() {
+    void sync(uint32_t now) {
         if (static_cast<uint8_t>(src.get_version() - _last_seen_version) == 0) {return;}
-        _last_seen_version = src.get_version();
+        auto const& current_val = src.peek();
 
-        dest.update(static_cast<To>(Converter::apply(src.peek())));
+        if constexpr (!std::is_same_v<Filter, PassAll>) {
+            if (!_filter_state.allows(now, current_val)) return;
+            _filter_state.apply(now, current_val);
+        }
+
+        _last_seen_version = src.get_version();
+        dest.update(static_cast<To>(Converter::apply(current_val)));
         dest.make_new();
 
         if (src.is_valid()) {

@@ -20,6 +20,9 @@
 
 #include "timer.hh"
 
+// DELETE ME
+#include "router.hh"
+
 static constexpr Version product_version = Version(0, 0, 1, 0);
 
 static const char *TAG = "main";
@@ -56,6 +59,28 @@ extern "C" void app_main(void) {
     Color color = LED_BLUE;
 
     main_timer.start(2000, true);
+
+    // ── Channels ──
+    static value_t<float>   direct_value;
+    static value_t<float>   time_gated_value;
+    static value_t<float>   dead_band_value;
+    static value_t<float>   and_value;
+    static value_t<float>   generator_value;
+
+    constexpr uint32_t interval_ms = 2000ul;
+    constexpr float threshold = 200;
+
+    using dead_band = DeadBand<float, threshold>;
+    using rate_limiter = RateLimiter<interval_ms>;
+    using and_filter = AndFilterChain<DeadBand<float, threshold>, RateLimiter<interval_ms>>;
+
+    // ── Routing ──
+    static Router router{
+        ChannelLink<float, float>                           {generator_value, direct_value},
+        ChannelLink<float, float, NoConv, rate_limiter>     {generator_value, time_gated_value},
+        ChannelLink<float, float, NoConv, dead_band>        {generator_value, dead_band_value},
+        ChannelLink<float, float, NoConv, and_filter>       {generator_value, and_value},
+    };
 
     while (1) {
         if (!main_timer.has_expired()) {

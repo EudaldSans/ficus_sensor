@@ -22,8 +22,8 @@ public:
      * @param now The time of update execution
      */
     void update(uint32_t now) override {
-        std::apply([](auto&... link) {
-            (link.sync(), ...);
+        std::apply([now](auto&... link) {
+            (link.sync(now), ...);
         }, _links);
     }
 
