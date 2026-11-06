@@ -70,16 +70,16 @@ extern "C" void app_main(void) {
     constexpr uint32_t interval_ms = 2000ul;
     constexpr float threshold = 200;
 
-    using dead_band = DeadBand<float, threshold>;
-    using rate_limiter = RateLimiter<interval_ms>;
-    using and_filter = AndFilterChain<DeadBand<float, threshold>, RateLimiter<interval_ms>>;
+    auto dead_band = DeadBand<float>(threshold);
+    auto rate_limiter = RateLimiter<float>(interval_ms);
+    // using and_filter = AndFilterChain<dead_band, rate_limiter>();
 
     // ── Routing ──
     static Router router{
         ChannelLink<float, float>                           {generator_value, direct_value},
         ChannelLink<float, float, NoConv, rate_limiter>     {generator_value, time_gated_value},
         ChannelLink<float, float, NoConv, dead_band>        {generator_value, dead_band_value},
-        ChannelLink<float, float, NoConv, and_filter>       {generator_value, and_value},
+        // ChannelLink<float, float, NoConv, and_filter>       {generator_value, and_value},
     };
 
     while (1) {

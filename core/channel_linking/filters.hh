@@ -5,12 +5,10 @@
  * 
  * @tparam T The type of the value being filtered
  */
-
-struct PassAll {
-    template<typename T>
-    inline bool allows(uint32_t /*now*/, T /*v*/) { return true; }
-    template<typename T>
-    inline void apply(uint32_t /*now*/, T /*v*/) { return; }
+template<typename T>
+struct Filter {
+    inline virtual bool allows(uint32_t /*now*/, T /*v*/) { return true; }
+    inline virtual void apply(uint32_t /*now*/, T /*v*/) { return; }
 };
 
 /**
@@ -18,24 +16,26 @@ struct PassAll {
  * greater than a threshold.
  * 
  * @tparam T The type of the value being filtered
- * @tparam Band The Threshold before a value can be reported again
  */
-template<typename T, T Threshold>
-struct DeadBand {
-    inline bool allows(uint32_t /*now*/, T v) {
+template<typename T>
+struct DeadBand : public Filter<T> {
+    DeadBand(T threshold) : _threshold(threshold) {}
+
+    inline bool allows(uint32_t /*now*/, T v) override {
         if (!_has_value) {
             return true; // Always allow the very first sample
         }
-        return get_diff(v, _last_value) >= Threshold;
+        return get_diff(v, _last_value) >= _threshold;
     }
 
-    inline void apply(uint32_t /*now*/, T v) {
+    inline void apply(uint32_t /*now*/, T v) override {
         _last_value = v;
         _has_value = true;
     }
 
 private:
     T _last_value{};
+    const T _threshold;
     bool _has_value = false;
 
     /**
@@ -58,17 +58,17 @@ private:
  * @brief Lets values torough only if enough time has passed since the last report
  * 
  * @tparam T The type of the value being filtered
-* @tparam IntervalMs Minimum time delay required between allowed updates in ms.
  */
-template <uint32_t IntervalMs>
+template<typename T>
 struct RateLimiter {
-    template<typename T>
-    inline bool allows(uint32_t now, T /*v*/) { return (now - _last_time) >= IntervalMs; }
-    template<typename T>
+    RateLimiter(uint32_t interval_ms) : _interval_ms(interval_ms) {}
+    
+    inline bool allows(uint32_t now, T /*v*/) { return (now - _last_time) >= _interval_ms; }
     inline void apply(uint32_t now,  T /*v*/) { _last_time = now; }
 
 private:
     uint32_t _last_time = 0;
+    const uint32_t _interval_ms;
 };
 
 /**
