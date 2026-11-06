@@ -63,8 +63,6 @@ extern "C" void app_main(void) {
             continue;
         }
 
-        continue;
-
         if (!sntp_client.is_syncing() && !sntp_client.is_synced()) {
             if (composition_get_wifi_state() == WiFiState::STA_CONNECTED) {
                 FIC_LOGI(TAG, "Starting time sync");
