@@ -1,0 +1,3 @@
+idf_component_register( SRCS ""
+                        REQUIRES fic_hal fic_log fic_time driver
+                        INCLUDE_DIRS ".")

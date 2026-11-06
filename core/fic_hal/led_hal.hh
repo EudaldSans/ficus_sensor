@@ -33,12 +33,12 @@ struct Color {
     uint32_t red, green, blue;
 };
 
-#define LED_WHITE {255, 255, 255}
-#define LED_RED {255, 0, 0}
-#define LED_GREEN {0, 255, 0}
-#define LED_YELLOW {255,255,0}
-#define LED_BLUE {0, 0, 255}
-#define LED_OFF {0, 0, 0}
+constexpr Color LED_WHITE = Color{255, 255, 255};
+constexpr Color LED_RED = Color{255, 0, 0};
+constexpr Color LED_GREEN = Color{0, 255, 0};
+constexpr Color LED_YELLOW = Color{255, 255, 0};
+constexpr Color LED_BLUE = Color{0, 0, 255};
+constexpr Color LED_OFF = Color{0, 0, 0};
 
 class IColorable : public ILightable {
 public: 

@@ -15,6 +15,8 @@ set(hardware_deps
     onewire
     leds
     nvs_flash
+    gpio
+    peripherals
 )
 
 set(communications
